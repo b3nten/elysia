@@ -1,0 +1,9 @@
+export const isDestroyed = Symbol("isDestroyed");
+export const isActive = Symbol("isActive");
+export const onEntityAdded = Symbol("onEntityAdded");
+export const onEntityRemoved = Symbol("onEntityRemoved");
+export const onComponentAdded = Symbol("onComponentAdded");
+export const onComponentRemoved = Symbol("onComponentRemoved");
+export const onStart = Symbol("onStart");
+export const onUpdate = Symbol("onUpdate");
+export const onStop = Symbol("onStop");

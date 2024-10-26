@@ -1,0 +1,39 @@
+{
+  "name": "@elysiatech/engine",
+  "version": "2024.1.1",
+  "license": "MIT",
+  "tasks": {
+    "build": "deno run -A cli.ts gen:modfiles && deno run -A cli.ts playground:build",
+    "dev": "deno run -A cli.ts dev",
+    "deploy": "deno cli.ts playground:deploy"
+  },
+  "imports": {
+    "@dimforge/rapier3d-compat": "npm:@dimforge/rapier3d-compat@^0.14.0",
+    "@luca/esbuild-deno-loader": "jsr:@luca/esbuild-deno-loader@^0.11.0",
+    "@std/http": "jsr:@std/http@^1.0.9",
+    "corel-color-picker": "npm:corel-color-picker@^0.2.3",
+    "lit": "npm:lit@^3.2.1",
+    "postprocessing": "npm:postprocessing@^6.36.3",
+    "three": "npm:three@^0.169.0",
+    "troika-three-text": "npm:troika-three-text@^0.50.1"
+  },
+  "exports": {
+    ".": "./src/mod.ts"
+  },
+  "compilerOptions": {
+    "lib": [
+      "deno.ns",
+      "dom"
+    ]
+  },
+  "deploy": {
+    "project": "784646d1-c7a8-44a0-8811-11b1665eb845",
+    "exclude": [
+      "**/node_modules"
+    ],
+    "include": [
+    	"playground/**"
+    ],
+    "entrypoint": "playground/server.ts"
+  }
+}
