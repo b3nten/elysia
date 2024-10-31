@@ -1,8 +1,5 @@
-import { ElysiaElement, defineComponent, h, c, defaultScheduler } from "./UI.ts";
+import { ElysiaElement, defineComponent, html ,css } from "./ElysiaElement.ts";
 import { ELYSIA_VERSION } from "../Core/Constants.ts";
-import { nothing } from "lit";
-import type { CSSResult } from "../../../../Library/Caches/deno/npm/registry.npmjs.org/@lit/reactive-element/2.0.4/development/css-tag.d.ts";
-import type { TemplateResult } from "../../../../Library/Caches/deno/npm/registry.npmjs.org/lit-element/4.1.1/development/lit-element.d.ts";
 
 export class ElysiaUiStats extends ElysiaElement
 {
@@ -10,9 +7,7 @@ export class ElysiaUiStats extends ElysiaElement
 
 	visible = false;
 
-	public override scheduler = defaultScheduler;
-
-	static override styles: CSSResult = c`
+	static styles = css`
 		:host {
 			position: fixed;
 			bottom: 0;
@@ -54,12 +49,14 @@ export class ElysiaUiStats extends ElysiaElement
 		setTimeout(() => this.visible = true, 500);
 	}
 
-	override onRender(): TemplateResult
+	override onRender()
 	{
-		return h`
+		return html`
 			<aside id="stats" class=${this.visible ? '' : 'inv'}>
 				<div class="purple">elsyia ui ${ELYSIA_VERSION}</div>
-				<div class=${this.scheduler.frametime > 12 ? 'red' : nothing}>update delta: ${this.scheduler.frametime.toFixed(0)}</div>
+				<div class=${this.scheduler.frametime > 12 ? 'red' : null}>
+					update delta: ${this.scheduler.frametime.toFixed(0)}
+				</div>
 				<div class="white">components: ${this.scheduler.components.size}</div>
 			</aside>
 		`

@@ -16,7 +16,7 @@ const c3 = c1 + 1;
 const c4 = (2 * PI) / 3;
 const c5 = (2 * PI) / 4.5;
 
-const linear: EasingFunction = (x) => x;
+export const linear: EasingFunction = (x) => x;
 export const easeInQuad: EasingFunction = (x) => x * x;
 export const easeOutQuad: EasingFunction = (x) => 1 - (1 - x) * (1 - x);
 export const easeInOutQuad: EasingFunction = (x) => (x < 0.5 ? 2 * x * x : 1 - pow(-2 * x + 2, 2) / 2);

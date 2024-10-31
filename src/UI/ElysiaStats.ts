@@ -1,7 +1,6 @@
-import { ElysiaElement, defineComponent, h, c, defaultScheduler } from "./UI.ts";
+import { ElysiaElement, defineComponent, css, html } from "./ElysiaElement.ts";
 import { ELYSIA_VERSION } from "../Core/Constants.ts";
-import type { CSSResult } from "../../../../Library/Caches/deno/npm/registry.npmjs.org/@lit/reactive-element/2.0.4/development/reactive-element.d.ts";
-import type { TemplateResult } from "lit";
+import { defaultScheduler } from "./mod.ts";
 
 export class ElysiaStats extends ElysiaElement
 {
@@ -18,7 +17,7 @@ export class ElysiaStats extends ElysiaElement
 		memory: 0,
 	}
 
-	static override styles: CSSResult = c`
+	static override styles = css`
 		:host {
 			position: fixed;
 			bottom: 0;
@@ -60,9 +59,9 @@ export class ElysiaStats extends ElysiaElement
 		setTimeout(() => this.visible = true, 500);
 	}
 
-	override onRender(): TemplateResult
+	override onRender()
 	{
-		return h`
+		return html`
 			<aside id="stats" class=${this.visible ? '' : 'inv'}>
 				<div class="purple">elsyia ${ELYSIA_VERSION}</div>
 				<div class=${this.stats.fps < 30 ? 'red' : 'white'}>fps: ${this.stats.fps}</div>

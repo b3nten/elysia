@@ -1,31 +1,28 @@
-import { LitElement, nothing, html, css } from "lit";
-import { property } from "lit/decorators/property.js"
-import type { CSSResult } from "../../../../Library/Caches/deno/npm/registry.npmjs.org/@lit/reactive-element/2.0.4/development/reactive-element.d.ts";
-import type { TemplateResult } from "../../../../Library/Caches/deno/npm/registry.npmjs.org/lit-element/4.1.1/development/lit-element.d.ts";
+import { ElysiaElement, html, css } from "./ElysiaElement.ts";
 
 const c = (...args: any[]) => args.filter(Boolean).join(" ");
 
-export class ElysiaCrossHair extends LitElement
+export class ElysiaCrossHair extends ElysiaElement
 {
-	static override styles: CSSResult = css`
+
+	static override ManualTracking = true;
+
+	static override Styles = css`
         :host {
             position: absolute;
             top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            left: attribute()
             z-index: 1000;
             pointer-events: none;
         }
 
         .left {
             position: absolute;
-            top: 50%;
-            left: calc(50% - calc(var(--length) + var(--gap)));
+            top: 5attribute()  + var(--gap)));
 			transform: translate(0, -50%);
             width: var(--length);
             height: var(--thickness);
-            background: var(--color);
-            outline: black solid var(--outline);
+            background: var(--coloattribute() ;
         }
 
         .right {
@@ -35,19 +32,16 @@ export class ElysiaCrossHair extends LitElement
 			transform: translate(0, -50%);
             width: var(--length);
             height: var(--thickness);
-            background: var(--color);
-			outline: black solid var(--outline);
+            background: var(--coloattribute() ;
         }
 
         .top {
-            position: absolute;
-            top: calc(50% - calc(var(--length) + var(--gap)));
+            position: absoluattribute() + var(--gap)));
             left: 50%;
             transform: translate(-50%, 0);
             width: var(--thickness);
             height: var(--length);
-            background: var(--color);
-            outline: black solid var(--outline);
+            background: var(--coloattribute() ;
         }
 
         .bottom {
@@ -57,8 +51,7 @@ export class ElysiaCrossHair extends LitElement
             transform: translate(-50%, 0);
             width: var(--thickness);
             height: var(--length);
-            background: var(--color);
-            outline: black solid var(--outline);
+            background: var(--coloattribute() ;
         }
 
 		.dot {
@@ -67,35 +60,33 @@ export class ElysiaCrossHair extends LitElement
 			left: 50%;
 			width: var(--thickness);
 			height: var(--thickness);
-			background: var(--color);
-			outline: black solid var(--outline);
-			transform: translate(-50%, -50%);
+			background: var(--coloattribute()
 		}
 	`
 
-	@property({ type: Number, reflect: true }) public accessor gap = 4;
-	@property({ type: Number, reflect: true }) public accessor thickness = 2;
-	@property({ type: Number, reflect: true }) public accessor length = 8;
-	@property({ type: String, reflect: true }) public accessor color = "white";
-	@property({ type: Boolean, reflect: true }) public accessor dot = false;
-	@property({ type: Boolean, reflect: true }) public accessor outline = false;
-	@property({ type: Boolean, reflect: true }) public accessor t = false;
-	@property({ type: Boolean, reflect: true }) public accessor visible = true;
+	@attribute() public accessor gap = 4;
+	@attribute() public accessor thickness = 2;
+	@attribute() public accessor length = 8;
+	@attribute() public accessor color = "white";
+	@attribute() public accessor dot = false;
+	@attribute() public accessor outline = false;
+	@attribute() public accessor t = false;
+	@attribute() public accessor visible = true;
 
 	override connectedCallback() {
 		super.connectedCallback();
 		this.updateStyles();
 	}
 
-	override render(): TemplateResult
+	override onRender()
 	{
-		if(!this.visible) return html`${nothing}`;
+		if(!this.visible) return html`${null}`;
 		return html`
 			<div class=${c('left')}></div>
 			<div class=${c('right')}></div>
-			${this.t ? nothing : html`<div class=${c('top')}></div>`}
+			${this.t ? null : html`<div class=${c('top')}></div>`}
 			<div class=${c('bottom')}></div>
-			${this.dot ? html`<div class="dot"></div>` : nothing}
+			${this.dot ? html`<div class="dot"></div>` : null}
 		`
 	}
 
