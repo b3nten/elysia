@@ -1,9 +1,11 @@
-import { css, ElysiaElement, html } from "./ElysiaElement.ts";
+import { css, defineComponent, ElysiaElement, html } from "./ElysiaElement.ts";
 
 const c = (...args: any[]) => args.filter(Boolean).join(" ");
 
 export class ElysiaCrossHair extends ElysiaElement
 {
+	static override Tag = "elysia-crosshair";
+
 	static override Styles = css`
         :host {
             position: absolute;
@@ -70,13 +72,13 @@ export class ElysiaCrossHair extends ElysiaElement
 		}
 	`
 
-	public get gap(): number { return Number(this.getAttribute("gap")) ?? 4; }
+	public get gap(): number { return Number(this.getAttribute("gap") ?? 4); }
 	public set gap(value: number) { this.setAttribute("gap", value.toString()); }
 
-	public get thickness(): number { return Number(this.getAttribute("thickness")) ?? 2; }
+	public get thickness(): number { return Number(this.getAttribute("thickness") ?? 2); }
 	public set thickness(value: number) { this.setAttribute("thickness", value.toString()); }
 
-	public get length(): number { return Number(this.getAttribute("length")) ?? 8; }
+	public get length(): number { return Number(this.getAttribute("length") ?? 8); }
 	public set length(value: number) { this.setAttribute("length", value.toString()); }
 
 	public get color(): string { return this.getAttribute("color") ?? "white"; }
@@ -92,10 +94,9 @@ export class ElysiaCrossHair extends ElysiaElement
 	public set t(value: boolean) { if(value) this.setAttribute("t", ""); else this.removeAttribute("t"); }
 
 	public get visible(): boolean { return this.hasAttribute("visible"); }
-	public set visible(value: boolean) { if(value) this.setAttribute("visible", ""); else this.removeAttribute("visible"); }
+	public set visible(value: boolean) { if(value) this.setAttribute("visible", "true"); else this.removeAttribute("visible"); }
 
-	override connectedCallback() {
-		super.connectedCallback();
+	override onMount() {
 		this.updateStyles();
 	}
 
@@ -118,7 +119,8 @@ export class ElysiaCrossHair extends ElysiaElement
 		this.style.setProperty("--length", `${this.length}px`);
 		this.style.setProperty("--color", this.color);
 		this.style.setProperty("--outline", this.outline ? "1px" : "0");
+		console.log(this.gap, this.thickness, this.length, this.color, this.outline)
 	}
 }
 
-customElements.define("elysia-crosshair", ElysiaCrossHair);
+defineComponent(ElysiaCrossHair);
