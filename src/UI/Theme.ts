@@ -1,6 +1,5 @@
 import { defineComponent, ElysiaElement, html } from "./ElysiaElement.ts";
 import { Colors } from "../Core/Colors.ts";
-import { attribute } from "./Decorators.ts";
 
 export class ElysiaTheme extends ElysiaElement
 {

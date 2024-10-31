@@ -5,9 +5,7 @@ export class ElysiaUiStats extends ElysiaElement
 {
 	static override Tag = "elysia-ui-stats";
 
-	visible = false;
-
-	static styles = css`
+	static override Styles = css`
 		:host {
 			position: fixed;
 			bottom: 0;
@@ -40,6 +38,8 @@ export class ElysiaUiStats extends ElysiaElement
 		.white { color: #f8f8f2; }
 		.inv { opacity: 0; transform: translateY(100%); }
 	`
+
+	visible = false;
 
 	override onMount() {
 		document.head.insertAdjacentHTML(

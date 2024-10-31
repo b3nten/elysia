@@ -1,5 +1,4 @@
-import * as uhtml from "npm:uhtml"
-// import * as uhtml from "npm:lit-html"
+import * as LitHtml from "npm:lit-html"
 import { type Scheduler, defaultScheduler } from "./Scheduler.ts";
 import { isFunction } from "../Core/Asserts.ts";
 import type { Constructor } from "../Core/Utilities.ts";
@@ -10,9 +9,9 @@ export enum OffscreenUpdateStrategy
 	HighPriority
 }
 
-const isUhtmlRenderResult  = ( value: unknown): value is uhtml.Hole =>
+const isUhtmlRenderResult  = ( value: unknown): value is LitHtml.TemplateResult =>
 {
-	return !!value && (typeof value === "object") && value instanceof uhtml.Hole;
+	return !!value && (typeof value === "object") && '_$litType$' in value;
 }
 
 const supportsAdoptingStyleSheets: boolean =
@@ -24,7 +23,7 @@ const Internal = Symbol.for("ElysiaUI::Internal")
 
 export const Attributes = Symbol.for("ElysiaUI::Attributes");
 
-export const html = uhtml.html;
+export const html = LitHtml.html;
 
 export const css = (strings: TemplateStringsArray, ...values: unknown[]): string => {
 	return strings.map((str, i) => str + (values[i] || "")).join("");
@@ -42,7 +41,7 @@ export function defineComponent(component: Constructor<ElysiaElement> & { Tag: s
 	}
 }
 
-export type RenderOutput = uhtml.Hole;
+export type RenderOutput = LitHtml.TemplateResult;
 
 interface ElysiaConstructor
 {
@@ -115,8 +114,8 @@ export abstract class ElysiaElement extends HTMLElement
 				{
 					if (
 						!this.#renderResult
-						|| this.compareRenderOutput(this.#renderResult.v, currentRender.v)
-						|| this.compareRenderOutput(this.#renderResult.s, currentRender.s)
+						|| this.compareRenderOutput(this.#renderResult.values, currentRender.values)
+						|| this.compareRenderOutput(this.#renderResult.strings, currentRender.strings)
 					)
 					{
 						this.#renderResult = currentRender;
@@ -147,7 +146,7 @@ export abstract class ElysiaElement extends HTMLElement
 	public forceUpdate(needsRender = false): void
 	{
 		this.onBeforeRender();
-		uhtml.render( this.shadowRoot, needsRender ? this.onRender() : this.#renderResult! );
+		LitHtml.render( needsRender ? this.onRender() : this.#renderResult!, this.shadowRoot!  );
 		this.onAfterRender();
 	}
 
@@ -179,7 +178,7 @@ export abstract class ElysiaElement extends HTMLElement
 			// lit template results are compared by their values
 			if (isUhtmlRenderResult(prev) && isUhtmlRenderResult(next))
 			{
-				return this.compareRenderOutput(prev.v, next.v) && this.compareRenderOutput(prev.s, next.s);
+				return this.compareRenderOutput(prev.values, next.values) && this.compareRenderOutput(prev.strings, next.strings);
 			}
 
 			// arrays are deeply compared

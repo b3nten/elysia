@@ -6,18 +6,7 @@ export class ElysiaStats extends ElysiaElement
 {
 	static override Tag = "elysia-stats";
 
-	visible = false;
-
-	public stats = {
-		calls: 0,
-		fps: 0,
-		lines: 0,
-		points: 0,
-		triangles: 0,
-		memory: 0,
-	}
-
-	static override styles = css`
+	static override Styles = css`
 		:host {
 			position: fixed;
 			bottom: 0;
@@ -51,6 +40,17 @@ export class ElysiaStats extends ElysiaElement
 		.inv { opacity: 0; transform: translateY(100%); }
 	`
 
+	visible = false;
+
+	public stats = {
+		calls: 0,
+		fps: 0,
+		lines: 0,
+		points: 0,
+		triangles: 0,
+		memory: 0,
+	}
+
 	override onMount() {
 		document.head.insertAdjacentHTML(
 			'beforeend',
@@ -70,8 +70,8 @@ export class ElysiaStats extends ElysiaElement
 				<div>triangles: ${this.stats.triangles}</div>
 				<div>lines: ${this.stats.lines}</div>
 				<div>points: ${this.stats.points}</div>
-				${defaultScheduler.components.size > 1 ? h`<div>ui components: ${defaultScheduler.components.size}</div>` : ''}
-				${defaultScheduler.components.size > 1 ? h`<div>ui updates: ${defaultScheduler.frametime.toFixed(0)}ms</div>` : ''}
+				${defaultScheduler.components.size > 1 ? html`<div>ui components: ${defaultScheduler.components.size}</div>` : ''}
+				${defaultScheduler.components.size > 1 ? html`<div>ui updates: ${defaultScheduler.frametime.toFixed(0)}ms</div>` : ''}
 			</aside>
 		`
 	}

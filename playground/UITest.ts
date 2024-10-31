@@ -13,8 +13,8 @@ class UITest extends ElysiaElement
 
 	get foo()
 	{
-		return performance.now().toFixed(2)
-		// return window.innerWidth
+		// return performance.now().toFixed(2)
+		return window.innerWidth
 	}
 
 	get components()
