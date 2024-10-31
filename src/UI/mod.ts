@@ -5,6 +5,5 @@ export * from "./ElysiaElement.ts";
 export * from "./mod.ts";
 export * from "./Scheduler.ts";
 export * from "./ElysiaStats.ts";
-export * from "./ElysiaUiStats.ts";
 export * from "./Theme.ts";
 export * from "./ElysiaCrossHair.ts";
