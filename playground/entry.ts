@@ -16,4 +16,3 @@ document.body.append(splash);
 import("./PlaygroundGame/Game.ts")
 	.then(({ scene, app }) => app.loadScene(scene))
 	.then(() => setTimeout(() => splash.goodbye(), 2000));
-
