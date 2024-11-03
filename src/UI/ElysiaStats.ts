@@ -1,24 +1,12 @@
-import { ElysiaElement, defineComponent, h, c, defaultScheduler } from "./UI.ts";
+import { ElysiaElement, defineComponent, css, html } from "./ElysiaElement.ts";
 import { ELYSIA_VERSION } from "../Core/Constants.ts";
-import type { CSSResult } from "../../../../Library/Caches/deno/npm/registry.npmjs.org/@lit/reactive-element/2.0.4/development/reactive-element.d.ts";
-import type { TemplateResult } from "lit";
+import { defaultScheduler } from "./mod.ts";
 
 export class ElysiaStats extends ElysiaElement
 {
 	static override Tag = "elysia-stats";
 
-	visible = false;
-
-	public stats = {
-		calls: 0,
-		fps: 0,
-		lines: 0,
-		points: 0,
-		triangles: 0,
-		memory: 0,
-	}
-
-	static override styles: CSSResult = c`
+	static override Styles = css`
 		:host {
 			position: fixed;
 			bottom: 0;
@@ -52,6 +40,17 @@ export class ElysiaStats extends ElysiaElement
 		.inv { opacity: 0; transform: translateY(100%); }
 	`
 
+	visible = false;
+
+	public stats = {
+		calls: 0,
+		fps: 0,
+		lines: 0,
+		points: 0,
+		triangles: 0,
+		memory: 0,
+	}
+
 	override onMount() {
 		document.head.insertAdjacentHTML(
 			'beforeend',
@@ -60,9 +59,9 @@ export class ElysiaStats extends ElysiaElement
 		setTimeout(() => this.visible = true, 500);
 	}
 
-	override onRender(): TemplateResult
+	override onRender()
 	{
-		return h`
+		return html`
 			<aside id="stats" class=${this.visible ? '' : 'inv'}>
 				<div class="purple">elsyia ${ELYSIA_VERSION}</div>
 				<div class=${this.stats.fps < 30 ? 'red' : 'white'}>fps: ${this.stats.fps}</div>
@@ -71,8 +70,8 @@ export class ElysiaStats extends ElysiaElement
 				<div>triangles: ${this.stats.triangles}</div>
 				<div>lines: ${this.stats.lines}</div>
 				<div>points: ${this.stats.points}</div>
-				${defaultScheduler.components.size > 1 ? h`<div>ui components: ${defaultScheduler.components.size}</div>` : ''}
-				${defaultScheduler.components.size > 1 ? h`<div>ui updates: ${defaultScheduler.frametime.toFixed(0)}ms</div>` : ''}
+				${defaultScheduler.components.size > 1 ? html`<div>ui components: ${defaultScheduler.components.size}</div>` : ''}
+				${defaultScheduler.components.size > 1 ? html`<div>ui updates: ${defaultScheduler.frametime.toFixed(0)}ms</div>` : ''}
 			</aside>
 		`
 	}

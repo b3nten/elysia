@@ -1,4 +1,3 @@
-import "../src/UI/ElysiaSplash.ts";
 import { ElysiaSplash } from "../src/UI/ElysiaSplash.ts";
 
 document.body.style.width = "100%";

@@ -1,51 +1,46 @@
-import { css, defineComponent, ElysiaElement, html } from "./UI.ts";
-import { query } from "lit/decorators.js";
 import logo_transparent from "../../assets/logo_transparent.ts";
-import type { CSSResult } from "../../../../Library/Caches/deno/npm/registry.npmjs.org/@lit/reactive-element/2.0.4/development/css-tag.d.ts";
-import type { TemplateResult } from "lit";
+import { css, defineComponent, ElysiaElement, html } from "./ElysiaElement.ts";
+
 export class ElysiaSplash extends ElysiaElement
 {
 	static override Tag = "elysia-splash";
 	static override ManualTracking = true;
-
-	static override styles: CSSResult = css`
-		:host {
-			z-index: 10000;
-			position: absolute;
-			inset: 0;
-			background: #EBEAEC;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			color: #44475A;
-			font-family: 'Kode Mono', serif;
-			transition: opacity 1s ease-out;
-		}
-
-		#container {
+	static override Styles = css`
+        :host {
+            z-index: 10000;
+            position: absolute;
+            inset: 0;
+            background: #EBEAEC;
             display: flex;
             justify-content: center;
             align-items: center;
-			flex-direction: column;
+            color: #979cab;
+            font-family: 'Kode Mono', serif;
+            transition: opacity 1s ease-out;
+        }
+
+        #container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
             opacity: 0;
             transition: opacity 1s ease-in-out;
-		}
+        }
 
-		img {
-			width: 50vw
-		}
+        img {
+            width: 50vw;
+            max-width: 300px;
+        }
 	`
 
-	@query("#container") accessor container!: HTMLElement;
-
-	mountedAt = 0;
+	get container(): HTMLDivElement { return this.shadowRoot!.getElementById("container") as HTMLDivElement; }
 
 	override onMount()
 	{
 		this.mountedAt = performance.now()
 		setTimeout(() => this.container.style.opacity = "1", 500);
 	}
-
 
 	goodbye = (): void =>
 	{
@@ -56,7 +51,7 @@ export class ElysiaSplash extends ElysiaElement
 		setTimeout(() => super.remove(), timeRemaining);
 	}
 
-	override onRender(): TemplateResult
+	override onRender()
 	{
 		return html`
 			<div id="container">
@@ -65,6 +60,8 @@ export class ElysiaSplash extends ElysiaElement
 			</div>
 		`
 	}
+
+	private mountedAt = 0;
 }
 
 defineComponent(ElysiaSplash)

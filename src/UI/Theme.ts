@@ -1,29 +1,37 @@
-import { defineComponent, ElysiaElement, html } from "./UI.ts";
+import { defineComponent, ElysiaElement, html } from "./ElysiaElement.ts";
 import { Colors } from "../Core/Colors.ts";
-import { attribute } from "./UI.ts";
-import type { TemplateResult } from "lit";
 
 export class ElysiaTheme extends ElysiaElement
 {
 	static override Tag = 'elysia-theme';
 
-	@attribute() accessor cullen: string = Colors.Cullen;
-	@attribute() accessor nosferatu: string = Colors.Nosferatu;
-	@attribute() accessor vonCount: string = Colors.VonCount;
-	@attribute() accessor aro: string = Colors.Aro;
-	@attribute() accessor red: string = Colors.Red;
-	@attribute() accessor orange: string = Colors.Orange;
-	@attribute() accessor yellow: string = Colors.Yellow;
-	@attribute() accessor green: string = Colors.Green;
-	@attribute() accessor purple: string = Colors.Purple;
-	@attribute() accessor cyan: string = Colors.Cyan;
-	@attribute() accessor pink: string = Colors.Pink;
-	@attribute() accessor font: string = 'Kode Mono, sans';
+	get cullen() { return this.getAttribute('cullen') ?? Colors.Cullen; }
+	set cullen(value) { this.setAttribute('cullen', value); }
+	get nosferatu() { return this.getAttribute('nosferatu') ?? Colors.Nosferatu; }
+	set nosferatu(value) { this.setAttribute('nosferatu', value); }
+	get vonCount() { return this.getAttribute('voncount') ?? Colors.VonCount; }
+	set vonCount(value) { this.setAttribute('voncount', value); }
+	get aro() { return this.getAttribute('aro') ?? Colors.Aro; }
+	set aro(value) { this.setAttribute('aro', value); }
+	get red() { return this.getAttribute('red') ?? Colors.Red; }
+	set red(value) { this.setAttribute('red', value); }
+	get orange() { return this.getAttribute('orange') ?? Colors.Orange; }
+	set orange(value) { this.setAttribute('orange', value); }
+	get yellow() { return this.getAttribute('yellow') ?? Colors.Yellow; }
+	set yellow(value) { this.setAttribute('yellow', value); }
+	get green() { return this.getAttribute('green') ?? Colors.Green; }
+	set green(value) { this.setAttribute('green', value); }
+	get purple() { return this.getAttribute('purple') ?? Colors.Purple; }
+	set purple(value) { this.setAttribute('purple', value); }
+	get cyan() { return this.getAttribute('cyan') ?? Colors.Cyan; }
+	set cyan(value) { this.setAttribute('cyan', value); }
+	get pink() { return this.getAttribute('pink') ?? Colors.Pink; }
+	set pink(value) { this.setAttribute('pink', value); }
 
-	override onRender(): TemplateResult { return html`<slot></slot>` }
+	override onRender() { return html`<slot></slot>` }
 
-	override attributeChangedCallback(name: string, _old: string | null, value: string | null) {
-		super.attributeChangedCallback(name, _old, value);
+	attributeChangedCallback()
+	{
 		this.#updateStyles();
 	}
 

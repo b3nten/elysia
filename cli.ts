@@ -10,7 +10,7 @@ const createPlaygroundEsbuildConfig = (mode: string): esbuild.BuildOptions => ({
 	target: "ES2022",
 	format: "esm",
 	minify: mode === "build",
-	conditions: ["worker", "browser"],
+	conditions: ["browser"],
 	treeShaking: true,
 	metafile: true,
 	splitting: true,

@@ -28,11 +28,11 @@ const app = new Application({
 
 class PlaygroundScene extends Scene {
 
-	onLoad(): void | Promise<void> {
+	override onLoad(): void | Promise<void> {
 		this.physics = new PhysicsWorld({ debug: false })
 	}
 
-	onCreate() {
+	override onCreate() {
 		this.ambientLight.intensity = .8;
 
 		const dirLight = new DirectionalLightActor()
@@ -55,7 +55,8 @@ class PlaygroundScene extends Scene {
 
 const crosshair = document.createElement("elysia-crosshair") as ElysiaCrossHair;
 crosshair.color = Colors.Green;
-crosshair.thickness = 3;
+crosshair.thickness = 2;
+crosshair.visible = true;
 document.body.appendChild(crosshair)
 
 const scene = new PlaygroundScene;

@@ -1,4 +1,4 @@
-import { lerp } from './Other.ts';
+ import { lerp } from './Other.ts';
 import { Vector2Like, Vector3Like, Vector4Like, VectorLike } from "./Vectors.ts";
 
 /**

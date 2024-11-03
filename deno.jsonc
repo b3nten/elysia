@@ -15,7 +15,8 @@
     "lit": "npm:lit@^3.2.1",
     "postprocessing": "npm:postprocessing@^6.36.3",
     "three": "npm:three@^0.169.0",
-    "troika-three-text": "npm:troika-three-text@^0.50.1"
+    "troika-three-text": "npm:troika-three-text@^0.50.1",
+    "uhtml": "npm:uhtml@^4.5.11"
   },
   "exports": {
     ".": "./src/mod.ts"
@@ -32,7 +33,7 @@
       "**/node_modules"
     ],
     "include": [
-    	"playground/**"
+      "playground/**"
     ],
     "entrypoint": "playground/server.ts"
   }

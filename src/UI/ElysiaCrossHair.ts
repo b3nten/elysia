@@ -1,13 +1,12 @@
-import { LitElement, nothing, html, css } from "lit";
-import { property } from "lit/decorators/property.js"
-import type { CSSResult } from "../../../../Library/Caches/deno/npm/registry.npmjs.org/@lit/reactive-element/2.0.4/development/reactive-element.d.ts";
-import type { TemplateResult } from "../../../../Library/Caches/deno/npm/registry.npmjs.org/lit-element/4.1.1/development/lit-element.d.ts";
+import { css, defineComponent, ElysiaElement, html } from "./ElysiaElement.ts";
 
 const c = (...args: any[]) => args.filter(Boolean).join(" ");
 
-export class ElysiaCrossHair extends LitElement
+export class ElysiaCrossHair extends ElysiaElement
 {
-	static override styles: CSSResult = css`
+	static override Tag = "elysia-crosshair";
+
+	static override Styles = css`
         :host {
             position: absolute;
             top: 50%;
@@ -73,29 +72,43 @@ export class ElysiaCrossHair extends LitElement
 		}
 	`
 
-	@property({ type: Number, reflect: true }) public accessor gap = 4;
-	@property({ type: Number, reflect: true }) public accessor thickness = 2;
-	@property({ type: Number, reflect: true }) public accessor length = 8;
-	@property({ type: String, reflect: true }) public accessor color = "white";
-	@property({ type: Boolean, reflect: true }) public accessor dot = false;
-	@property({ type: Boolean, reflect: true }) public accessor outline = false;
-	@property({ type: Boolean, reflect: true }) public accessor t = false;
-	@property({ type: Boolean, reflect: true }) public accessor visible = true;
+	public get gap(): number { return Number(this.getAttribute("gap") ?? 4); }
+	public set gap(value: number) { this.setAttribute("gap", value.toString()); }
 
-	override connectedCallback() {
-		super.connectedCallback();
+	public get thickness(): number { return Number(this.getAttribute("thickness") ?? 2); }
+	public set thickness(value: number) { this.setAttribute("thickness", value.toString()); }
+
+	public get length(): number { return Number(this.getAttribute("length") ?? 8); }
+	public set length(value: number) { this.setAttribute("length", value.toString()); }
+
+	public get color(): string { return this.getAttribute("color") ?? "white"; }
+	public set color(value: string) { this.setAttribute("color", value); }
+
+	public get dot(): boolean { return this.hasAttribute("dot"); }
+	public set dot(value: boolean) { if(value) this.setAttribute("dot", ""); else this.removeAttribute("dot"); }
+
+	public get outline(): boolean { return this.hasAttribute("outline"); }
+	public set outline(value: boolean) { if(value) this.setAttribute("outline", ""); else this.removeAttribute("outline"); }
+
+	public get t(): boolean { return this.hasAttribute("t"); }
+	public set t(value: boolean) { if(value) this.setAttribute("t", ""); else this.removeAttribute("t"); }
+
+	public get visible(): boolean { return this.hasAttribute("visible"); }
+	public set visible(value: boolean) { if(value) this.setAttribute("visible", "true"); else this.removeAttribute("visible"); }
+
+	override onMount() {
 		this.updateStyles();
 	}
 
-	override render(): TemplateResult
+	override onRender()
 	{
-		if(!this.visible) return html`${nothing}`;
+		if(!this.visible) return html`${null}`;
 		return html`
 			<div class=${c('left')}></div>
 			<div class=${c('right')}></div>
-			${this.t ? nothing : html`<div class=${c('top')}></div>`}
+			${this.t ? null : html`<div class=${c('top')}></div>`}
 			<div class=${c('bottom')}></div>
-			${this.dot ? html`<div class="dot"></div>` : nothing}
+			${this.dot ? html`<div class="dot"></div>` : null}
 		`
 	}
 
@@ -106,7 +119,8 @@ export class ElysiaCrossHair extends LitElement
 		this.style.setProperty("--length", `${this.length}px`);
 		this.style.setProperty("--color", this.color);
 		this.style.setProperty("--outline", this.outline ? "1px" : "0");
+		console.log(this.gap, this.thickness, this.length, this.color, this.outline)
 	}
 }
 
-customElements.define("elysia-crosshair", ElysiaCrossHair);
+defineComponent(ElysiaCrossHair);
