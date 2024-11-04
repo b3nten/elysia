@@ -25,6 +25,14 @@ export const Attributes = Symbol.for("ElysiaUI::Attributes");
 
 export const html = LitHtml.html;
 
+export const nothing = LitHtml.nothing;
+
+export const svg = LitHtml.svg;
+
+export const template = LitHtml.noChange;
+
+export const unsafeHTML = LitHtml.mathml;
+
 export const css = (strings: TemplateStringsArray, ...values: unknown[]): string => {
 	return strings.map((str, i) => str + (values[i] || "")).join("");
 }
