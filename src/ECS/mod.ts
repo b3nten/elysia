@@ -5,6 +5,5 @@ export * from "./Component.ts";
 export * from "./ErrorHandler.ts";
 export * from "./Entity.ts";
 export * from "./System.ts";
-export * from "./Material.ts";
 export * from "./Internal.ts";
 export * from "./World.ts";

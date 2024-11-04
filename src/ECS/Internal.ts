@@ -7,3 +7,5 @@ export const onComponentRemoved = Symbol("onComponentRemoved");
 export const onStart = Symbol("onStart");
 export const onUpdate = Symbol("onUpdate");
 export const onStop = Symbol("onStop");
+export const dirty = Symbol("dirty");
+export const uuid = Symbol("uuid");

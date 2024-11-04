@@ -4,10 +4,11 @@ import { Entity } from "./Entity.ts";
 import { CatchAndReport } from "./ErrorHandler.ts";
 import { World } from "./World.ts";
 import * as Internal from "./Internal.ts";
+import { Constructor, uuid } from "../Core/Utilities.ts";
 
 export abstract class System implements Destroyable
 {
-	protected constructor(protected world: World){}
+	constructor(protected world: World){}
 
 	abstract readonly name: string;
 
@@ -23,8 +24,6 @@ export abstract class System implements Destroyable
 		this.world.removeSystem(this);
 	}
 
-	protected abstract query(): Component[];
-
 	protected onEntityAdded?(entity: Entity): void
 
 	protected onEntityRemoved?(entity: Entity): void
@@ -35,7 +34,7 @@ export abstract class System implements Destroyable
 
 	protected onStart?(): void
 
-	protected onUpdate?(delta: number, elapsed: number): void
+	protected onUpdate?(context: World, delta: number, elapsed: number): void
 
 	protected onStop?(): void
 
@@ -43,11 +42,13 @@ export abstract class System implements Destroyable
 
 	[Internal.isActive] = false;
 
+	[Internal.uuid] = uuid();
+
 	@CatchAndReport
 	[Internal.onStart]() { this.onStart?.(); }
 
 	@CatchAndReport
-	[Internal.onUpdate](delta: number, elapsed: number) { this.onUpdate?.(delta, elapsed); }
+	[Internal.onUpdate](context: World, delta: number, elapsed: number) { this.onUpdate?.(context, delta, elapsed); }
 
 	@CatchAndReport
 	[Internal.onStop]() { this.onStop?.(); }

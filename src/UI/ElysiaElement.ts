@@ -1,4 +1,4 @@
-import * as LitHtml from "npm:lit-html"
+import * as LitHtml from "lit-html"
 import { type Scheduler, defaultScheduler } from "./Scheduler.ts";
 import { isFunction } from "../Core/Asserts.ts";
 import type { Constructor } from "../Core/Utilities.ts";
