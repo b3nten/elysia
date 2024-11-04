@@ -154,7 +154,7 @@ export abstract class ElysiaElement extends HTMLElement
 	public forceUpdate(needsRender = false): void
 	{
 		this.onBeforeRender();
-		LitHtml.render( needsRender ? this.onRender() : this.#renderResult!, this.shadowRoot!  );
+		LitHtml.render( needsRender ? this.onRender() : this.#renderResult!, this.shadowRoot! , { host: this } );
 		this.onAfterRender();
 	}
 
