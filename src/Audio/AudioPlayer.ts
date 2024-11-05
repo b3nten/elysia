@@ -1,7 +1,9 @@
 import { ASSERT, isBrowser } from "../Core/Asserts.ts";
 import { Audio, type AudioConstructorArguments } from "./Audio.ts";
+
 export class AudioPlayer
 {
+	/** Get the shared AudioContext */
 	static GetContext(): AudioContext
 	{
 		// @ts-ignore - global
@@ -33,10 +35,19 @@ export class AudioPlayer
 		}
 	}
 
+	/**
+	 * The set of all active audio instances, stored weakly.
+	 */
 	readonly instances: Set<WeakRef<Audio>> = new Set;
 
+	/**
+	 * A cache of audio buffers.
+	 */
 	readonly cache: Map<string | ArrayBuffer, Promise<AudioBuffer>> = new Map;
 
+	/**
+	 * Enable debug logd
+	 */
 	debug = false;
 
 	get muteOnBlur(): boolean

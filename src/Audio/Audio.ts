@@ -4,6 +4,7 @@ import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
 import * as Events from "./AudioEvents.ts";
 import { ASSERT } from "../Core/Asserts.ts";
 import { isBrowser } from "../Core/Asserts.ts";
+import { clamp } from "../Math/Other.ts";
 
 export interface AudioConstructorArguments {
 	bytes: ArrayBuffer;
@@ -15,30 +16,33 @@ export interface AudioConstructorArguments {
 
 export class Audio
 {
+	/** Whether the audio is currently loading */
 	get loading(): boolean { return !this.#ready; }
 
+	/** Whether the audio is ready to be played */
 	get ready(): boolean { return this.#ready; }
 
+	/** The error that occurred while loading the audio, if any */
 	get error(): Error | undefined { return this.#error; }
 
+	/** Whether the audio is currently playing */
 	get playing(): boolean { return this.#playing; }
-
 	set playing(value: boolean) { value ? this.play() : this.pause(); }
 
+	/** Whether the audio is currently paused */
 	get paused(): boolean { return this.#paused; }
-
 	set paused(value: boolean) { value ? this.pause() : this.play(); }
 
+	/** Whether the audio is currently stopped */
 	get stopped(): boolean { return this.#stopped; }
-
 	set stopped(value: boolean) { value ? this.stop() : this.play(); }
 
+	/** Whether the audio is currently muted */
 	get muted(): boolean { return this.#muted; }
-
 	set muted(value: boolean) { value ? this.mute() : this.unmute(); }
 
+	/** Whether the audio should loop */
 	get loop(): boolean { return this.#loop; }
-
 	set loop(value: boolean)
 	{
 		if (!isBrowser()) return;
@@ -52,8 +56,8 @@ export class Audio
 		this.#source.loop = value;
 	}
 
+	/** The volume of the audio */
 	get volume(): number { return this.#volume; }
-
 	set volume(value: number)
 	{
 		if (!isBrowser()) return;
@@ -66,10 +70,11 @@ export class Audio
 		this.#gainNode.gain.value = this.#volume;
 	}
 
+	/** The current position of the audio */
 	get position(): number { return this.#position; }
-
 	set position(value: number) { this.seek(value); }
 
+	/** The duration of the audio */
 	get duration(): number { return this.#duration; }
 
 	constructor(args: AudioConstructorArguments)
@@ -109,6 +114,7 @@ export class Audio
 		)
 	}
 
+	/** Play an instance of the audio once */
 	fire()
 	{
 		if (!isBrowser()) return;
@@ -127,6 +133,7 @@ export class Audio
 		src.start(0);
 	}
 
+	/** Begin playing the audio */
 	play()
 	{
 		if (!isBrowser()) return;
@@ -168,6 +175,7 @@ export class Audio
 		this.#eventDispatcher.dispatchEvent(new Events.AudioPlayEvent(this));
 	}
 
+	/** Pause the audio */
 	pause()
 	{
 		if (!isBrowser()) return;
@@ -192,8 +200,12 @@ export class Audio
 		this.#eventDispatcher.dispatchEvent(new Events.AudioPauseEvent(this));
 	}
 
+	/** Toggle between playing and pausing the audio */
+	togglePause() { this.#paused ? this.play() : this.pause(); }
+	/** Toggle between playing and pausing the audio */
 	togglePlay() { this.#playing ? this.pause() : this.play(); }
 
+	/** Stop the audio */
 	stop()
 	{
 		if (!isBrowser()) return;
@@ -222,6 +234,7 @@ export class Audio
 		this.#eventDispatcher.dispatchEvent(new Events.AudioStopEvent(this));
 	}
 
+	/** Mute the audio */
 	mute()
 	{
 		if (!isBrowser()) return;
@@ -239,6 +252,7 @@ export class Audio
 		this.#eventDispatcher.dispatchEvent(new Events.AudioMuteEvent(this));
 	}
 
+	/** Unmute the audio */
 	unmute()
 	{
 		if (!isBrowser()) return;
@@ -256,8 +270,10 @@ export class Audio
 		this.#eventDispatcher.dispatchEvent(new Events.AudioVolumeEvent(this));
 	}
 
+	/** Toggle between muting and unmuting the audio */
 	toggleMute() { this.#muted ? this.unmute() : this.mute(); }
 
+	/** Seek to a specific position in the audio */
 	seek(position: number)
 	{
 		if (!isBrowser()) return;
@@ -284,6 +300,7 @@ export class Audio
 		}
 	}
 
+	/** Clone this audio node */
 	clone(): Audio
 	{
 		if (!this.#buffer)
@@ -339,6 +356,3 @@ export class Audio
 	#ready = false;
 	#error?: Error;
 }
-
-const clamp = (value: number, min: number, max: number) =>
-	Math.max(min, Math.min(max, value));
