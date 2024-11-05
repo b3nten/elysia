@@ -1,4 +1,20 @@
 /**
+ * @module
+ *
+ * When you need to store references to objects in a map without holding a strong reference to them.
+ *
+ * @example
+ * ```ts
+ * const map = new RefMap<Object>();
+ * const ref = map.add({ name: "John" });
+ * console.log(map.has(ref)); // true
+ * console.log(map.deref(ref)); // { name: "John" }
+ * map.delete(ref);
+ * console.log(map.has(ref)); // false
+ * ```
+ */
+
+/**
  * A map of references to objects.
  */
 export class RefMap<T extends WeakKey>

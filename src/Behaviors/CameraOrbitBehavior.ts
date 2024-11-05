@@ -1,9 +1,15 @@
+/**
+ * @module
+ *
+ * Implements the standard orbit controls for a camera.
+ *
+ * See https://threejs.org/docs/#examples/en/controls/OrbitControls for more information.
+ */
+
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { Behavior } from "../Scene/Behavior.ts";
 import { ELYSIA_LOGGER } from "../Core/Logger.ts";
 import { isOrthographicCamera, isPerspectiveCamera } from "../Core/Asserts.ts";
-import { PerspectiveCameraActor } from "../Actors/PerspectiveCameraActor.ts";
-import { OrthographicCameraActor } from "../Actors/OrthographicCameraActor.ts";
 
 /**
  * Implements the standard orbit controls for a camera.

@@ -1,6 +1,7 @@
-import { Gradient, RGB } from "./Gradients.ts";
+import type { Gradient, RGB } from "./Gradients.ts";
 import { lerp } from "../Math/Other.ts";
 
+// given a start and end color, and a t value between 0 and 1, return the color that is t percent between the start and end color
 export function interpolateRGB(startColor: RGB, endColor: RGB, t: number): RGB
 {
 	if (t < 0) {
@@ -63,7 +64,7 @@ function formatBrowser(
 	} = {},
 )
 {
-	const styles = [];
+	const styles: string[] = [];
 	if (options.bold) styles.push("font-weight: bold;");
 	if (options.italic) styles.push("font-style: italic;");
 	if (options.underline) styles.push("text-decoration: underline;");

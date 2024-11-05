@@ -1,13 +1,10 @@
 import * as LitHtml from "lit-html"
 import { type Scheduler, defaultScheduler } from "./Scheduler.ts";
 import { isFunction } from "../Core/Asserts.ts";
-import type { Constructor } from "../Core/Utilities.ts";
-
-export enum OffscreenUpdateStrategy
-{
-	Disabled,
-	HighPriority
-}
+import { OffscreenUpdateStrategy } from "./UpdateStrategy.ts";
+import { Attributes, Internal } from "./Internal.ts";
+import _css from "./Css.ts";
+import _defineComponent from "./DefineComponent.ts";
 
 const isUhtmlRenderResult  = ( value: unknown): value is LitHtml.TemplateResult =>
 {
@@ -19,11 +16,11 @@ const supportsAdoptingStyleSheets: boolean =
   'adoptedStyleSheets' in Document.prototype &&
   'replace' in CSSStyleSheet.prototype;
 
-const Internal = Symbol.for("ElysiaUI::Internal")
-
-export const Attributes = Symbol.for("ElysiaUI::Attributes");
+export const defineComponent = _defineComponent;
 
 export const html = LitHtml.html;
+
+export const css = _css
 
 export const nothing = LitHtml.nothing;
 
@@ -32,22 +29,6 @@ export const svg = LitHtml.svg;
 export const template = LitHtml.noChange;
 
 export const unsafeHTML = LitHtml.mathml;
-
-export const css = (strings: TemplateStringsArray, ...values: unknown[]): string => {
-	return strings.map((str, i) => str + (values[i] || "")).join("");
-}
-
-export function defineComponent(component: Constructor<ElysiaElement> & { Tag: string })
-{
-	if(!component.Tag || component.Tag === "unknown-elysia-element")
-	{
-		throw new Error(`You must define a tag for ${component.name}!`)
-	}
-	if(!customElements.get(component.Tag))
-	{
-		customElements.define(component.Tag, component);
-	}
-}
 
 export type RenderOutput = LitHtml.TemplateResult;
 
@@ -58,15 +39,71 @@ interface ElysiaConstructor
 	Styles?: string | string[];
 }
 
+/**
+ * Base class for Elysia web components implementing an Immediate Mode UI pattern.
+ * Handles component lifecycle, rendering, and visibility-based update optimization.
+ *
+ * @example
+ * ```ts
+ * class MyComponent extends ElysiaElement {
+ *   static override Tag = 'my-component';
+ *
+ *   override onMount() {
+ *       console.log('Component mounted');
+ *   }
+ *
+ *   override onUnmount() {
+ *   	console.log('Component unmounted');
+ *   }
+ *
+ *   protected override onRender() {
+ *     return html`<div>Hello World</div>`;
+ *   }
+ * }
+ * ```
+ */
 export abstract class ElysiaElement extends HTMLElement
 {
+ 	/**
+     * The HTML tag name for this component. Must be overridden by derived classes.
+     * Must contain a hyphen as per Web Components specification.
+     */
 	public static Tag: string = "unknown-elysia-element";
+
+ 	/**
+     * Controls whether the component handles its own update tracking.
+     * If false (default), the component automatically tracks changes to onRender.
+     * If true, updates must be manually triggered via requestUpdate().
+     */
 	public static ManualTracking: boolean = false;
+
+ 	/**
+     * CSS styles to be applied to the component's shadow DOM.
+     * Can be a single string or an array of strings.
+     */
 	public static Styles?: string | string[];
+
+ 	/**
+     * The scheduler responsible for managing this component's update lifecycle.
+     * @default { defaultScheduler }
+     */
 	public scheduler: Scheduler = defaultScheduler;
 
+ 	/**
+     * Indicates whether the component is currently outside the viewport.
+     */
 	public get offscreen(): boolean { return this.#offscreen; }
+
+
+	/**
+     * Controls how the component updates when it's not visible in the viewport.
+     */
 	public get offscreenUpdateStrategy(): OffscreenUpdateStrategy { return this.#offscreenUpdateStrategy; }
+
+ 	/**
+     * Sets the update strategy for when the component is offscreen.
+     * @param value - The desired update strategy
+     */
 	public setOffscreenUpdateStrategy(value: OffscreenUpdateStrategy)
 	{
 		this.#offscreenUpdateStrategy = value;
@@ -109,7 +146,10 @@ export abstract class ElysiaElement extends HTMLElement
 		this.onUnmount && this.onUnmount();
 	}
 
-	/** Request the component check if it needs to update. */
+ 	/**
+     * Requests the component to check if it needs to update.
+     * Compares current render output with previous render output to determine if an update is necessary.
+     */
 	public requestUpdate(): void
 	{
 		for(const field of this.fieldsToCheck)
@@ -150,7 +190,10 @@ export abstract class ElysiaElement extends HTMLElement
 		}
 	}
 
-	/** Force the component to render regardless of status. */
+	/**
+     * Forces an immediate render of the component, bypassing the usual update checks.
+     * @param needsRender - If true, calls onRender(). If false, uses cached render result.
+     */
 	public forceUpdate(needsRender = false): void
 	{
 		this.onBeforeRender();
@@ -158,10 +201,44 @@ export abstract class ElysiaElement extends HTMLElement
 		this.onAfterRender();
 	}
 
+	/**
+ 	 * Lifecycle hook called when the component is connected to the DOM.
+     * Use this to initialize resources, set up subscriptions, or perform other setup tasks.
+     * Called after initial attributes are set but before the first render.
+     */
 	protected onMount(): void {}
+
+
+	/**
+	 * Lifecycle hook called immediately before each render.
+	 * Use this to prepare data or perform calculations needed for rendering.
+	 */
 	protected onBeforeRender(): void {}
+
+	/**
+ 	 * Required render method that defines the component's template.
+ 	 * Must return a valid render result using the html template literal tag.
+ 	 *
+ 	 * @example
+	 * ```ts
+ 	 * protected override onRender(): RenderOutput {
+ 	 *   return html`<div>Hello ${this.name}</div>`;
+ 	 * }
+ 	 *```
+ 	 * @returns A template result that will be rendered to the component's shadow DOM
+ 	 */
 	protected abstract onRender(): RenderOutput
+
+	/**
+ 	 * Lifecycle hook called immediately after each render.
+ 	 * Use this to perform tasks that require the updated DOM, like measurements or focus management.
+ 	 */
 	protected onAfterRender(): void {}
+
+	/**
+ 	 * Lifecycle hook called when the component is disconnected from the DOM.
+ 	 * Use this to clean up resources, remove event listeners, or unsubscribe from subscriptions.
+ 	 */
 	protected onUnmount(): void {}
 
 	protected fieldsToCheck: Array<PropertyKey> = [!(this.constructor as unknown as ElysiaConstructor).ManualTracking && "onRender"].filter(Boolean) as string[];

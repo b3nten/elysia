@@ -1,5 +1,13 @@
-import * as Three from "three";
+// @ts-types="npm:@types/three@^0.169"
+import * as Three from 'three';
 import { dirty } from "./Internal.ts";
+import { Constructor } from "../Core/Utilities.ts";
+import { Entity } from "./Entity.ts";
+
+export function getComponentType (component: Component)
+{
+	return component.constructor as Constructor<Component>
+}
 
 export class Component {}
 
@@ -41,26 +49,34 @@ export class Transform extends Component
 	#scaleZ = 1;
 }
 
+export class Family
+{
+	parent?: Entity;
+	children: Entity[] = [];
+}
+
 export class MeshRenderer extends Component
 {
 	constructor( public geometry: Three.BufferGeometry )
 	{ super(); }
 }
 
-export class InstancedMeshRenderer extends Component
+export class PointsRenderer extends Component
 {
 	constructor( public geometry: Three.BufferGeometry )
-	{ super() }
+	{ super(); }
 }
 
 export class BasicMaterial extends Component
 {
-
+	constructor(public instance: Three.MeshBasicMaterial)
+	{ super(); }
 }
 
 export class PBRMaterial extends Component
 {
-
+	constructor(public instance: Three.MeshPhysicalMaterial)
+	{ super(); }
 }
 
 export class DirectionalLight extends Component
@@ -80,24 +96,35 @@ export class PointLight extends Component
 
 export class SpotLight extends Component
 {
+	target = new Transform();
 	intensity = 1;
 	color = 0xffffff;
 	castShadow = true;
+	angle = Math.PI / 3;
+	penumbra = 0;
+	decay = 1;
+	distance = 0;
 }
 
-export class PerspectiveCamera extends Component
+export class HemisphereLight extends Component
 {
-	fov = 75;
-	near = 0.1;
-	far = 1000;
+	intensity = 1;
+	skyColor = 0xffffff;
+	groundColor = 0xffffff;
 }
 
-export class OrthographicCamera extends Component
+export class AmbientLight extends Component
 {
-	left = -1;
-	right = 1;
-	top = 1;
-	bottom = -1;
-	near = 0.1;
-	far = 1000;
+	intensity = 1;
+	color = 0xffffff;
+}
+
+export class AudioListener extends Component
+{
+
+}
+
+export class PositionalAudioSource extends Component
+{
+
 }

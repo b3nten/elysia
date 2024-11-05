@@ -1,4 +1,4 @@
-import { hasKeys, isObject, isTruthy } from "../Core/Asserts.ts";
+import { hasKeys, isObject } from "../Core/Asserts.ts";
 
 export type VectorLike = { x: number, y: number, z?: number, w?: number }
 export type Vector2Like = { x: number, y: number };

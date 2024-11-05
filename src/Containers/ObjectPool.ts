@@ -1,4 +1,18 @@
 /**
+ * @module
+ *
+ * A basic object pool implementation.
+ * This will automatically grow if it runs out of objects (default: doubles in size).
+ *
+ * @example
+ * ```ts
+ * const pool = new ObjectPool(() => new MyObject());
+ * const obj = pool.alloc();
+ * pool.free(obj);
+ * ```
+ */
+
+/**
  * Simple object pool implementation.
  * The pool will automatically grow if it runs out of objects (double the size).
  * @template T The type of object to pool.

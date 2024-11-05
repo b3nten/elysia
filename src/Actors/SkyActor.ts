@@ -1,3 +1,11 @@
+/**
+ * @module
+ *
+ * This module contains the SkyActor class, which can be used to render a physical sky.
+ *
+ * See https://threejs.org/docs/#examples/en/objects/Skyfor more information.
+ */
+
 import { Actor } from "../Scene/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
@@ -11,21 +19,39 @@ export class SkyActor extends Actor
 {
 	override type = "SkyActor";
 
+	/**
+	 * The turbidity of the sky.
+	 */
 	get turbidity(): number { return this.material.uniforms.turbidity.value; }
 	set turbidity(v: number) { this.material.uniforms.turbidity.value = v; }
 
+	/**
+	 * The rayleigh scattering coefficient.
+	 */
 	get rayleigh(): number { return this.material.uniforms.rayleigh.value; }
 	set rayleigh(v: number) { this.material.uniforms.rayleigh.value = v; }
 
+	/**
+	 * The mie scattering coefficient.
+	 */
 	get mieCoefficient(): number { return this.material.uniforms.mieCoefficient.value; }
 	set mieCoefficient(v: number) { this.material.uniforms.mieCoefficient.value = v; }
 
+	/**
+	 * The mie scattering direction.
+	 */
 	get mieDirectionalG(): number { return this.material.uniforms.mieDirectionalG.value; }
 	set mieDirectionalG(v: number) { this.material.uniforms.mieDirectionalG.value = v; }
 
+	/**
+	 * The sun's position in the sky (height).
+	 */
 	get elevation(): number { return this.#elevation; }
 	set elevation(v: number) { this.#elevation = v; this.updateSunPosition(); }
 
+	/**
+	 * The sun's position in the sky (rotation / azimuth).
+	 */
 	get azimuth(): number { return this.#azimuth; }
 	set azimuth(v: number) { this.#azimuth = v; this.updateSunPosition(); }
 

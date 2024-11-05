@@ -1,6 +1,19 @@
-import { Actor } from "../Scene/Actor.ts";
+/**
+ * @module
+ * An Actor wrapping Three.AmbientLight.
+ * Like Three.AmbientLight, setting transform properties will have no effect on this actor.
+ * See Three.AmbientLight for more information.
+ *
+ * @example
+ * ```ts
+ * const light = new AmbientLightActor(0.5, new Three.Color(0x404040));
+ * scene.add(light);
+ * ```
+ */
+
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
+import { Actor } from "../Scene/Actor.ts";
 
 /** An actor wrapping Three.AmbientLight. Setting transform properties will have no effect on this actor.n*/
 export class AmbientLightActor extends Actor<Three.AmbientLight>

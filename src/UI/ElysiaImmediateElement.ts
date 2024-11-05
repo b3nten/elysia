@@ -1,37 +1,12 @@
 import { type Scheduler, defaultScheduler } from "./Scheduler.ts";
-import type { Constructor } from "../Core/Utilities.ts";
 import type { ElysiaElement } from "./ElysiaElement.ts";
-
-export enum OffscreenUpdateStrategy
-{
-	Disabled,
-	HighPriority
-}
+import { OffscreenUpdateStrategy } from "./UpdateStrategy.ts";
+import { Attributes, Internal } from "./Internal.ts";
 
 const supportsAdoptingStyleSheets: boolean =
 	globalThis.ShadowRoot &&
 	'adoptedStyleSheets' in Document.prototype &&
 	'replace' in CSSStyleSheet.prototype;
-
-const Internal = Symbol.for("ElysiaUI::Internal")
-
-export const Attributes = Symbol.for("ElysiaUI::Attributes");
-
-export const css = (strings: TemplateStringsArray, ...values: unknown[]): string => {
-	return strings.map((str, i) => str + (values[i] || "")).join("");
-}
-
-export function defineComponent(component: Constructor<ElysiaImmediateElement> & { Tag: string })
-{
-	if(!component.Tag || component.Tag === "unknown-elysia-element")
-	{
-		throw new Error(`You must define a tag for ${component.name}!`)
-	}
-	if(!customElements.get(component.Tag))
-	{
-		customElements.define(component.Tag, component);
-	}
-}
 
 interface ElysiaConstructor
 {
@@ -96,7 +71,8 @@ export abstract class ElysiaImmediateElement extends HTMLElement
 	public forceUpdate(): void
 	{
 		this.onBeforeRender();
-		beginComponent(this.shadowRoot!);
+		// @ts-ignore - sigh
+		beginComponent(this.shadowRoot);
 		this.onRender();
 		endComponent();
 		this.onAfterRender();

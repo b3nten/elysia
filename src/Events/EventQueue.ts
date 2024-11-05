@@ -2,11 +2,33 @@ import { ElysiaEvent } from "./Event.ts";
 import { Constructor } from "../Core/Utilities.ts";
 
 /**
- * A queue of events.
- * Events are pushed to the queue and then flushed.
- * Events are flushed in the order they were pushed.
- * Events pushed after the queue has been flushed are pushed to a secondary queue
- * and are flushed only after .clear() is called.
+ * A double-buffered event queue system that manages event dispatching and subscriptions.
+ *
+ * @example
+ * ```ts
+ * // Define an event
+ * class UserLoginEvent extends ElysiaEvent<{ userId: string }> {}
+ *
+ * // Create the event queue
+ * const eventQueue = new ElysiaEventQueue();
+ *
+ * // Subscribe to events
+ * const unsubscribe = eventQueue.subscribe(UserLoginEvent, (data) => {
+ *     console.log(`User logged in: ${data.userId}`);
+ * });
+ *
+ * // Push events to the queue
+ * eventQueue.push(new UserLoginEvent({ userId: "123" }));
+ *
+ * // Process all queued events
+ * eventQueue.flush();
+ *
+ * // Clean up the queue and prepare for next batch
+ * eventQueue.clear();
+ *
+ * // Unsubscribe when done
+ * unsubscribe();
+ * ```
  */
 export class ElysiaEventQueue
 {

@@ -1,3 +1,15 @@
+/**
+ * @module
+ * An Actor wrapping Three.DirectionalLight.
+ * See Three.DirectionalLight for more information.
+ *
+ * @example
+ * ```ts
+ * const light = new DirectionalLightActor(1, new Three.Color(0xffffff));
+ * scene.add(light);
+ * ```
+ */
+
 import { Actor } from "../Scene/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';

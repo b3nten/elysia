@@ -1,11 +1,19 @@
 import type { ElysiaElement } from "./ElysiaElement.ts";
 
+/**
+ * Scheduler is a class that manages the update loop for all ElysiaElements subscribed to it.
+ * It can be called manually using the update() method, or it can be set to automatically update
+ * by calling beginAutomaticUpdateLoop(). The update loop can be stopped by calling stopAutomaticUpdateLoop().
+ */
 export class Scheduler
 {
 	frametime: number = 0;
 
 	components: Set<ElysiaElement> = new Set;
 
+	/*
+	 * Updates all subscribed ElysiaElements.
+	 */
 	update()
 	{
 		const t = performance.now();
@@ -15,6 +23,9 @@ export class Scheduler
 		this.frametime = performance.now() - t;
 	}
 
+	/*
+	 * Begins an automatic update loop that calls update() every frame.
+	 */
 	beginAutomaticUpdateLoop(): void
 	{
 		if(!this.#autoUpdating)
@@ -24,9 +35,24 @@ export class Scheduler
 		}
 	}
 
+	/*
+	 * Stops the automatic update loop.
+	 */
 	stopAutomaticUpdateLoop(): void
 	{
 		this.#autoUpdating = false;
+	}
+
+	/** @internal */
+	subscribe(component: ElysiaElement)
+	{
+		this.components.add(component);
+	}
+
+	/** @internal */
+	unsubscribe(component: ElysiaElement)
+	{
+		this.components.delete(component);
 	}
 
 	private autoUpdateCallback = () =>
@@ -34,16 +60,6 @@ export class Scheduler
 		if(!this.#autoUpdating) return;
 		requestAnimationFrame(this.autoUpdateCallback)
 		this.update();
-	}
-
-	subscribe(component: ElysiaElement)
-	{
-		this.components.add(component);
-	}
-
-	unsubscribe(component: ElysiaElement)
-	{
-		this.components.delete(component);
 	}
 
 	#autoUpdating = false;

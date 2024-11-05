@@ -1,3 +1,19 @@
+/**
+ * @module
+ *
+ * This actor is responsible for rendering environment maps or scenes. It attaches to the scene and sets the environment map or scene as the background or environment of the scene.
+ * You can optionally specify the rotation of the environment map or scene, the intensity of the environment, and whether the environment should be used as the background.
+ *
+ * @example
+ * ```ts
+ * const env = new EnvironmentActor;
+ * env.texture = app.assets.unwrap("envMap");
+ * env.background = true;
+ * env.backgroundIntensity = 0.5;
+ * env.backgroundBlur = 2;
+ * scene.add(env);
+ */
+
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 import { Actor } from "../Scene/Actor.ts";
@@ -116,8 +132,6 @@ function createAreaLightMaterial( intensity: number ) {
 	return material;
 }
 
-export { RoomEnvironment };
-
 function constructScene(pmremGenerator: Three.PMREMGenerator, envScene: Three.Scene)
 {
 	const envMap = pmremGenerator.fromScene(envScene).texture;
@@ -139,24 +153,42 @@ export class EnvironmentActor extends Actor
 {
 	override type = "EnvironmentActor";
 
+	/**
+	 * The texture or cube texture to use as the environment map.
+	 */
 	get texture(): Three.Texture | null { return this.#texture; }
 	set texture(v: Three.Texture | Three.CubeTexture | null) { this.#texture = v; this.updateState(); }
 
+	/**
+	 * The scene to use as the environment map.
+	 */
 	get envScene(): Maybe<Three.Scene> { return this.#envScene; }
 	set envScene(v: Maybe<Three.Scene>) { this.#envScene = v; this.updateState(); }
 
 	override get rotation(): Three.Euler { return this.#rotation; }
 	override set rotation(v: Three.Euler) { this.#rotation = v; this.updateState(); }
 
+	/**
+	 * The intensity of the environment map.
+	 */
 	get intensity(): number { return this.#environmentIntensity; }
 	set intensity(v: number) { this.#environmentIntensity = v; this.updateState(); }
 
+	/**
+	 * Whether the environment map should be used as the background.
+	 */
 	get background(): boolean { return this.#background; }
 	set background(v: boolean) { this.#background = v; this.updateState(); }
 
+	/**
+	 * The intensity of the background.
+	 */
 	get backgroundIntensity(): number { return this.#backgroundIntensity; }
 	set backgroundIntensity(v: number) { this.#backgroundIntensity = v; this.updateState(); }
 
+	/**
+	 * The blur of the background.
+	 */
 	get backgroundBlur(): number { return this.#backgroundBlur; }
 	set backgroundBlur(v: number) { this.#backgroundBlur = v; this.updateState(); }
 
@@ -172,6 +204,10 @@ export class EnvironmentActor extends Actor
 		this.#backgroundBlur = args.backgroundBlur ?? 0;
 	}
 
+	/**
+	 * Update the state of the environment.
+	 * This is usually called automatically, in most cases is unnecessary to call manually.
+	 */
 	updateState()
 	{
 		const renderer = this.app?.renderPipeline.getRenderer();

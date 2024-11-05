@@ -1,6 +1,21 @@
 import { KeyCode } from "./KeyCode.ts";
-import { MouseCode } from "./MouseCode.ts";
+import type { MouseCode } from "./MouseCode.ts";
 
+/**
+ * Represents a keyboard or mouse input event with associated state information.
+ * Used within an object pool system for efficient event handling.
+ * Contains information about:
+ * - The key/button that triggered the event
+ * - Event type (down/up)
+ * - Timestamp of the event
+ * - State of modifier keys (ctrl, shift, alt, meta)
+ * - State of mouse buttons
+ * - Mouse cursor position
+ *
+ * Note: When received from InputQueue callbacks, instances should be cloned
+ * if they need to persist beyond the callback scope, as they will be
+ * recycled by the object pool.
+ */
 export class QueuedEvent
 {
 	key: KeyCode | MouseCode;

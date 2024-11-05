@@ -1,7 +1,22 @@
+/**
+ * @module
+ *
+ * This module contains the PointLightActor class, which can be used to render Three.PointLights.
+ * Point lights can be expensive to render, so use them sparingly.
+ *
+ * See Three.PointLight for more information.
+ *
+ * @example
+ * ```ts
+ * const light = new PointLightActor();
+ * light.position.set(0, 10, 0);
+ * scene.add(light);
+ * ```
+ */
+
 import { Actor } from "../Scene/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
-
 
 export class PointLightActor extends Actor<Three.PointLight>
 {

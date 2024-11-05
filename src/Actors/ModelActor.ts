@@ -1,3 +1,18 @@
+/**
+ * @module
+ * An Actor designed to render 3D models loaded from GLTF files.
+ * It supports animations and shadows.
+ *
+ * @example
+ * ```ts
+ * const model = new ModelActor(model);
+ * scene.add(model);
+ *
+ * // Play an animation
+ * model.getAction("Walk")?.play();
+ * ```
+ */
+
 import { Actor } from "../Scene/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
@@ -49,13 +64,21 @@ export class ModelActor extends Actor
 		this.loadModel(model);
 	}
 
-	@bound public getAction(name: string): Three.AnimationAction | undefined
+	/**
+	 * Get an animation action by name.
+	 * @param name
+	 */
+	public getAction(name: string): Three.AnimationAction | undefined
 	{
 		const clip = Three.AnimationClip.findByName(this.clips, name);
 		return this.mixer?.clipAction(clip);
 	}
 
-	@bound loadModel(model?: GLTF)
+	/**
+	 * Load a new model into this actor.
+	 * @param model
+	 */
+	loadModel(model?: GLTF)
 	{
 		const clips = model?.animations ?? [];
 		const scene = model?.scene ?? model?.scenes[0];
@@ -76,7 +99,7 @@ export class ModelActor extends Actor
 		}
 	}
 
-	@bound override onUpdate(delta: number, elapsed: number)
+	override onUpdate(delta: number, elapsed: number)
 	{
 		this.mixer?.update(delta);
 	}

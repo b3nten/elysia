@@ -1,5 +1,5 @@
 import { ElysiaEvent } from "../Events/Event.ts";
-import { Audio } from "./Audio.ts";
+import type { Audio } from "./Audio.ts";
 
 export class AudioPlayEvent extends ElysiaEvent<Audio> {}
 export class AudioPauseEvent extends ElysiaEvent<Audio> {}

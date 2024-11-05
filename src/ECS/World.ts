@@ -6,23 +6,17 @@ import type { Component } from "./Component.ts";
 import type { Destroyable } from "../Core/Lifecycle.ts";
 import { SparseSet } from "../Containers/SparseSet.ts";
 import { AutoInitializedMap } from "../Containers/AutoInitializedMap.ts";
-
-type Context = {
-	delta: number;
-	elapsed: number;
-	components: AutoInitializedMap<Constructor<Component>, SparseSet<Component>>;
-	smallest: (...componentTypes: Constructor<Component>[]) => Constructor<Component>;
-}
+import { getComponentType } from "./Component.ts";
 
 export class World implements Destroyable
 {
-	public get active() { return this[Internal.isActive] && !this[Internal.isDestroyed]; }
+	public get active(): boolean { return this[Internal.isActive] && !this[Internal.isDestroyed]; }
 
-	public get destroyed() { return this[Internal.isDestroyed]; }
+	public get destroyed(): boolean { return this[Internal.isDestroyed]; }
 
-	public get systems() { return this.#systems; }
+	public get systems(): Set<System> { return this.#systems; }
 
-	public get components() { return this.#components; }
+	public get components(): AutoInitializedMap<Constructor<Component>, SparseSet<Component>> { return this.#components; }
 
 	constructor(...systems: Constructor<System>[])
 	{
@@ -32,9 +26,9 @@ export class World implements Destroyable
 		}
 	}
 
-	public addSystem<T extends System>(system: Constructor<T>): T
+	public addSystem<T extends System, Args extends any[]>(system: Constructor<T, [World, ...Args]>, ...args: Args): T
 	{
-		const instance = new system(this);
+		const instance = new system(this, ...args);
 		this.#systems.add(instance);
 		if(this.active) instance[Internal.onStart]();
 		return instance;
@@ -46,7 +40,7 @@ export class World implements Destroyable
 		system.destructor();
 	}
 
-	addEntity(): Entity
+	public addEntity(): Entity
 	{
 		const entity = this.#entityCount++;
 		for (const system of this.#systems)
@@ -57,8 +51,14 @@ export class World implements Destroyable
 		return entity;
 	}
 
-	removeEntity(entity: Entity)
+	public removeEntity(entity: Entity)
 	{
+		// todo: see if there is a faster way to do this
+		for(const componentType of this.#components.keys())
+		{
+			this.removeComponent(entity, componentType);
+		}
+
 		for (const system of this.#systems)
 		{
 			if (system.active)
@@ -66,29 +66,62 @@ export class World implements Destroyable
 		}
 	}
 
-	addComponent(entity: Entity, component: Component)
+	public addComponent(entity: Entity, component: Component): boolean
 	{
-		const componentType = component.constructor as Constructor<Component>;
+		const componentType = getComponentType(component);
+
+		if(this.hasComponent(entity, componentType)) return false;
+
 		const components = this.#components.get(componentType);
+
 		components.add(entity, component);
+
 		for (const system of this.#systems)
 		{
 			if (system.active)
 				system[Internal.onComponentAdded](entity, component);
 		}
+
+		return true;
 	}
 
-	removeComponent<T extends Component>(entity: Entity, componentType: Constructor<T>): T | undefined
+	public removeComponent<T extends Component>(entity: Entity, componentType: Constructor<T>): T | undefined
 	{
-		const components = this.#components.get(componentType) as SparseSet<T>;
-		const removed = components.get(entity);
+		const components = this.#components.get(componentType);
+
+		const removed = components.get(entity) as T | undefined;
+
+		if(!removed) return undefined;
+
 		components.remove(entity);
+
 		for (const system of this.#systems)
 		{
-			if (system.active)
+			if (system.active && removed)
 				system[Internal.onComponentRemoved](entity, removed);
 		}
+
 		return removed;
+	}
+
+	public getComponent<T extends Component>(entity: Entity, componentType: Constructor<T>): T | undefined
+	{
+		return this.#components.get(componentType).get(entity) as T;
+	}
+
+	public hasComponent(entity: Entity, componentType: Constructor<Component>): boolean
+	{
+		return this.#components.get(componentType).has(entity);
+	}
+
+	public getComponentsByType<T extends Component>(componentType: Constructor<T>): SparseSet<T>
+	{
+		return this.#components.get(componentType) as SparseSet<T>;
+	}
+
+	public getComponentCount(componentType: Constructor<Component>): number
+	{
+		return this.#components.get(componentType).size;
 	}
 
 	public start()
@@ -145,56 +178,29 @@ export class World implements Destroyable
 	 */
 	public *iterateByComponent<T extends Component>(componentType: Constructor<T>): Generator<[entity: number, component: T], void, unknown>
 	{
-		for(const entity of this.#components.get(componentType))
+		try
 		{
-			yield entity as [number, T];
-		}
-	}
-
-	/**
-	 * Iterate over all entities with all the given components.
-	 * @param componentTypes
-	 */
-	public *iterateByComponents<T extends Component>(...componentTypes: Constructor<T>[]): Generator<number, void, unknown>
-	{
-		const smallest = this.findSmallestComponent(...componentTypes);
-		const components = this.#components.get(smallest);
-		for(const entity of components)
-		{
-			if(componentTypes.every(componentType => this.#components.get(componentType).has(entity[0])))
+			this.#components.get(componentType).lock();
+			for(const entity of this.#components.get(componentType))
 			{
-				yield entity[0];
+				yield entity as [number, T];
 			}
 		}
-	}
-
-	/**
-	 * From the provided component types, find the component type with the fewest entities.
-	 * @param componentTypes
-	 */
-	public findSmallestComponent<T extends Constructor<Component>>(...componentTypes: T[]): T
-	{
-		let smallest = componentTypes[0];
-
-		for(const componentType of componentTypes)
+		finally
 		{
-			if(!smallest || this.#components.get(componentType).size < this.#components.get(smallest).size)
-			{
-				smallest = componentType;
-			}
+			this.#components.get(componentType).unlock();
 		}
-		return smallest;
 	}
 
-	#systems = new Set<System>;
+	[Internal.isActive]: boolean = false;
 
-	#entityCount = 0;
+	[Internal.isDestroyed]: boolean = false;
 
-	#components: AutoInitializedMap<Constructor<Component>, SparseSet<Component>> = new AutoInitializedMap(SparseSet);
+	#systems: Set<System> = new Set<System>;
 
-	[Internal.isActive] = false;
+	#entityCount: number = 0;
 
-	[Internal.isDestroyed] = false;
+	#components: AutoInitializedMap<Constructor<Component>, SparseSet<Component>> =
+		new AutoInitializedMap<Constructor<Component>, SparseSet<Component>>(SparseSet);
 }
-
 

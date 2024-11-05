@@ -1,9 +1,9 @@
 import { KeyCode } from "./KeyCode.ts";
 import { ObjectPool } from "../Containers/ObjectPool.ts";
 import { QueuedEvent } from "./QueuedEvent.ts";
-import { Destroyable } from "../Core/Lifecycle.ts";
+import type { Destroyable } from "../Core/Lifecycle.ts";
 import { MouseObserver } from "./Mouse.ts";
-import { MouseCode } from "./MouseCode.ts";
+import type { MouseCode } from "./MouseCode.ts";
 
 interface InputQueueConstructorArguments
 {
@@ -11,7 +11,43 @@ interface InputQueueConstructorArguments
 }
 
 /**
- * Input queue backed by an object pool for event recycling.
+ * An input management system that queues and processes keyboard and mouse events.
+ * It serves as a central hub for handling all input events in the engine, providing:
+ *
+ * - Event queueing and pooling for efficient memory usage
+ * - Unified handling of both keyboard (KeyCode) and mouse (MouseCode) events
+ * - Event data including modifier keys and mouse position
+ * - Event subscription system for key/button press and release
+ *
+ * The InputQueue works in conjunction with:
+ * - MouseObserver: Handles raw mouse input and tracking
+ * - QueuedEvent: Represents pooled input events with full state information
+ * - KeyCode/MouseCode: Enums defining all possible input codes
+ *
+ * Events are processed through an object pool to minimize garbage collection,
+ * so event objects should be cloned if they need to persist beyond callback scope.
+ *
+ * @example
+ * ```ts
+ * const input = new InputQueue();
+ *
+ * // Subscribe to keyboard events
+ * input.onKeyDown(KeyCode.Space, (event) => {
+ *   console.log('Space pressed', event.timestamp);
+ * });
+ *
+ * // Subscribe to mouse events
+ * input.onKeyDown(MouseCode.MouseLeft, (event) => {
+ *   console.log('Left click at', event.mouseX, event.mouseY);
+ * });
+ *
+ * // Check current state
+ * if (input.isDown(KeyCode.W)) {
+ *   console.log('W is currently pressed');
+ * }
+ * ```
+ *
+ * @implements {Destroyable}
  */
 export class InputQueue implements Destroyable
 {
@@ -27,8 +63,8 @@ export class InputQueue implements Destroyable
 		this.mouseDownHandler = this.mouseDownHandler.bind(this);
 		this.mouseUpHandler = this.mouseUpHandler.bind(this);
 
-		window.addEventListener("keydown", this.keyDownHandler);
-		window.addEventListener("keyup", this.keyUpHandler);
+		globalThis.addEventListener("keydown", this.keyDownHandler);
+		globalThis.addEventListener("keyup", this.keyUpHandler);
 		this.mouse.addEventListener("mousedown", this.mouseDownHandler);
 		this.mouse.addEventListener("mouseup", this.mouseUpHandler);
 	}
@@ -113,8 +149,8 @@ export class InputQueue implements Destroyable
 
 	public destructor()
 	{
-		window.removeEventListener("keydown", this.keyDownHandler)
-		window.removeEventListener("keyup", this.keyUpHandler)
+		globalThis.removeEventListener("keydown", this.keyDownHandler)
+		globalThis.removeEventListener("keyup", this.keyUpHandler)
 		this.mouse.removeEventListener("mousedown", this.mouseDownHandler)
 		this.mouse.removeEventListener("mouseup", this.mouseUpHandler)
 		this.mouse.destructor()
@@ -132,6 +168,8 @@ export class InputQueue implements Destroyable
 	private queue: Map<KeyCode | MouseCode, Set<QueuedEvent>> = new Map;
 
 	private currentlyPressed: Set<KeyCode | MouseCode> = new Set;
+
+	// There is a lot of repetition here, but performance > readability in this case.
 
 	private keyDownHandler(event: KeyboardEvent): void
 	{

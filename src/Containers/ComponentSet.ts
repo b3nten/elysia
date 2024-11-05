@@ -1,10 +1,13 @@
 /**
- * SparseSet is a data structure that is used to store a set of unique values.
- * It is backed by a dense array and a sparse map.
- * The dense array stores the values in contiguous memory, while the sparse map
- * stores the index of each value in the dense array.
- * This means it is possible to look up the index of a value in constant time.
- * However, the set does not guarantee the order of the values.
+ * @module
+ *
+ * A set that keeps track of the first and last elements.
+ * This is designed to allow for fast access to the first element,
+ * and easy (but potentially slow) access to the last element.
+ */
+
+/**
+ * A set that keeps track of the first and last elements.
  */
 export class ComponentSet<T> extends Set<T>
 {

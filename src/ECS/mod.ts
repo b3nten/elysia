@@ -2,6 +2,7 @@
 
 export * from "./mod.ts";
 export * from "./Component.ts";
+export * from "./ThreeSystems.ts";
 export * from "./ErrorHandler.ts";
 export * from "./Entity.ts";
 export * from "./test.ts";

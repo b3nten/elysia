@@ -1,7 +1,19 @@
+/**
+ * @module
+ *
+ * A behavior that makes the parent object always face the camera.
+ *
+ * @example
+ * ```ts
+ * const billboard = new BillboardBehavior;
+ * actor.addBehavior(billboard);
+ * ```
+ */
+
 import { Behavior } from "../Scene/Behavior.ts";
 
 /**
- * A behavior that makes the s_Parent object always face the camera.
+ * Makes the parent object always face the camera.
  */
 export class BillboardBehavior extends Behavior
 {

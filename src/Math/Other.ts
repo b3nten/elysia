@@ -17,7 +17,7 @@ export function remap(
 export function lerp(a: number, b: number, t: number): number { return a + (b - a) * t; }
 
 /**
- * Linearly interpolates between two vectors.
+ * Smoothly interpolates between two numbers.
  */
 export function slerp(a: number, b: number, t: number): number
 {

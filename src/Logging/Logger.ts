@@ -23,6 +23,17 @@ globalThis.FILTER_LOGS = (...args: any[]) =>
 	}
 }
 
+/**
+ * A logging utility class that provides different logging levels and message types.
+ * Supports debug, info, success, warning, error, and critical message logging.
+ * Can be configured with custom writers and logging levels, and includes support
+ * for message filtering based on logger name.
+ *
+ * @class
+ * @param {string} name - The identifier for the logger instance
+ * @param {LogLevel} level - The minimum logging level to output
+ * @param {Writer} writer - The writer implementation for log output
+ */
 class Logger
 {
 	constructor(
@@ -30,6 +41,14 @@ class Logger
 		public level: LogLevel,
 		public writer: Writer,
 	) {}
+
+	/**
+	 * Log a message.
+	*/
+	message = (...msg: any[]) =>
+	{
+		this.writer.message(msg);
+	}
 
 	/**
 	 * Log a message for debugging purposes.
@@ -46,11 +65,13 @@ class Logger
 		}
 		this.level <= LogLevel.Debug && this.writer.debug(msg);
 	}
+
 	/**
 	 * Log a message that provides non critical information for the user.
 	 * @param  {...any} msg
 	 * @returns void
 	 */
+
 	info = (...msg: any[]) =>
 	{
 		// @ts-ignore
@@ -66,6 +87,7 @@ class Logger
 	 * @param  {...any} msg
 	 * @returns void
 	 */
+
 	success = (...msg: any[]) =>
 	{
 		// @ts-ignore
@@ -76,6 +98,7 @@ class Logger
 		}
 		this.level <= LogLevel.Info && this.writer.success(msg);
 	}
+
 	/**
 	 * Log a message that indicates a warning to the user.
 	 * @param  {...any} msg
@@ -91,6 +114,7 @@ class Logger
 		}
 		this.level <= LogLevel.Warn && this.writer.warn(msg);
 	}
+
 	/**
 	 * Log a message that indicates an error to the user.
 	 * @param  {...any} msg
@@ -106,6 +130,7 @@ class Logger
 		}
 		this.level <= LogLevel.Error && this.writer.error(msg);
 	}
+
 	/**
 	 * Log a message that indicates a critical error to the user.
 	 * @param  {...any} msg

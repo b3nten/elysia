@@ -1,3 +1,17 @@
+/**
+ * @module
+ * An Actor that renders a debug bounding box and axis for its parent actor.
+ * This actor is useful for debugging the size and position of other actors.
+ *
+ * @example
+ * ```ts
+ * const actor = new Actor();
+ * actor.addComponent(new DebugActor());
+ * // or
+ * DebugActor.Debug(actor);
+ * ```
+ */
+
 import { Actor } from "../Scene/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';

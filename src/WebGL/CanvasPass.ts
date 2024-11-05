@@ -3,6 +3,20 @@ import { ShaderMaterial, Uniform } from "three";
 import * as Three from 'three'
 import { ShaderPass } from "postprocessing";
 
+/**
+ * A custom shader material that blends a base texture with a canvas texture.
+ * Extends Three.js ShaderMaterial to provide canvas overlay functionality.
+ *
+ * @extends {ShaderMaterial}
+ *
+ * @description
+ * This material uses a fragment shader to mix between a diffuse texture (tDiffuse)
+ * and a canvas texture (tCanvas) based on the canvas texture's alpha channel.
+ * The blending is performed using GLSL's mix function where the canvas alpha
+ * determines the blend ratio.
+ *
+ * @param {Three.CanvasTexture} canvas - The canvas texture to blend with the base texture
+ */
 export class CanvasMaterial extends ShaderMaterial
 {
 	constructor(canvas: Three.CanvasTexture)
@@ -33,6 +47,13 @@ export class CanvasMaterial extends ShaderMaterial
 	}
 }
 
+/**
+ * A custom shader pass that blends
+ * a base texture with a canvas texture.
+ *
+ * @extends {ShaderPass}
+ * @param {Three.CanvasTexture} canvas - The canvas texture to blend with the base texture
+ */
 export class CanvasPass extends ShaderPass
 {
 	constructor(canvas: Three.CanvasTexture)

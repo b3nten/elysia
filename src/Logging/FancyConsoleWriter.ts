@@ -25,6 +25,15 @@ export class FancyConsoleWriter implements Writer {
 		};
 	}
 
+	message(message: any[]): void
+	{
+		console.log(
+			`${this.formattedName.content}`,
+			...this.formattedName.styles,
+			...message,
+		)
+	}
+
 	debug(message: any[]): void
 	{
 		console.debug(

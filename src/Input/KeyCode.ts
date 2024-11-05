@@ -1,3 +1,6 @@
+/**
+* Enum for key codes, corresponding to the KeyboardEvent.code property.
+*/
 export enum KeyCode
 {
 	None = "KEY_NONE",

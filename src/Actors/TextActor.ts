@@ -1,7 +1,13 @@
+/**
+ * An actor that wraps Troika's Text.
+ *
+ * See https://protectwise.github.io/troika/troika-3d/text/ for more information.
+ */
+
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
 // @ts-ignore
-import { Text, preloadFont } from 'troika-three-text'
+import { Text} from 'troika-three-text'
 import { OverrideMaterialManager } from 'postprocessing'
 import { Actor } from "../Scene/Actor.ts";
 

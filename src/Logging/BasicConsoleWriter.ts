@@ -4,6 +4,8 @@ export class BasicConsoleWriter implements Writer
 {
 	constructor(private name: string) {}
 
+	message(message: any[]): void {  console.log(`${performance.now()} [${this.name}]`, ...message); }
+
 	debug(message: any[]): void { console.debug(`${performance.now()} [${this.name}] DEBUG`, ...message); }
 
 	info(message: any[]): void { console.info(`${performance.now()} [${this.name}] INFO`, ...message); }

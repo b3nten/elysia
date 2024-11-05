@@ -3,7 +3,7 @@ import { ProjectileBehavior } from "./ProjectileBehavior.ts";
 
 export class PlaygroundPlayer extends FirstPersonActor
 {
-	onCreate() {
+	override onCreate() {
 		super.onCreate()
 		this.scene.activeCamera = this.camera;
 		this.camera.fov = 75;

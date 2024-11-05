@@ -1,12 +1,11 @@
 import { ASSERT, isBrowser } from "../Core/Asserts.ts";
-import { Audio, AudioConstructorArguments } from "./Audio.ts";
+import { Audio, type AudioConstructorArguments } from "./Audio.ts";
 export class AudioPlayer
 {
-
 	static GetContext(): AudioContext
 	{
 		// @ts-ignore - global
-		return window.ELYSIA_AUDIO_CTX;
+		return globalThis.ELYSIA_AUDIO_CTX;
 	}
 
 	static
@@ -14,10 +13,10 @@ export class AudioPlayer
 		if(isBrowser())
 		{
 			// @ts-ignore - global
-			if(!window.ELYSIA_AUDIO_CTX)
+			if(!gloalThis.ELYSIA_AUDIO_CTX)
 			{
 				// @ts-ignore - global
-				window.ELYSIA_AUDIO_CTX = new AudioContext();
+				globalThis.ELYSIA_AUDIO_CTX = new AudioContext();
 			}
 
 			const unlock = () => {
@@ -52,11 +51,11 @@ export class AudioPlayer
 		if (!isBrowser()) return;
 
 		if (value) {
-			window.addEventListener("blur", this.muteAll);
-			window.addEventListener("focus", this.unmuteAll);
+			globalThis.addEventListener("blur", this.muteAll);
+			globalThis.addEventListener("focus", this.unmuteAll);
 		} else {
-			window.removeEventListener("blur", this.muteAll);
-			window.removeEventListener("focus", this.unmuteAll);
+			globalThis.removeEventListener("blur", this.muteAll);
+			globalThis.removeEventListener("focus", this.unmuteAll);
 		}
 	}
 

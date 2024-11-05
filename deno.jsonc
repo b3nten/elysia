@@ -3,7 +3,7 @@
   "version": "2024.1.1",
   "license": "MIT",
   "tasks": {
-    "build": "deno run -A cli.ts gen:modfiles && deno run -A cli.ts playground:build",
+    "build": "deno run -A cli.ts playground:build",
     "dev": "deno run -A cli.ts dev",
     "deploy": "deno cli.ts playground:deploy"
   },

@@ -1,7 +1,7 @@
 import { Actor } from "./Actor.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
-import { Destroyable, SceneLifecycle } from "../Core/Lifecycle.ts";
+import { Destroyable } from "../Core/Lifecycle.ts";
 import { Future } from "../Containers/Future.ts";
 import { bound, Constructor, noop } from "../Core/Utilities.ts";
 import { Behavior } from "./Behavior.ts";
@@ -13,7 +13,7 @@ import { ComponentSet } from "../Containers/ComponentSet.ts";
 import {
 	s_ActiveCamera,
 	s_App, s_Created, s_Destroyed,
-	s_Internal, s_Loaded,
+	s_Loaded,
 	s_OnBeforePhysicsUpdate,
 	s_OnCreate,
 	s_OnDestroy,
@@ -25,6 +25,8 @@ import {
 import { Application } from "../Core/ApplicationEntry.ts";
 import { LifeCycleError, reportLifecycleError } from "./Errors.ts";
 import { PhysicsWorld } from "../Physics/PhysicsWorld.ts";
+import { World } from "../ECS/World.ts";
+import { ThreeLightSystem } from "../ECS/ThreeSystems.ts";
 
 export const Root = Symbol.for("Elysia::Scene::Root");
 
@@ -37,6 +39,8 @@ export class Scene implements Destroyable
 	public readonly type: string = "Scene";
 
 	public physics?: PhysicsWorld;
+
+	public readonly ecs: World = new World;
 
 	/** Get the root Three.Scene */
 	get object3d(): Three.Scene { return this[Root].object3d; }
@@ -216,6 +220,8 @@ export class Scene implements Destroyable
 		this.addComponent(this.#grid)
 		this.grid.disable();
 
+		this.ecs.addSystem(ThreeLightSystem, this)
+
 		reportLifecycleError(this, this.onCreate);
 
 		this[Root][s_App] = this[s_App];
@@ -231,6 +237,7 @@ export class Scene implements Destroyable
 	{
 		if(this[s_Started] || !this[s_Created] || this[s_Destroyed]) return;
 		this.physics?.[s_OnStart]()
+		this.ecs.start();
 		reportLifecycleError(this, this.onStart);
 		this[s_Started] = true;
 		this[Root][s_OnStart]();
@@ -252,6 +259,7 @@ export class Scene implements Destroyable
 		if(!this[s_Started]) this[s_OnStart]();
 		reportLifecycleError(this, this.onUpdate, delta, elapsed);
 		this[Root][s_OnUpdate](delta, elapsed);
+		this.ecs.update(delta, elapsed);
 	}
 
 	@bound [s_OnDestroy]()
@@ -265,6 +273,8 @@ export class Scene implements Destroyable
 		this.#componentsByType.clear();
 		this[s_App] = null;
 		this[s_Destroyed] = true;
+		this[Root][s_OnDestroy]();
+		this.ecs.destructor();
 	}
 
 	[s_SceneLoadPromise]: Future<void> = new Future<void>(noop);

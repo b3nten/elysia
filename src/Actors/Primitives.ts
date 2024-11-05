@@ -1,9 +1,14 @@
+/**
+ * @module
+ * Helper actors for creating basic 3D shapes.
+ */
+
 import { MeshActor } from "./MeshActor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 
 /**
- * A basic modelRoot actor.
+ * A basic cube mesh actor.
  */
 export class CubeActor extends MeshActor
 {

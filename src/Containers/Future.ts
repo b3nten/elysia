@@ -1,4 +1,13 @@
 /**
+ * @module
+ *
+ * A custom implementation of the Promise class that allows for synchronous access to the resolved value.
+ * This allows for cases where a promise is resolved synchronously, but the value is needed immediately.
+ * It's also useful for structures where the work to complete a promise value is done internally, but
+ * a promise is needed to be accessed from the outside.
+ */
+
+/**
  * A custom implementation of the Promise class that allows for synchronous access to the resolved value.
  * This is useful for cases where a promise is resolved synchronously, but the value is needed immediately.
  * It can also be resolved or rejected externally.

@@ -10,8 +10,7 @@ import { Map } from "./Map.ts";
 import { playgroundAssets } from "./Assets.ts";
 import "../../src/UI/ElysiaCrossHair.ts"
 import { PhysicsWorld } from "../../src/Physics/PhysicsWorld.ts";
-import { Actor } from "../../src/Scene/Actor.ts";
-import { Behavior } from "../../src/Scene/Behavior.ts";
+import { PointLight, Transform } from "../../src/ECS/Component.ts";
 
 const app = new Application({
 	renderPipeline: new HighDefRenderPipeline({
@@ -50,6 +49,17 @@ class PlaygroundScene extends Scene {
 		this.addComponent(new PlaygroundPlayer)
 
 		this.addComponent(new Map)
+	}
+
+	override onStart() {
+		let entity = this.ecs.addEntity();
+		const light = new PointLight;
+		light.intensity = 20;
+		const transform = new Transform;
+		transform.posY = 2;
+
+		this.ecs.addComponent(entity, light);
+		this.ecs.addComponent(entity, transform);
 	}
 }
 

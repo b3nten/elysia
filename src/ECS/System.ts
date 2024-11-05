@@ -12,9 +12,9 @@ export abstract class System implements Destroyable
 
 	abstract readonly name: string;
 
-	public get active() { return this[Internal.isActive] && !this[Internal.isDestroyed]; }
+	public get active(): boolean { return this[Internal.isActive] && !this[Internal.isDestroyed]; }
 
-	public get destroyed() { return this[Internal.isDestroyed]; }
+	public get destroyed(): boolean { return this[Internal.isDestroyed]; }
 
 	@CatchAndReport
 	destructor()
@@ -38,11 +38,11 @@ export abstract class System implements Destroyable
 
 	protected onStop?(): void
 
-	[Internal.isDestroyed] = false;
+	[Internal.isDestroyed]: boolean = false;
 
-	[Internal.isActive] = false;
+	[Internal.isActive]: boolean = false;
 
-	[Internal.uuid] = uuid();
+	[Internal.uuid]: string = uuid();
 
 	@CatchAndReport
 	[Internal.onStart]() { this.onStart?.(); }

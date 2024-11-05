@@ -54,7 +54,8 @@ type HighDefRenderPipelineConstructorArguments = {
 };
 
 /**
- * A high definition render pipeline that uses pmndr's Postprocessing to render the s_Scene.
+ * A high definition render pipeline that uses pmndr's Postprocessing to render the scene with SMAA and filmic tonemapping.
+ * Supports optional SSAO, Bloom, and Chromatic Aberration effects.
  */
 export class HighDefRenderPipeline extends RenderPipeline
 {
