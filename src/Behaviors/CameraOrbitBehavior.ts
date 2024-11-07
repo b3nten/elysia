@@ -66,15 +66,28 @@ class ActorAdaptor
 		}
 	}
 
-	updateProjectionMatrix() {}
-	updateMatrixWorld() {}
-	updateWorldMatrix() {}
+	updateMatrixWorld() {
+		this.actor.updateWorldMatrix();
+	}
+
+	updateWorldMatrix() {
+		this.actor.updateWorldMatrix();
+	}
 }
 
 class CameraActorAdaptor extends ActorAdaptor
 {
 	get isOrthographicCamera() { return this.actor.object3d instanceof Three.OrthographicCamera; }
 	get isPerspectiveCamera() { return this.actor.object3d instanceof Three.PerspectiveCamera; }
+	get projectionMatrix() { return (this.actor.object3d as Three.PerspectiveCamera).projectionMatrix; }
+	get projectionMatrixInverse() { return (this.actor.object3d as Three.PerspectiveCamera).projectionMatrixInverse; }
+
+	updateProjectionMatrix() {
+		if (this.isPerspectiveCamera) {
+			const camera = this.actor.object3d as Three.PerspectiveCamera;
+			camera.updateProjectionMatrix();
+		}
+	}
 }
 
 /**
@@ -82,8 +95,6 @@ class CameraActorAdaptor extends ActorAdaptor
  */
 export class CameraOrbitBehavior extends Behavior
 {
-	override type = 'CameraOrbitBehavior';
-
 	controls?: OrbitControls;
 
 	/**
@@ -124,7 +135,6 @@ export class CameraOrbitBehavior extends Behavior
 	{
 		if(this.controls)
 		{
-			console.log("updating orbit controls");
 			this.controls.update();
 		}
 	}

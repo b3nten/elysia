@@ -35,7 +35,7 @@ export class Scene implements Destroyable
 {
 	[IsScene]: boolean = true;
 
-	public readonly type: string = "Scene";
+	public readonly userData: Map<any, any> = new Map;
 
 	public physics?: PhysicsWorld;
 

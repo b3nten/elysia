@@ -14,7 +14,7 @@
     "corel-color-picker": "npm:corel-color-picker@^0.2.3",
     "lit-html": "npm:lit-html@^3.2.1",
     "postprocessing": "npm:postprocessing@^6.36.3",
-    "three": "npm:three@^0.169.0",
+    "three": "npm:three@^0.170.0",
     "troika-three-text": "npm:troika-three-text@^0.50.1",
     "uhtml": "npm:uhtml@^4.5.11"
   },
@@ -26,7 +26,7 @@
       "deno.ns",
       "dom"
     ],
-    "types": ["npm:"],
+    "types": ["npm:"]
   },
   "deploy": {
     "project": "784646d1-c7a8-44a0-8811-11b1665eb845",

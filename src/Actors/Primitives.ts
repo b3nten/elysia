@@ -9,145 +9,72 @@ import * as Three from 'three';
 
 const primitiveMaterialMap = new Map<Three.ColorRepresentation, Three.MeshStandardMaterial>();
 
+const box = new Three.BoxGeometry();
+const sphere = new Three.SphereGeometry();
+const cone = new Three.ConeGeometry();
+const cylinder = new Three.CylinderGeometry();
+const torus = new Three.TorusGeometry();
+const plane = new Three.PlaneGeometry();
+const ring = new Three.RingGeometry();
+
 /**
  * A basic cube mesh actor.
  */
-export class CubeActor extends MeshActor
+export class PrimitiveActor extends MeshActor
 {
 	// deno-lint-ignore constructor-super
-	constructor(color?: Three.ColorRepresentation)
+	constructor(geometry: Three.BufferGeometry, color?: Three.ColorRepresentation | Three.Material)
 	{
 		if(color === undefined) color = 0xff0000;
-
-		if(primitiveMaterialMap.has(color))
+		if(color instanceof Three.Material)
 		{
-			super(new Three.BoxGeometry(), primitiveMaterialMap.get(color)!);
+			super(geometry, color);
+		}
+		else if(primitiveMaterialMap.has(color))
+		{
+			super(geometry, primitiveMaterialMap.get(color)!);
 		}
 		else
 		{
 			const material = new Three.MeshStandardMaterial({ color });
 			primitiveMaterialMap.set(color, material);
-			super(new Three.BoxGeometry(), material);
+			super(geometry, material);
 		}
 	}
-}
 
-/**
- * A basic sphere actor.
- */
-export class SphereActor extends MeshActor
-{
-	override get material(): Three.MeshStandardMaterial { return this.object3d.material as Three.MeshStandardMaterial; }
-
-	constructor(color?: Three.ColorRepresentation, position?: Three.Vector3, radius = 1)
+	static Box(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
 	{
-		super(new Three.SphereGeometry(), new Three.MeshStandardMaterial({ color }));
-
-		if(position)
-		{
-			this.object3d.position.copy(position);
-		}
-
-		this.object3d.scale.set(radius, radius, radius);
+		return new PrimitiveActor(box, color);
 	}
-}
 
-/**
- * A basic plane actor.
- */
-export class PlaneActor extends MeshActor
-{
-	constructor(color?: Three.ColorRepresentation, position?: Three.Vector3, rotation?: Three.Euler, scale?: Three.Vector3)
+	static Sphere(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
 	{
-		super(new Three.PlaneGeometry(), new Three.MeshStandardMaterial({ color }));
-
-		if(position)
-		{
-			this.object3d.position.copy(position);
-		}
-
-		if(rotation)
-		{
-			this.object3d.rotation.copy(rotation);
-		}
-
-		if(scale)
-		{
-			this.object3d.scale.copy(scale);
-		}
+		return new PrimitiveActor(sphere, color);
 	}
-}
 
-/**
- * A basic cylinder actor.
- */
-export class CylinderActor extends MeshActor
-{
-	get radius(): number { return this.object3d.scale.x; }
-	set radius(value: number) { this.object3d.scale.set(value, this.object3d.scale.y, value); }
-
-	get height(): number { return this.object3d.scale.y; }
-	set height(value: number) { this.object3d.scale.set(this.object3d.scale.x, value, this.object3d.scale.z); }
-
-	constructor(color?: Three.ColorRepresentation, position?: Three.Vector3, radius = 1, height = 1)
+	static Cone(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
 	{
-		super(new Three.CylinderGeometry(), new Three.MeshStandardMaterial({ color }));
-
-		if(position)
-		{
-			this.object3d.position.copy(position);
-		}
-
-		this.object3d.scale.set(radius, height, radius);
+		return new PrimitiveActor(cone, color);
 	}
-}
 
-/**
- * A basic cone actor.
- */
-export class ConeActor extends MeshActor
-{
-	get radius(): number { return this.object3d.scale.x; }
-	set radius(value: number) { this.object3d.scale.set(value, this.object3d.scale.y, value); }
-
-	get height(): number { return this.object3d.scale.y; }
-	set height(value: number) { this.object3d.scale.set(this.object3d.scale.x, value, this.object3d.scale.z); }
-
-	constructor(color?: Three.ColorRepresentation, position?: Three.Vector3, radius = 1, height = 1)
+	static Cylinder(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
 	{
-		super(new Three.ConeGeometry(), new Three.MeshStandardMaterial({ color }));
-		// @ts-ignore - augmenting object3d
-		this.object3d.actor = this;
-
-		if(position)
-		{
-			this.object3d.position.copy(position);
-		}
-
-		this.object3d.scale.set(radius, height, radius);
+		return new PrimitiveActor(cylinder, color);
 	}
-}
 
-/**
- * A basic torus actor.
- */
-export class TorusActor extends MeshActor
-{
-	get radius(): number { return this.object3d.scale.x; }
-	set radius(value: number) { this.object3d.scale.set(value, this.object3d.scale.y, value); }
-
-	get tube(): number { return this.object3d.scale.z; }
-	set tube(value: number) { this.object3d.scale.set(this.object3d.scale.x, this.object3d.scale.y, value); }
-
-	constructor(color?: Three.ColorRepresentation, position?: Three.Vector3, radius = 1, tube = 0.4)
+	static Torus(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
 	{
-		super(new Three.TorusGeometry(), new Three.MeshStandardMaterial({ color }));
-
-		if(position)
-		{
-			this.object3d.position.copy(position);
-		}
-
-		this.object3d.scale.set(radius, radius, tube);
+		return new PrimitiveActor(torus, color);
 	}
+
+	static Plane(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
+	{
+		return new PrimitiveActor(plane, color);
+	}
+
+	static Ring(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
+	{
+		return new PrimitiveActor(ring, color);
+	}
+
 }

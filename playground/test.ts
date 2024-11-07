@@ -7,13 +7,19 @@ const app = new Elysia.Core.Application({
 	stats: true,
 })
 
+const assets = new Elysia.Assets.AssetLoader({
+	Dummy: new Elysia.Assets.GLTFAsset("/assets/Dummy.glb")
+})
+
 class MyScene extends Elysia.Scene.Scene
 {
 	camera = new Elysia.Actors.PerspectiveCameraActor();
 
 	env = new Elysia.Actors.EnvironmentActor();
 
-	cube = new Elysia.Actors.CubeActor;
+	override async onLoad() {
+		await assets.load();
+	}
 
 	override onCreate()
 	{
@@ -30,26 +36,35 @@ class MyScene extends Elysia.Scene.Scene
 			this.addComponent(this.env);
 		}
 
-		this.addComponent(this.cube);
-
 		{
+			const red = 0xff0000;
+			const green = 0x00ff00;
+			const blue = 0x0000ff;
+			const yellow = 0xffff00;
+
+			const randomColor = () => [red,green,blue,yellow].at(Math.floor(Math.random() * 4))
+
+			const randomShape = () => [
+				Elysia.Actors.PrimitiveActor.Box,
+				Elysia.Actors.PrimitiveActor.Sphere,
+				Elysia.Actors.PrimitiveActor.Cone,
+				Elysia.Actors.PrimitiveActor.Cylinder,
+				Elysia.Actors.PrimitiveActor.Ring,
+			].at(Math.floor(Math.random() * 5))!("red");
+
+			const mesh = assets.unwrap("Dummy").clone().children[0] as Three.Mesh;
+
 			for(let i = 0; i < 20000; i++)
 			{
-				const cube = new Elysia.Actors.CubeActor;
+				// const cube = new Elysia.Actors.MeshActor(
+				// 	mesh.geometry,
+				// 	mesh.material
+				// )
+				const cube = randomShape();
 				cube.position.set(Math.random() * 100 - 50, Math.random() * 100 - 50, Math.random() * 100 - 50);
 				this.addComponent(cube);
 			}
 		}
-	}
-
-	euler = new Three.Euler();
-
-	override onUpdate(d: number)
-	{
-		this.euler.x += 0.1 * d;
-		this.euler.y += 0.1 * d;
-		this.euler.z += 0.1 * d;
-		this.cube.rotation.setFromEuler(this.euler);
 	}
 }
 

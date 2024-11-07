@@ -9,7 +9,7 @@ if(import.meta.DEV)
 	new EventSource('/esbuild').addEventListener('change', () => location.reload());
 }
 
-const splash = document.createElement("elysia-splash") as ElysiaSplash;
+// const splash = document.createElement("elysia-splash") as ElysiaSplash;
 
 // document.body.append(splash);
 
