@@ -9,33 +9,37 @@ const app = new Elysia.Core.Application({
 
 class MyScene extends Elysia.Scene.Scene
 {
-	cube = new Elysia.Scene.ThreeActor(
-		new Three.Mesh(new Three.BoxGeometry(), new Three.MeshStandardMaterial({ color: 0xff0000 })))
-
 	camera = new Elysia.Actors.PerspectiveCameraActor();
 
 	env = new Elysia.Actors.EnvironmentActor();
 
+	cube = new Elysia.Actors.CubeActor;
+
 	override onCreate()
 	{
-		this.camera.position.z = 5;
-		this.activeCamera = this.camera;
-		this.camera.addComponent(new Elysia.Behaviors.CameraOrbitBehavior);
-		this.addComponent(this.camera);
+		{
+			this.camera.position.z = 5;
+			this.activeCamera = this.camera;
+			this.camera.addComponent(new Elysia.Behaviors.CameraOrbitBehavior);
+			this.addComponent(this.camera);
+		}
 
-		this.cube.position.y = 2;
+		{
+			this.env.background = true;
+			this.env.backgroundBlur = 3;
+			this.addComponent(this.env);
+		}
+
 		this.addComponent(this.cube);
 
-		const cube2 = new Elysia.Scene.ThreeActor(
-			new Three.Mesh(new Three.BoxGeometry(), new Three.MeshStandardMaterial({ color: "green" })))
-
-		cube2.scale.setScalar(0.5)
-		cube2.position.y = -3
-		this.cube.addComponent(cube2)
-
-		this.env.background = true;
-		this.env.backgroundBlur = 3;
-		this.addComponent(this.env);
+		{
+			for(let i = 0; i < 20000; i++)
+			{
+				const cube = new Elysia.Actors.CubeActor;
+				cube.position.set(Math.random() * 100 - 50, Math.random() * 100 - 50, Math.random() * 100 - 50);
+				this.addComponent(cube);
+			}
+		}
 	}
 
 	euler = new Three.Euler();

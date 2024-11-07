@@ -13,16 +13,13 @@
  * ```
  */
 
-import { Actor } from "../Scene/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
-import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
-import { ResizeEvent } from "../Core/Resize.ts";
+import { ThreeActor } from "../Scene/ThreeActor.ts";
 
-export class OrthographicCameraActor extends Actor<Three.OrthographicCamera>
+export class OrthographicCameraActor extends ThreeActor<Three.OrthographicCamera>
 {
-	override type: string = "OrthographicCameraActor";
-
+	override object3d = new Three.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
 	/**
 	 * The left edge of the camera's view.
 	 */

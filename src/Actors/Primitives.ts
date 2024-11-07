@@ -7,29 +7,27 @@ import { MeshActor } from "./MeshActor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 
+const primitiveMaterialMap = new Map<Three.ColorRepresentation, Three.MeshStandardMaterial>();
+
 /**
  * A basic cube mesh actor.
  */
 export class CubeActor extends MeshActor
 {
-	override get material(): Three.MeshStandardMaterial { return this.object3d.material as Three.MeshStandardMaterial; }
-	constructor(color?: Three.ColorRepresentation, position?: Three.Vector3, rotation?: Three.Euler, scale?: Three.Vector3)
+	// deno-lint-ignore constructor-super
+	constructor(color?: Three.ColorRepresentation)
 	{
-		super(new Three.BoxGeometry(), new Three.MeshStandardMaterial({ color }));
+		if(color === undefined) color = 0xff0000;
 
-		if(position)
+		if(primitiveMaterialMap.has(color))
 		{
-			this.object3d.position.copy(position);
+			super(new Three.BoxGeometry(), primitiveMaterialMap.get(color)!);
 		}
-
-		if(rotation)
+		else
 		{
-			this.object3d.rotation.copy(rotation);
-		}
-
-		if(scale)
-		{
-			this.object3d.scale.copy(scale);
+			const material = new Three.MeshStandardMaterial({ color });
+			primitiveMaterialMap.set(color, material);
+			super(new Three.BoxGeometry(), material);
 		}
 	}
 }

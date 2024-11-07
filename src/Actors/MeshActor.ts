@@ -16,64 +16,99 @@ import { Actor } from "../Scene/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 
-export class MeshActor extends Actor<Three.Mesh>
+export class MeshActor extends Actor
 {
-	override type: string = "MeshActor";
-
 	/**
 	 * The underlying Three.BufferGeometry.
 	 */
-	get geometry(): Three.BufferGeometry { return this.object3d.geometry; }
-	set geometry(value: Three.BufferGeometry) { this.object3d.geometry = value; }
+	get geometry(): Three.BufferGeometry { return this.geometry; }
+	set geometry(value: Three.BufferGeometry)
+	{
+		if(this.geometry === value) return;
+		// todo: swap geometry
+		this.geometry = value;
+	}
 
 	/**
 	 * The underlying Three.Material.
 	 */
-	get material(): Three.Material { return this.object3d.material as Three.Material; }
-	set material(value: Three.Material) { this.object3d.material = value; }
-
-	/**
-	 * Whether the actor casts shadows.
-	 * @default true
-	 */
-	get castShadow(): boolean { return this.object3d.castShadow; }
-	set castShadow(value: boolean) { this.object3d.castShadow = value; }
-
-	/**
-	 * Whether the actor receives shadows.
-	 * @default true
-	 */
-	get receiveShadow(): boolean { return this.object3d.receiveShadow; }
-	set receiveShadow(value: boolean) { this.object3d.receiveShadow = value; }
-
-	/**
-	 * Should the actor render a debug helper.
-	 */
-	get debug(): boolean { return this.#debug; }
-	set debug(value: boolean)
+	get material(): Three.Material { return this.material as Three.Material; }
+	set material(value: Three.Material)
 	{
-		if(value)
+		if(this.material === value) return;
+		// todo: swap material
+		this.material = value;
+	}
+
+	constructor(geometry: Three.BufferGeometry, material: Three.Material)
+	{
+		super();
+		this.#geometry = geometry;
+		this.#material = material;
+	}
+
+	override onEnterScene()
+	{
+		let mesh = meshMap.get(this.#material);
+
+		if(mesh === undefined)
 		{
-			this.#debugHelper ??= new Three.BoxHelper(this.object3d, "red");
-			this.object3d.add(this.#debugHelper);
+			const batchedMesh = new Three.BatchedMesh(100000, 5000000, 5000000, this.#material);
+			batchedMesh.perObjectFrustumCulled = true;
+			this.scene.object3d.add(batchedMesh);
+
+			const geoInstances = new Map<Three.BufferGeometry, number>();
+			const index = batchedMesh.addGeometry(this.#geometry);
+			geoInstances.set(this.#geometry, index);
+
+			mesh = { batchedMesh, geoInstances, refs: 0};
+			meshMap.set(this.#material, mesh);
+		}
+
+		const geometryId = mesh.geoInstances.get(this.#geometry);
+
+		if(geometryId === undefined)
+		{
+			const index = mesh.batchedMesh.addGeometry(this.#geometry);
+			mesh.geoInstances.set(this.#geometry, index);
+			this.#instanceId = mesh.batchedMesh.addInstance(index);
 		}
 		else
 		{
-			this.#debugHelper?.parent?.remove(this.#debugHelper);
-			this.#debugHelper?.dispose();
-			this.#debugHelper = undefined;
+			this.#instanceId = mesh.batchedMesh.addInstance(geometryId);
 		}
-		this.#debug = value;
+
+		meshMap.get(this.#material)!.refs++;
+
+		meshMap.get(this.#material)?.batchedMesh.setMatrixAt(this.#instanceId, this.worldMatrix);
+
 	}
 
-	constructor(geometry: Three.BufferGeometry, material: Three.Material, castShadow = true, receiveShadow = true)
+	override onUpdate(delta: number, elapsed: number) {
+		if(this.#instanceId === undefined) return;
+		meshMap.get(this.#material)?.batchedMesh.setMatrixAt(this.#instanceId, this.worldMatrix);
+	}
+
+	override onLeaveScene()
 	{
-		super();
-		this.object3d = new Three.Mesh(geometry, material);
-		this.castShadow = castShadow;
-		this.receiveShadow = receiveShadow;
+		const mesh = meshMap.get(this.#material);
+
+		if(mesh === undefined) return;
+
+		mesh.batchedMesh.deleteInstance(this.#instanceId!);
+		mesh.refs--;
+
+		if(mesh.refs === 0)
+		{
+			meshMap.delete(this.#material);
+			mesh.batchedMesh.dispose();
+			this.scene.object3d.remove(mesh.batchedMesh);
+		}
 	}
 
-	#debug = false;
-	#debugHelper?: Three.BoxHelper;
+	#instanceId?: number;
+	#geometry: Three.BufferGeometry;
+	#material: Three.Material;
 }
+
+const meshMap: Map<Three.Material, { batchedMesh: Three.BatchedMesh, geoInstances: Map<Three.BufferGeometry, number>, refs: number }> = new Map();

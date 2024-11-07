@@ -20,6 +20,7 @@ export class MouseIntersections
 	 */
 	public cast(camera: Three.Camera, scene: Three.Scene, x: number, y: number)
 	{
+		return;
 		this.intersections.clear()
 
 		this.vec2.x = x

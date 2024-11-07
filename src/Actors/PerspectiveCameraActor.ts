@@ -112,7 +112,6 @@ export class PerspectiveCameraActor extends ThreeActor<Three.PerspectiveCamera>
 
 	override onCreate()
 	{
-		this.object3d.userData.LOL = true
 		if(this.debug) this.scene!.object3d.add(this.#debugHelper!);
 	}
 
