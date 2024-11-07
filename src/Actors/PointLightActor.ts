@@ -14,13 +14,14 @@
  * ```
  */
 
-import { Actor } from "../Scene/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
+import { ThreeActor } from "../Scene/ThreeActor.ts";
+import { isUndefined } from "../Core/Asserts.ts";
 
-export class PointLightActor extends Actor<Three.PointLight>
+export class PointLightActor extends ThreeActor<Three.PointLight>
 {
-	override type: string = "PointLightActor";
+	override readonly object3d = new Three.PointLight();
 
 	get intensity(): number { return this.object3d.intensity; }
 	set intensity(value: number) { this.object3d.intensity = value; }
@@ -61,8 +62,11 @@ export class PointLightActor extends Actor<Three.PointLight>
 	constructor(color?: Three.Color, intensity?: number, distance?: number, decay?: number)
 	{
 		super();
-		this.object3d = new Three.PointLight(color, intensity, distance, decay);
-		this.castShadow = true;
+
+		if(!isUndefined(color)) this.color = color;
+		if(!isUndefined(intensity)) this.intensity = intensity;
+		if(!isUndefined(distance)) this.distance = distance;
+		if(!isUndefined(decay)) this.decay = decay;
 	}
 
 	#debug = false;

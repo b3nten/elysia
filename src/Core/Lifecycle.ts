@@ -65,12 +65,6 @@ export interface ActorLifecycle
 	onDestroy(): void;
 
 	/**
-	 * Called when the actor is reparented.
-	 * @param parent
-	 */
-	onReparent(parent: Actor | null): void;
-
-	/**
 	 * Called when the output canvas is resized.
 	 */
 	onResize(width: number, height: number): void;

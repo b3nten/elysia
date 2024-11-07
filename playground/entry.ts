@@ -11,8 +11,10 @@ if(import.meta.DEV)
 
 const splash = document.createElement("elysia-splash") as ElysiaSplash;
 
-document.body.append(splash);
+// document.body.append(splash);
 
-import("./PlaygroundGame/Game.ts")
-	.then(({ scene, app }) => app.loadScene(scene))
-	.then(() => setTimeout(() => splash.goodbye(), 2000));
+// import("./PlaygroundGame/Game.ts")
+// 	.then(({ scene, app }) => app.loadScene(scene))
+// 	.then(() => setTimeout(() => splash.goodbye(), 2000));
+
+import("./test.ts")

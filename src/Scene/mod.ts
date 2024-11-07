@@ -8,3 +8,4 @@ export * from "./Scene.ts";
 export * from "./Behavior.ts";
 export * from "./Prefab.ts";
 export * from "./Internal.ts";
+export * from "./ThreeActor.ts"

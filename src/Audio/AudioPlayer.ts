@@ -15,7 +15,7 @@ export class AudioPlayer
 		if(isBrowser())
 		{
 			// @ts-ignore - global
-			if(!gloalThis.ELYSIA_AUDIO_CTX)
+			if(!globalThis.ELYSIA_AUDIO_CTX)
 			{
 				// @ts-ignore - global
 				globalThis.ELYSIA_AUDIO_CTX = new AudioContext();

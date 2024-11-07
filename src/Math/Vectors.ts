@@ -5,6 +5,7 @@ export type Vector2Like = { x: number, y: number };
 export type Vector3Like = { x: number, y: number, z: number };
 export type Vector4Like = { x: number, y: number, z: number, w: number };
 export type QuaternionLike = { x: number, y: number, z: number, w: number };
+export type EulerLike = { x: number, y: number, z: number, order?: "XYZ" | "YXZ" | "ZXY" | "ZYX" | "YZX" | "XZY" };
 
 export function isVectorLike(obj: unknown): obj is VectorLike { return isObject(obj) }
 

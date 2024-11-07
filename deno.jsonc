@@ -25,7 +25,8 @@
     "lib": [
       "deno.ns",
       "dom"
-    ]
+    ],
+    "types": ["npm:"],
   },
   "deploy": {
     "project": "784646d1-c7a8-44a0-8811-11b1665eb845",

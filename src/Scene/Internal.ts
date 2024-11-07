@@ -32,8 +32,6 @@ export const s_App = Symbol.for("Elysia::s_App");
 
 export const s_Scene = Symbol.for("Elysia::Scene");
 
-export const s_Object3D = Symbol.for("Elysia::Object3d");
-
 export const s_Parent = Symbol.for("Elysia::Parent");
 
 export const s_Tags = Symbol.for("Elysia::Tags");
@@ -49,3 +47,25 @@ export const s_Destroyed = Symbol.for("Elysia::Destroyed");
 export const s_InScene = Symbol.for("Elysia::InScene");
 
 export const s_Loaded = Symbol.for("Elysia::Loaded");
+
+export const s_Object3D = Symbol.for("Elysia::Object3D");
+
+export const s_RegisterComponentWithScene = Symbol.for("Elysia::RegisterComponentWithScene");
+
+export const s_UnregisterComponentWithScene = Symbol.for("Elysia::UnregisterComponentWithScene");
+
+export const s_RegisterTagWithScene = Symbol.for("Elysia::RegisterTagWithScene");
+
+export const s_UnregisterTagWithScene = Symbol.for("Elysia::UnregisterTagWithScene");
+
+export const s_TransformDirty = Symbol.for("Elysia::TransformDirty");
+
+export const s_WorldMatrix = Symbol.for("Elysia::WorldMatrix");
+
+export const s_LocalMatrix = Symbol.for("Elysia::LocalMatrix");
+// internal symbols
+export const s_IsActor = Symbol.for("Elysia::IsActor");
+
+export const s_ComponentsByType = Symbol("Elysia::Actor::ComponentsByType");
+
+export const s_ComponentsByTag = Symbol("Elysia::Actor::ComponentsByTag");

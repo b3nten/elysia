@@ -13,17 +13,13 @@
  * ```
  */
 
-import { Actor } from "../Scene/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
-import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
-import { ResizeEvent } from "../Core/Resize.ts";
-import { ELYSIA_LOGGER } from "../Core/Logger.ts";
+import { ThreeActor } from "../Scene/ThreeActor.ts";
 
-export class PerspectiveCameraActor extends Actor<Three.PerspectiveCamera>
+export class PerspectiveCameraActor extends ThreeActor<Three.PerspectiveCamera>
 {
-	override type: string = "PerspectiveCameraActor";
-
+	override object3d = new Three.PerspectiveCamera(75, 1, 0.1, 1000);
 	/**
 	 * The field of view of the camera.
 	 */
@@ -110,7 +106,6 @@ export class PerspectiveCameraActor extends Actor<Three.PerspectiveCamera>
 	{
 		super();
 		this.onResize = this.onResize.bind(this);
-		this.object3d = new Three.PerspectiveCamera();
 	}
 
 	override onCreate()

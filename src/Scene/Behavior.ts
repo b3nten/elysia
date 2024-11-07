@@ -99,8 +99,6 @@ export class Behavior implements ActorLifecycle, Destroyable
 
 	onDestroy() {}
 
-	onReparent(parent: Actor | null) {}
-
 	onResize(width: number, height: number) {}
 
 	destructor()
@@ -232,16 +230,6 @@ export class Behavior implements ActorLifecycle, Destroyable
 		if(this[s_Destroyed]) return;
 		reportLifecycleError(this, this.onDestroy)
 		this[s_Destroyed] = true;
-	}
-
-	[s_OnReparent](newParent: Actor | null)
-	{
-		if(newParent === this[s_Parent])
-		{
-			if(isDev()) ELYSIA_LOGGER.warn(`Trying to reparent actor to the same parent: ${this}`);
-		}
-		this[s_Parent] = newParent;
-		reportLifecycleError(this, this.onReparent, newParent);
 	}
 
 	[s_OnResize](width: number, height: number)

@@ -1,19 +1,25 @@
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
-import { ActorLifecycle, Destroyable } from "../Core/Lifecycle.ts";
+import type { ActorLifecycle, Destroyable } from "../Core/Lifecycle.ts";
 import { ELYSIA_LOGGER } from "../Core/Logger.ts";
 import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
 import { ComponentAddedEvent, ComponentRemovedEvent, TagAddedEvent } from "../Core/ElysiaEvents.ts";
-import { Component, isActor } from "./Component.ts";
-import { Scene } from "./Scene.ts";
-import { Application } from "../Core/ApplicationEntry.ts";
-import { isDev } from "../Core/Asserts.ts";
-import { Constructor } from "../Core/Utilities.ts";
+import { type Component, isActor } from "./Component.ts";
+import type { Scene } from "./Scene.ts";
+import type { Application } from "../Core/ApplicationEntry.ts";
+import type { Constructor } from "../Core/Utilities.ts";
 import { ComponentSet } from "../Containers/ComponentSet.ts";
 import {
-	s_App, s_Created, s_Destroyed, s_Enabled, s_InScene,
+	s_App,
+	s_ComponentsByTag,
+	s_ComponentsByType,
+	s_Created,
+	s_Destroyed,
+	s_Enabled,
+	s_InScene,
 	s_Internal,
-	s_Object3D,
+	s_IsActor,
+	s_LocalMatrix,
 	s_OnBeforePhysicsUpdate,
 	s_OnCreate,
 	s_OnDestroy,
@@ -21,30 +27,22 @@ import {
 	s_OnEnable,
 	s_OnEnterScene,
 	s_OnLeaveScene,
-	s_OnReparent,
 	s_OnResize,
 	s_OnStart,
-	s_OnUpdate, s_Parent, s_Scene, s_Started
+	s_OnUpdate,
+	s_Parent,
+	s_Scene,
+	s_Started,
+	s_TransformDirty,
+	s_WorldMatrix
 } from "./Internal.ts";
 import { reportLifecycleError } from "./Errors.ts";
 
-// internal symbols
-export const IsActor = Symbol.for("Elysia::IsActor");
-export const s_ComponentsByType = Symbol("Elysia::Actor::ComponentsByType");
-export const s_ComponentsByTag = Symbol("Elysia::Actor::ComponentsByTag");
+const tempVec2 = new Three.Vector2();
 
-export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLifecycle, Destroyable
+export class Actor implements ActorLifecycle, Destroyable
 {
-	[IsActor]: boolean = true;
-
-	public readonly type: string = "Actor";
-
-	/**
-	 * The underlying Three.js object.
-	 * This should be used with caution, as it can break the internal state of the actor in some cases.
-	 */
-	get object3d(): T { return this[s_Object3D]; }
-	set object3d(object3d: T) { this.updateObject3d(object3d); }
+	[s_IsActor]: boolean = true;
 
 	/** Whether this actor has finished it's onCreate() lifecycle. */
 	get created(): boolean { return this[s_Created]; }
@@ -54,9 +52,6 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 
 	/** Whether this actor has finished it's onStart() lifecycle. */
 	get started(): boolean { return this[s_Started]; }
-
-	/** Whether this actor is in the scene. */
-	get inScene(): boolean { return this[s_InScene]; }
 
 	/** Whether this actor is destroyed */
 	get destroyed(): boolean { return this[s_Destroyed]; }
@@ -71,20 +66,25 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 	get parent(): Actor { return this[s_Parent]!; }
 
 	/** The position of this actor. */
-	get position(): Three.Vector3 { return this[s_Object3D].position; }
-	set position(position: Three.Vector3) { this[s_Object3D].position.copy(position); }
+	readonly position = new ActorVector;
 
 	/** The rotation of this actor. */
-	get rotation(): Three.Euler { return this[s_Object3D].rotation; }
-	set rotation(rotation: Three.Euler) { this[s_Object3D].rotation.copy(rotation); }
+	readonly rotation = new ActorQuaternion;
 
 	/** The scale of this actor. */
-	get scale(): Three.Vector3 { return this[s_Object3D].scale; }
-	set scale(scale: Three.Vector3) { this[s_Object3D].scale.copy(scale); }
+	readonly scale = new ActorVector(1,1,1)
 
-	/** The quaternion of this actor. */
-	get quaternion(): Three.Quaternion { return this[s_Object3D].quaternion; }
-	set quaternion(quaternion: Three.Quaternion) { this[s_Object3D].quaternion.copy(quaternion); }
+	get worldMatrix(): Three.Matrix4
+	{
+		this.updateWorldMatrix();
+		return this[s_WorldMatrix];
+	}
+
+	get localMatrix(): Three.Matrix4
+	{
+		this.updateWorldMatrix();
+		return this[s_LocalMatrix];
+	}
 
 	/** The child components of this actor. */
 	readonly components: Set<Component> = new Set;
@@ -114,50 +114,18 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 
 	onDestroy() {}
 
-	onReparent(parent: Actor | null) {}
-
 	onResize(width: number, height: number) {}
+
+	constructor()
+	{
+		this.position.actor = this;
+		this.rotation.actor = this;
+		this.scale.actor = this;
+	}
 
 	/* **********************************************************
 	    Public methods
 	************************************************************/
-
-	updateObject3d(newObject3d: T)
-	{
-		if(this[s_Object3D] === newObject3d) return;
-
-		const parent = this[s_Object3D].parent;
-
-		this[s_Object3D].parent?.remove(this[s_Object3D]);
-		// @ts-ignore - internal augmentation
-		this[s_Object3D].actor = undefined;
-
-		// set this actor as the actor of the s_Object3D
-		// @ts-ignore - internal augmentation
-		newObject3d.actor = this;
-		this[s_Object3D] = newObject3d;
-
-		// @ts-ignore - internal augmentation
-		if(!newObject3d.hasElysiaEvents) {
-			newObject3d.addEventListener("added", (e) =>
-			{
-				// @ts-ignore - internal augmentation
-				newObject3d.actor?.[s_OnEnterScene]();
-			})
-			newObject3d.addEventListener("removed", (e) =>
-			{
-				// @ts-ignore - internal augmentation
-				newObject3d.actor?.[s_OnLeaveScene]();
-			})
-			// @ts-ignore - internal augmentation
-			newObject3d.hasElysiaEvents = true;
-		}
-
-		if(parent)
-		{
-			parent.add(newObject3d);
-		}
-	}
 
 	/**
 	 * Enables this actor. This means it receives updates and is visible.
@@ -238,7 +206,6 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 
 		if(this[s_InScene])
 		{
-			if(isActor(component)) this.object3d.add(component.object3d);
 			component[s_OnEnterScene]();
 		}
 
@@ -259,6 +226,7 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 			ELYSIA_LOGGER.warn("Trying to remove component from a destroyed actor");
 			return false;
 		}
+
 		if(component.destroyed)
 		{
 			ELYSIA_LOGGER.warn("Trying to remove destroyed component from actor");
@@ -280,7 +248,6 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 		}
 
 		component[s_OnLeaveScene]();
-		isActor(component) && this.object3d.remove(component.object3d);
 		component[s_OnDisable]();
 		return true;
 	}
@@ -316,6 +283,29 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 	}
 
 	/**
+	 * Update the world matrix of this actor.
+	 * By default will not update if the transform is not dirty.
+	 * @param force If true, will update the world matrix even if the transform is not dirty.
+	 */
+	public updateWorldMatrix(force = false)
+	{
+		if(!force && !this[s_TransformDirty]) return;
+
+		this[s_LocalMatrix].compose(this.position, this.rotation, this.scale);
+
+		if(this.parent)
+		{
+			this[s_WorldMatrix].multiplyMatrices(this.parent.worldMatrix, this[s_LocalMatrix]);
+		}
+		else
+		{
+			this[s_WorldMatrix].copy(this[s_LocalMatrix]);
+		}
+
+		this[s_TransformDirty] = false;
+	}
+
+	/**
 	 * Destroys this actor and all its components.
 	 * Recursively destroys all children actors, starting from the deepest children.
 	 */
@@ -328,9 +318,9 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 		this[s_OnDisable]();
 		this[s_Parent]?.removeComponent(this);
 		this[s_OnDestroy]();
-		// @ts-ignore - internal augmentation
-		this[s_Object3D].actor = undefined;
-		this[s_Object3D].parent?.remove(this[s_Object3D]);
+		this.position.actor = undefined;
+		this.rotation.actor = undefined;
+		this.scale.actor = undefined;
 		this[s_Parent] = null;
 		this[s_Scene] = null;
 		this[s_App] = null;
@@ -338,11 +328,8 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 	}
 
 	/* **********************************************************
-	    s_Internal
+	    Internal
 	************************************************************/
-
-	// @ts-ignore - internal augmentation
-	[s_Object3D] = ((e: Three.Object3D) => (e.actor = this, e))(new Three.Object3D) as T;
 
 	[s_Parent]: Actor | null = null;
 
@@ -362,6 +349,12 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 
 	[s_Destroyed]: boolean = false;
 
+	[s_TransformDirty] = true;
+
+	[s_WorldMatrix] = new Three.Matrix4();
+
+	[s_LocalMatrix] = new Three.Matrix4();
+
 	[s_ComponentsByType]: Map<Constructor<Component>, ComponentSet<Component>> = new Map;
 
 	[s_ComponentsByTag]: Map<any, ComponentSet<Component>> = new Map;
@@ -372,7 +365,6 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 		if(this[s_Internal]._enabled || this[s_Destroyed])  return;
 		this[s_Enabled] = true;
 		this[s_Internal]._enabled = true;
-		this.object3d.visible = true;
 		reportLifecycleError(this, this.onEnable);
 		for(const component of this.components)
 		{
@@ -385,7 +377,6 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 		if(!this[s_Enabled] || this[s_Destroyed]) return;
 		this[s_Enabled] = false;
 		this[s_Internal]._enabled = false;
-		this.object3d.visible = false;
 		reportLifecycleError(this, this.onDisable);
 		for(const component of this.components)
 		{
@@ -426,7 +417,6 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 		this[s_InScene] = true;
 		for(const component of this.components)
 		{
-			if(isActor(component)) this.object3d.add(component.object3d);
 			component[s_OnEnterScene]();
 		}
 	}
@@ -489,7 +479,6 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 		for(const component of this.components)
 		{
 			component[s_OnLeaveScene]();
-			if(isActor(component)) component.object3d.removeFromParent()
 		}
 	}
 
@@ -501,16 +490,6 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 		for(const component of this.components) component[s_OnDestroy]();
 	}
 
-	[s_OnReparent](newParent: Actor | null)
-	{
-		if(newParent === this[s_Parent])
-		{
-			if(isDev()) ELYSIA_LOGGER.warn(`Trying to reparent actor to the same parent: ${this}`);
-		}
-		this[s_Parent] = newParent;
-		reportLifecycleError(this, this.onReparent, newParent);
-	}
-
 	[s_OnResize](width: number, height: number)
 	{
 		reportLifecycleError(this, this.onResize, width, height);
@@ -519,6 +498,96 @@ export class Actor<T extends Three.Object3D = Three.Object3D> implements ActorLi
 			component[s_OnResize](width, height);
 		}
 	}
+
 }
 
-const tempVec2 = new Three.Vector2();
+/** @internal patches Three.Vector to flag parent actor as dirty */
+class ActorVector extends Three.Vector3
+{
+	_x: number;
+	_y: number;
+	_z: number
+	actor?: Actor;
+
+	constructor(x?: number, y?: number, z?: number) {
+		super(x, y, z);
+
+		this._x = x ?? 0;
+		this._y = y ?? 0;
+		this._z = z ?? 0;
+
+		Object.defineProperties(this, {
+			x: {
+				get() { return this._x },
+				set(value) {
+					this.actor!.transformDirty = true;
+					this._x = value
+				}
+			},
+			y: {
+				get() { return this._y },
+				set(value) {
+					this.actor!.transformDirty = true;
+					this._y = value
+				}
+			},
+			z: {
+				get() { return this._z },
+				set(value) {
+					this.actor!.transformDirty = true;
+					this._z = value
+				}
+			}
+		})
+	}
+}
+
+/** @internal patches Three.Quaternion to flag parent actor as dirty */
+class ActorQuaternion extends Three.Quaternion
+{
+	_x: number;
+	_y: number;
+	_z: number;
+	_w: number;
+	actor?: Actor;
+
+	constructor(x?: number, y?: number, z?: number, w?: number) {
+		super(x, y, z, w);
+
+		this._x = x ?? 0;
+		this._y = y ?? 0;
+		this._z = z ?? 0;
+		this._w = w ?? 1;
+
+		Object.defineProperties(this, {
+			x: {
+				get() { return this._x },
+				set(value) {
+					this.actor!.transformDirty = true;
+					this._x = value
+				}
+			},
+			y: {
+				get() { return this._y },
+				set(value) {
+					this.actor!.transformDirty = true;
+					this._y = value
+				}
+			},
+			z: {
+				get() { return this._z },
+				set(value) {
+					this.actor!.transformDirty = true;
+					this._z = value
+				}
+			},
+			w: {
+				get() { return this._w },
+				set(value) {
+					this.actor!.transformDirty = true;
+					this._w = value
+				}
+			}
+		})
+	}
+}

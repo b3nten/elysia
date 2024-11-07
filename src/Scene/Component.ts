@@ -1,5 +1,7 @@
-import { Actor, IsActor } from "./Actor.ts";
+import { Actor } from "./Actor.ts";
 import { Behavior, IsBehavior } from "./Behavior.ts";
+import { ThreeActor } from "./ThreeActor.ts";
+import { s_IsActor } from "./Internal.ts";
 
 /**
  * A Component is an Actor or Behavior that satisfies the ActorLifecycle interface.
@@ -12,7 +14,7 @@ export type Component = Actor | Behavior;
  */
 export function isActor(component: any): component is Actor
 {
-	return IsActor in component;
+	return s_IsActor in component;
 }
 
 /**
@@ -22,6 +24,11 @@ export function isActor(component: any): component is Actor
 export function isBehavior(component: any): component is Behavior
 {
 	return IsBehavior in component;
+}
+
+export function isThreeActor(component: any): component is ThreeActor
+{
+	return s_IsActor in component && "object3d" in component;
 }
 
 /**
