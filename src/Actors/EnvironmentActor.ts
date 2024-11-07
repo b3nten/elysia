@@ -151,8 +151,6 @@ type EnvironmentArgs = {
 
 export class EnvironmentActor extends Actor
 {
-	override type = "EnvironmentActor";
-
 	/**
 	 * The texture or cube texture to use as the environment map.
 	 */
@@ -164,9 +162,6 @@ export class EnvironmentActor extends Actor
 	 */
 	get envScene(): Maybe<Three.Scene> { return this.#envScene; }
 	set envScene(v: Maybe<Three.Scene>) { this.#envScene = v; this.updateState(); }
-
-	override get rotation(): Three.Euler { return this.#rotation; }
-	override set rotation(v: Three.Euler) { this.#rotation = v; this.updateState(); }
 
 	/**
 	 * The intensity of the environment map.
@@ -197,7 +192,6 @@ export class EnvironmentActor extends Actor
 		super();
 		this.#texture = args.texture ?? null;
 		this.#envScene = args.envScene ?? null;
-		this.#rotation = args.rotation ?? new Three.Euler();
 		this.#environmentIntensity = args.environmentIntensity ?? 1;
 		this.#background = args.background ?? false;
 		this.#backgroundIntensity = args.backgroundIntensity ?? 1;
@@ -238,7 +232,7 @@ export class EnvironmentActor extends Actor
 		if (this.#background)
 		{
 			this.scene.object3d.backgroundIntensity = this.#backgroundIntensity;
-			this.scene.object3d.backgroundRotation = this.#rotation;
+			this.scene.object3d.backgroundRotation = new Three.Euler().setFromQuaternion(this.rotation);
 			this.scene.object3d.backgroundBlurriness = this.#backgroundBlur;
 			this.scene.object3d.background = this.#texture;
 		}
@@ -248,7 +242,7 @@ export class EnvironmentActor extends Actor
 		}
 
 		this.scene.object3d.environmentIntensity = this.#environmentIntensity;
-		this.scene.object3d.environmentRotation = this.#rotation;
+		this.scene.object3d.environmentRotation = new Three.Euler().setFromQuaternion(this.rotation);
 	}
 
 	override onCreate()
@@ -272,7 +266,6 @@ export class EnvironmentActor extends Actor
 	#pmremGenerator?: Three.PMREMGenerator;
 	#texture: Three.Texture | Three.CubeTexture | null;
 	#envScene: Maybe<Three.Scene>;
-	#rotation: Three.Euler;
 	#environmentIntensity: number;
 	#background: boolean;
 	#backgroundIntensity: number;

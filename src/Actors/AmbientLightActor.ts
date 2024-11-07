@@ -16,10 +16,8 @@ import * as Three from 'three';
 import { Actor } from "../Scene/Actor.ts";
 
 /** An actor wrapping Three.AmbientLight. Setting transform properties will have no effect on this actor.n*/
-export class AmbientLightActor extends Actor<Three.AmbientLight>
+export class AmbientLightActor extends Actor
 {
-	override type: string = "AmbientLightActor";
-
 	/** The intensity of the ambient light. */
 	get intensity(): number { return this.object3d.intensity; }
 	set intensity(value: number) { this.object3d.intensity = value; }
@@ -36,6 +34,17 @@ export class AmbientLightActor extends Actor<Three.AmbientLight>
 	constructor(intensity?: number, color?: Three.Color)
 	{
 		super();
-		this.object3d = new Three.AmbientLight(color, intensity);
+		this.object3d.intensity = intensity ?? 1;
+		this.object3d.color = color ?? new Three.Color(0xFFFFFF);
 	}
+
+	override onEnterScene() {
+		this.scene?.object3d.add(this.object3d);
+	}
+
+	override onLeaveScene() {
+		this.scene?.object3d.remove(this.object3d);
+	}
+
+	private readonly object3d: Three.AmbientLight = new Three.AmbientLight();
 }

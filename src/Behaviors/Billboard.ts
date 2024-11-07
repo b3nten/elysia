@@ -11,14 +11,16 @@
  */
 
 import { Behavior } from "../Scene/Behavior.ts";
+import { isThreeActor } from "../Scene/Component.ts";
+import { ThreeActor } from "../Scene/ThreeActor.ts";
+// @ts-types="npm:@types/three@^0.169.0"
+import * as Three from 'three';
 
 /**
  * Makes the parent object always face the camera.
  */
 export class BillboardBehavior extends Behavior
 {
-	override type: string = 'BillboardBehavior'
-
 	/**
 	 * Lock the rotation on the X axis.
 	 * @default false
@@ -40,23 +42,43 @@ export class BillboardBehavior extends Behavior
 	get lockZ(): boolean { return this.#lockZ }
 	set lockZ(value: boolean) { this.#lockZ = value }
 
+	override onCreate() {
+		if(!isThreeActor(this.parent)) {
+			console.warn("BillboardBehavior requires a ThreeActor parent.")
+			this.#valid = false
+		}
+	}
+
+	override onStart()
+	{
+		if(!this.#valid) return
+		this.euler.setFromQuaternion((this.parent as ThreeActor).rotation)
+	}
+
 	override onUpdate(delta: number, elapsed: number)
 	{
-		if (!this.parent) return
+		if (!this.parent || !this.#valid) return
+
+		const parent = this.parent as ThreeActor;
 
 		// save previous rotation in case we're locking an axis
-		const prevRotation = this.parent!.object3d.rotation.clone()
+		const prevRotation = this.euler.clone()
 
 		// always face the camera
-		this.scene?.getActiveCamera()?.getWorldQuaternion(this.parent.object3d.quaternion)
+		this.scene?.getActiveCamera()?.getWorldQuaternion(parent.rotation)
 
 		// readjust any axis that is locked
-		if (this.#lockX) this.parent.object3d.rotation.x = prevRotation.x
-		if (this.#lockY) this.parent.object3d.rotation.y = prevRotation.y
-		if (this.#lockZ) this.parent.object3d.rotation.z = prevRotation.z
+		if (this.#lockX) this.euler.x = prevRotation.x
+		if (this.#lockY) this.euler.y = prevRotation.y
+		if (this.#lockZ) this.euler.z = prevRotation.z
+
+		parent.rotation.setFromEuler(this.euler)
 	}
+
+	euler = new Three.Euler();
 
 	#lockX = false
 	#lockY = false
 	#lockZ = false
+	#valid = true;
 }

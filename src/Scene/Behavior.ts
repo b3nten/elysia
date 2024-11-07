@@ -25,8 +25,6 @@ export class Behavior implements ActorLifecycle, Destroyable
 {
 	[IsBehavior]: boolean = true;
 
-	readonly type: string = "Behavior";
-
 	/** If this behavior has completed it's onCreate() lifecycle. */
 	get created(): boolean { return this[s_Created]; }
 

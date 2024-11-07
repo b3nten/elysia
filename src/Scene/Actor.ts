@@ -74,12 +74,20 @@ export class Actor implements ActorLifecycle, Destroyable
 	/** The scale of this actor. */
 	readonly scale = new ActorVector(1,1,1)
 
+	/**
+	 * Get the world Matrix4 of this actor.
+	 * If the object's transform has been modified, it will recalculate the world matrix of this actor and all its parents.
+	 */
 	get worldMatrix(): Three.Matrix4
 	{
 		this.updateWorldMatrix();
 		return this[s_WorldMatrix];
 	}
 
+	/**
+	 * Get the local Matrix4 of this actor.
+	 * If the object's transform has been modified, it will recalculate the local matrix of this actor.
+	 */
 	get localMatrix(): Three.Matrix4
 	{
 		this.updateWorldMatrix();
@@ -306,6 +314,22 @@ export class Actor implements ActorLifecycle, Destroyable
 	}
 
 	/**
+	 * Mark the actor as having a dirty transform.
+	 * Usually called when the position, rotation, or scale of the actor is changed, but in
+	 * rare cases you might want to call this manually.
+	 */
+	public markTransformDirty()
+	{
+		if(this[s_TransformDirty]) return;
+		this[s_TransformDirty] = true;
+		for(const component of this.components)
+		{
+			// no need to check, if it's not an actor it will just ignore it
+			(component as Actor).markTransformDirty?.();
+		}
+	}
+
+	/**
 	 * Destroys this actor and all its components.
 	 * Recursively destroys all children actors, starting from the deepest children.
 	 */
@@ -498,7 +522,6 @@ export class Actor implements ActorLifecycle, Destroyable
 			component[s_OnResize](width, height);
 		}
 	}
-
 }
 
 /** @internal patches Three.Vector to flag parent actor as dirty */
@@ -520,21 +543,21 @@ class ActorVector extends Three.Vector3
 			x: {
 				get() { return this._x },
 				set(value) {
-					this.actor!.transformDirty = true;
+					this.actor?.markTransformDirty();
 					this._x = value
 				}
 			},
 			y: {
 				get() { return this._y },
 				set(value) {
-					this.actor!.transformDirty = true;
+					this.actor?.markTransformDirty();
 					this._y = value
 				}
 			},
 			z: {
 				get() { return this._z },
 				set(value) {
-					this.actor!.transformDirty = true;
+					this.actor?.markTransformDirty();
 					this._z = value
 				}
 			}
@@ -545,49 +568,15 @@ class ActorVector extends Three.Vector3
 /** @internal patches Three.Quaternion to flag parent actor as dirty */
 class ActorQuaternion extends Three.Quaternion
 {
-	_x: number;
-	_y: number;
-	_z: number;
-	_w: number;
 	actor?: Actor;
 
 	constructor(x?: number, y?: number, z?: number, w?: number) {
 		super(x, y, z, w);
+	}
 
-		this._x = x ?? 0;
-		this._y = y ?? 0;
-		this._z = z ?? 0;
-		this._w = w ?? 1;
-
-		Object.defineProperties(this, {
-			x: {
-				get() { return this._x },
-				set(value) {
-					this.actor!.transformDirty = true;
-					this._x = value
-				}
-			},
-			y: {
-				get() { return this._y },
-				set(value) {
-					this.actor!.transformDirty = true;
-					this._y = value
-				}
-			},
-			z: {
-				get() { return this._z },
-				set(value) {
-					this.actor!.transformDirty = true;
-					this._z = value
-				}
-			},
-			w: {
-				get() { return this._w },
-				set(value) {
-					this.actor!.transformDirty = true;
-					this._w = value
-				}
-			}
-		})
+	// @ts-ignore
+	override _onChangeCallback()
+	{
+		this.actor?.markTransformDirty();
 	}
 }

@@ -24,7 +24,6 @@ import {
 import { Application } from "../Core/ApplicationEntry.ts";
 import { LifeCycleError, reportLifecycleError } from "./Errors.ts";
 import { PhysicsWorld } from "../Physics/PhysicsWorld.ts";
-import { World } from "../ECS/World.ts";
 import { AutoInitializedMap } from "../Containers/AutoInitializedMap.ts";
 import { ThreeActor } from "./ThreeActor.ts";
 
@@ -39,8 +38,6 @@ export class Scene implements Destroyable
 	public readonly type: string = "Scene";
 
 	public physics?: PhysicsWorld;
-
-	public readonly ecs: World = new World;
 
 	/** Get the root Three.Scene */
 	get object3d(): Three.Scene { return this[s_Object3D]; }

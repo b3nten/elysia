@@ -10,9 +10,11 @@ const app = new Elysia.Core.Application({
 class MyScene extends Elysia.Scene.Scene
 {
 	cube = new Elysia.Scene.ThreeActor(
-		new Three.Mesh(new Three.BoxGeometry(), new Three.MeshBasicMaterial({ color: 0xff0000 })))
+		new Three.Mesh(new Three.BoxGeometry(), new Three.MeshStandardMaterial({ color: 0xff0000 })))
 
 	camera = new Elysia.Actors.PerspectiveCameraActor();
+
+	env = new Elysia.Actors.EnvironmentActor();
 
 	override onCreate()
 	{
@@ -25,21 +27,25 @@ class MyScene extends Elysia.Scene.Scene
 		this.addComponent(this.cube);
 
 		const cube2 = new Elysia.Scene.ThreeActor(
-			new Three.Mesh(new Three.BoxGeometry(), new Three.MeshBasicMaterial({ color: "green" })))
+			new Three.Mesh(new Three.BoxGeometry(), new Three.MeshStandardMaterial({ color: "green" })))
 
 		cube2.scale.setScalar(0.5)
 		cube2.position.y = -3
 		this.cube.addComponent(cube2)
+
+		this.env.background = true;
+		this.env.backgroundBlur = 3;
+		this.addComponent(this.env);
 	}
 
 	euler = new Three.Euler();
 
-	override onUpdate()
+	override onUpdate(d: number)
 	{
-		this.euler.x += 0.01;
-		this.euler.y += 0.01;
-		this.euler.z += 0.01;
-		// this.cube.rotation.setFromEuler(this.euler);
+		this.euler.x += 0.1 * d;
+		this.euler.y += 0.1 * d;
+		this.euler.z += 0.1 * d;
+		this.cube.rotation.setFromEuler(this.euler);
 	}
 }
 

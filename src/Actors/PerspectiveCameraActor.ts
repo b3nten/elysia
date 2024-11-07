@@ -106,6 +106,8 @@ export class PerspectiveCameraActor extends ThreeActor<Three.PerspectiveCamera>
 	{
 		super();
 		this.onResize = this.onResize.bind(this);
+		// this.object3d.matrixAutoUpdate = false;
+		// this.object3d.matrixWorldAutoUpdate = false;
 	}
 
 	override onCreate()

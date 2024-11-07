@@ -26,6 +26,10 @@ export function isBehavior(component: any): component is Behavior
 	return IsBehavior in component;
 }
 
+/**
+ * Returns true if the component is a ThreeActor.
+ * @param component
+ */
 export function isThreeActor(component: any): component is ThreeActor
 {
 	return s_IsActor in component && "object3d" in component;
