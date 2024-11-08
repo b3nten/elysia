@@ -42,12 +42,8 @@ export class ThreeActor<T extends Three.Object3D = Three.Object3D> extends Actor
 		this.scene.object3d.add(this.object3d);
 	}
 
-	override [s_OnUpdate](delta: number, elapsed: number)
+	override onTransformUpdate()
 	{
-		super[s_OnUpdate](delta, elapsed);
-
-		if(this[s_Destroyed]) return;
-
 		if(this.updatePositionRotationScale)
 		{
 			this.worldMatrix.decompose(this.object3d.position, this.object3d.quaternion, this.object3d.scale);

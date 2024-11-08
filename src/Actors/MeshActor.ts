@@ -15,8 +15,15 @@
 import { Actor } from "../Scene/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
+import { isArray } from "../Core/Asserts.ts";
 
-type BatchedMeshPool = Map<Three.Material, {
+/*
+	Todo:
+	- Implement LOD system
+	- Implement skeletalBatchedMesh
+ */
+
+type BatchedMeshPool = Map<string, {
 	batchedMesh: Three.BatchedMesh,
 	geoInstances: Map<Three.BufferGeometry, number>,
 	actors: Set<MeshActor>,
@@ -25,42 +32,76 @@ type BatchedMeshPool = Map<Three.Material, {
 	maxIndices: number
 }>
 
+type Mesh = { geometry: Three.BufferGeometry, material: Three.Material | Array<Three.Material> }
+const isMeshObject = (obj: any): obj is Mesh => obj.geometry !== undefined && obj.material !== undefined;
+
+type MeshGroup = { children: Array<any> }
+const isMeshGroup = (obj: any): obj is MeshGroup => Array.isArray(obj.children);
+
+type LodMesh = {
+	levels: Array<{
+		distance: number,
+		mesh: Mesh | MeshGroup
+	}>,
+	billboard?: Three.Mesh
+}
+
+const isLodMesh = (obj: any): obj is LodMesh => Array.isArray(obj.levels);
+
 export class MeshActor extends Actor
 {
-	/**
-	 * The underlying Three.BufferGeometry.
-	 */
-	get geometry(): Three.BufferGeometry { return this.#geometry; }
-	set geometry(value: Three.BufferGeometry)
-	{
-		if(this.geometry === value) return;
-		this.removeActorFromBatchedMesh();
-		this.#geometry = value;
-		this.addActorToBatchedMesh();
-	}
-
-	/**
-	 * The underlying Three.Material.
-	 */
-	get material(): Three.Material { return this.#material as Three.Material; }
-	set material(value: Three.Material)
-	{
-		if(this.#material === value) return;
-		this.removeActorFromBatchedMesh();
-		this.#material = value;
-		this.addActorToBatchedMesh();
-	}
-
-	constructor(geometry: Three.BufferGeometry, material: Three.Material)
+	constructor(mesh: Mesh )
+	constructor(meshGroup: MeshGroup)
+	constructor(meshes: Array<Mesh>)
+	constructor(geometry: Three.BufferGeometry, material?: Three.Material)
+	constructor(a1: Three.BufferGeometry | Mesh | MeshGroup | Array<Mesh>, a2?: Three.Material)
 	{
 		super();
-		this.#geometry = geometry;
-		this.#material = material;
+		// single object with geo and mat properties (like a Three.Mesh)
+		if(isMeshObject((a1)))
+		{
+			if(Array.isArray(a1.material)) throw Error("MeshActor: Array of materials is not supported yet.")
+			this.#geometries[0] = a1.geometry;
+			this.#materials[0] = a1.material;
+		}
+		// object with children property (like a Three.Group containing meshes)
+		else if(isMeshGroup(a1))
+		{
+			for(const child of a1.children)
+			{
+				if("geometry" in child && "material" in child)
+				{
+					if(Array.isArray(child.material)) throw Error("MeshActor: Array of materials is not supported yet.")
+					this.#geometries.push(child.geometry);
+					this.#materials.push(child.material)
+				}
+			}
+		}
+		// array of objects with geo and mat properties
+		else if(isArray(a1))
+		{
+			for(const mesh of a1)
+			{
+				if("geometry" in mesh && "material" in mesh)
+				{
+					if(Array.isArray(mesh.material)) throw Error("MeshActor: Array of materials is not supported yet.")
+					this.#geometries.push(mesh.geometry);
+					this.#materials.push(mesh.material)
+				}
+			}
+		}
+		// separate geometry and material arguments
+		else if(a1 instanceof Three.BufferGeometry)
+		{
+			this.#geometries[0] = a1;
+			this.#materials[0] = a2!;
+		}
+
+		this.updateMeshKeys();
 	}
 
 	override onCreate()
 	{
-		// create if not exists
 		if(!this.scene.userData.has("BatchedMeshPool"))
 		{
 			this.scene.userData.set("BatchedMeshPool", new Map());
@@ -72,106 +113,130 @@ export class MeshActor extends Actor
 		this.addActorToBatchedMesh()
 	}
 
-	override onUpdate(delta: number, elapsed: number) {
-		if(this.#instanceId === undefined) return;
-		this.#meshMap!.get(this.#material)?.batchedMesh.setMatrixAt(this.#instanceId, this.worldMatrix);
-	}
-
 	override onLeaveScene()
 	{
 		this.removeActorFromBatchedMesh();
+	}
+
+	override onUpdate()
+	{
+		for(let i = 0; i < this.#geometries.length; i++)
+		{
+			if(this.#instanceIds[i] === undefined) return;
+			this.#meshMap!.get(this.#keys[i])?.batchedMesh.setMatrixAt(this.#instanceIds[i], this.worldMatrix);
+		}
 	}
 
 	private addActorToBatchedMesh()
 	{
 		const meshMap = this.scene.userData.get("BatchedMeshPool") as BatchedMeshPool;
 
-		this.#meshMap = meshMap;
-
-		let mesh = meshMap.get(this.#material);
-
-		if(mesh === undefined)
+		for(let i = 0; i < this.#geometries.length; i++)
 		{
-			// creating buffer space
-			const maxVertices = 1000;
-			const maxIndices = 3000;
-			const instanceCount = 10;
+			this.#meshMap = meshMap;
 
-			const batchedMesh = new Three.BatchedMesh(instanceCount, maxVertices, maxIndices, this.#material);
-			batchedMesh.perObjectFrustumCulled = true;
-			this.scene.object3d.add(batchedMesh);
+			let mesh = meshMap.get(this.#keys[i]);
 
-			const geoInstances = new Map<Three.BufferGeometry, number>();
+			if(mesh === undefined)
+			{
+				// creating buffer space
+				const maxVertices = 1000;
+				const maxIndices = 3000;
+				const instanceCount = 10;
 
-			mesh = {
-				batchedMesh,
-				geoInstances,
-				maxVertices,
-				maxIndices,
-				refs: 0,
-				actors: new Set()
-			};
+				const batchedMesh = new Three.BatchedMesh(instanceCount, maxVertices, maxIndices, this.#materials[i]);
 
-			meshMap.set(this.#material, mesh);
+				batchedMesh.perObjectFrustumCulled = true;
+
+				this.scene.object3d.add(batchedMesh);
+
+				const geoInstances = new Map<Three.BufferGeometry, number>();
+
+				mesh = {
+					batchedMesh,
+					geoInstances,
+					maxVertices,
+					maxIndices,
+					refs: 0,
+					actors: new Set()
+				};
+
+				meshMap.set(this.#keys[i], mesh);
+			}
+
+			let geometryId = mesh.geoInstances.get(this.#geometries[i]);
+
+			// add geometry to batched mesh, creating space for it
+			if(geometryId === undefined)
+			{
+				mesh.maxVertices = mesh.maxVertices
+					+ this.#geometries[i].getAttribute("position").count
+
+				mesh.maxIndices = mesh.maxIndices +
+					(this.#geometries[i].index?.count ?? this.#geometries[i].getAttribute("position").count)
+
+				mesh.batchedMesh.setGeometrySize(mesh.maxVertices, mesh.maxIndices);
+
+				geometryId = mesh.batchedMesh.addGeometry(this.#geometries[i]);
+
+				mesh.geoInstances.set(this.#geometries[i], geometryId);
+			}
+
+			// update instance count
+			if(mesh.batchedMesh.maxInstanceCount < mesh.refs + 1)
+			{
+				mesh.batchedMesh.setInstanceCount(mesh.batchedMesh.maxInstanceCount*2);
+			}
+
+			// create our instance
+			this.#instanceIds[i] = mesh.batchedMesh.addInstance(geometryId);
+
+			// mesh.batchedMesh.setVisibleAt(this.#instanceId, false);
+
+			// register actor
+			mesh.actors.add(this);
+			mesh.refs++;
 		}
-
-		let geometryId = mesh.geoInstances.get(this.#geometry);
-
-		// add geometry to batched mesh, creating space for it
-		if(geometryId === undefined)
-		{
-			mesh.maxVertices = mesh.maxVertices
-				+ this.#geometry.getAttribute("position").count
-
-			mesh.maxIndices = mesh.maxIndices +
-				(this.#geometry.index?.count ?? this.#geometry.getAttribute("position").count)
-
-			mesh.batchedMesh.setGeometrySize(mesh.maxVertices, mesh.maxIndices);
-
-			geometryId = mesh.batchedMesh.addGeometry(this.#geometry);
-
-			mesh.geoInstances.set(this.#geometry, geometryId);
-		}
-
-		// update instance count
-		if(mesh.batchedMesh.maxInstanceCount < mesh.refs + 1)
-		{
-			mesh.batchedMesh.setInstanceCount(mesh.batchedMesh.maxInstanceCount*2);
-		}
-
-		// create our instance
-		this.#instanceId = mesh.batchedMesh.addInstance(geometryId);
-
-		// mesh.batchedMesh.setVisibleAt(this.#instanceId, false);
-
-		// register actor
-		mesh.actors.add(this);
-		meshMap.get(this.#material)!.refs++;
 	}
 
 	private removeActorFromBatchedMesh()
 	{
-		const meshMap = this.scene.userData.get("BatchedMeshPool") as BatchedMeshPool;
+		const meshMap = this.#meshMap!
 
-		const mesh = meshMap.get(this.#material);
-
-		if(mesh === undefined) return;
-
-		mesh.batchedMesh.deleteInstance(this.#instanceId!);
-		mesh.refs--;
-		mesh.actors.delete(this);
-
-		// if no actors are using this mesh, remove it
-		if(mesh.refs === 0)
+		for(let i = 0; i < this.#geometries.length; i++)
 		{
-			meshMap.delete(this.#material);
-			mesh.batchedMesh.dispose();
-			this.scene.object3d.remove(mesh.batchedMesh);
+			const mesh = meshMap.get(this.#keys[i]);
+
+			if(mesh === undefined) return;
+
+			mesh.batchedMesh.deleteInstance(this.#instanceIds[i]!);
+			mesh.refs--;
+			mesh.actors.delete(this);
+
+			// if no actors are using this mesh, remove it
+			if(mesh.refs === 0)
+			{
+				meshMap.delete(this.#materials[i].uuid);
+				mesh.batchedMesh.dispose();
+				this.scene.object3d.remove(mesh.batchedMesh);
+			}
 		}
 	}
 
-	#instanceId?: number;
-	#geometry: Three.BufferGeometry;
-	#material: Three.Material;
+	protected updateMeshKeys()
+	{
+		for(let i = 0; i < this.#geometries.length; i++)
+		{
+			this.#keys[i] = `${this.#materials[i].uuid}-${Boolean(this.#geometries[i].index)}-`;
+			for(const key in this.#geometries[i].attributes) this.#keys[i] += `${key}`
+		}
+	}
+
 	#meshMap?: BatchedMeshPool;
+
+
+	#instanceIds: Array<number> = [];
+	#geometries: Array<Three.BufferGeometry> = [];
+	#materials: Array<Three.Material> = [];
+	#keys: Array<string> = [];
 }

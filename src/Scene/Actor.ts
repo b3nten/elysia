@@ -19,7 +19,7 @@ import {
 	s_InScene,
 	s_Internal,
 	s_IsActor,
-	s_LocalMatrix,
+	s_LocalMatrix, s_MatrixDirty,
 	s_OnBeforePhysicsUpdate,
 	s_OnCreate,
 	s_OnDestroy,
@@ -28,7 +28,7 @@ import {
 	s_OnEnterScene,
 	s_OnLeaveScene,
 	s_OnResize,
-	s_OnStart,
+	s_OnStart, s_OnTransformUpdate,
 	s_OnUpdate,
 	s_Parent,
 	s_Scene,
@@ -123,6 +123,8 @@ export class Actor implements ActorLifecycle, Destroyable
 	onDestroy() {}
 
 	onResize(width: number, height: number) {}
+
+	onTransformUpdate() {}
 
 	constructor()
 	{
@@ -297,7 +299,7 @@ export class Actor implements ActorLifecycle, Destroyable
 	 */
 	public updateWorldMatrix(force = false)
 	{
-		if(!force && !this[s_TransformDirty]) return;
+		if(!force && !this[s_MatrixDirty]) return;
 
 		this[s_LocalMatrix].compose(this.position, this.rotation, this.scale);
 
@@ -310,7 +312,7 @@ export class Actor implements ActorLifecycle, Destroyable
 			this[s_WorldMatrix].copy(this[s_LocalMatrix]);
 		}
 
-		this[s_TransformDirty] = false;
+		this[s_MatrixDirty] = false;
 	}
 
 	/**
@@ -320,13 +322,16 @@ export class Actor implements ActorLifecycle, Destroyable
 	 */
 	public markTransformDirty()
 	{
-		if(this[s_TransformDirty]) return;
-		this[s_TransformDirty] = true;
-		for(const component of this.components)
+		if(!this[s_TransformDirty])
 		{
-			// no need to check, if it's not an actor it will just ignore it
-			(component as Actor).markTransformDirty?.();
+			this[s_TransformDirty] = true;
+			for(const component of this.components)
+			{
+				(component as Actor).markTransformDirty?.();
+			}
 		}
+		// mark matrix dirty as true, will be set to false when the world matrix is accessed/updated
+		this[s_MatrixDirty] = true;
 	}
 
 	/**
@@ -373,11 +378,16 @@ export class Actor implements ActorLifecycle, Destroyable
 
 	[s_Destroyed]: boolean = false;
 
-	[s_TransformDirty] = true;
-
 	[s_WorldMatrix] = new Three.Matrix4();
 
 	[s_LocalMatrix] = new Three.Matrix4();
+
+	// true after the transform has changed, before onTransformChange is called
+	[s_TransformDirty] = true;
+
+	// true after the transform has changed,
+	// before updateWorldMatrix is called or worldMatrix/localMatrix are accessed
+	[s_MatrixDirty] = true;
 
 	[s_ComponentsByType]: Map<Constructor<Component>, ComponentSet<Component>> = new Map;
 
@@ -487,6 +497,11 @@ export class Actor implements ActorLifecycle, Destroyable
 			return;
 		}
 		if(!this[s_Started]) this[s_OnStart]();
+		if(this[s_TransformDirty])
+		{
+			this.onTransformUpdate();
+			this[s_TransformDirty] = false;
+		}
 		reportLifecycleError(this, this.onUpdate, delta, elapsed);
 		for(const component of this.components)
 		{

@@ -41,6 +41,12 @@ export interface ActorLifecycle
 	onBeforePhysicsUpdate(delta: number, elapsed: number): void;
 
 	/**
+	 * Called before onUpdate if the Actor's transform has been updated.
+	 * @param delta
+	 * @param elapsed
+	 */
+	onTransformUpdate(): void;
+	/**
 	 * Called every frame when the actor is updated. This is the last step before rendering.
 	 * @param delta The time in seconds since the last frame.
 	 * @param elapsed The time in seconds since the application was instantiated.

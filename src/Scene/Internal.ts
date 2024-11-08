@@ -10,6 +10,8 @@ export const s_OnEnable = Symbol.for("Elysia::s_OnEnable");
 
 export const s_OnDisable = Symbol.for("Elysia::s_OnDisable");
 
+export const s_OnTransformUpdate = Symbol.for("Elysia::s_OnTransformUpdate");
+
 export const s_OnUpdate = Symbol.for("Elysia::s_OnUpdate");
 
 export const s_OnBeforePhysicsUpdate = Symbol.for("Elysia::s_OnBeforePhysicsUpdate");
@@ -59,6 +61,8 @@ export const s_RegisterTagWithScene = Symbol.for("Elysia::RegisterTagWithScene")
 export const s_UnregisterTagWithScene = Symbol.for("Elysia::UnregisterTagWithScene");
 
 export const s_TransformDirty = Symbol.for("Elysia::TransformDirty");
+
+export const s_MatrixDirty = Symbol.for("Elysia::MatrixDirty");
 
 export const s_WorldMatrix = Symbol.for("Elysia::WorldMatrix");
 
