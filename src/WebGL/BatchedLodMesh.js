@@ -1208,8 +1208,9 @@ class BatchedLodMesh extends Mesh {
 
 	}
 
-	onBeforeRender( renderer, scene, camera, geometry, material/*, _group*/ ) {
+	firstRender = true;
 
+	onBeforeRender( renderer, scene, camera, geometry, material/*, _group*/ ) {
 		// if visibility has not changed and frustum culling and object sorting is not required
 		// then skip iterating over all items
 		if ( ! this._visibilityChanged && ! this.perObjectFrustumCulled && ! this.sortObjects ) {
@@ -1246,12 +1247,10 @@ class BatchedLodMesh extends Mesh {
 
 		let multiDrawCount = 0;
 		if ( this.sortObjects ) {
-
 			// get the camera position in the local frame
 			_matrix.copy( this.matrixWorld ).invert();
 			_vector.setFromMatrixPosition( camera.matrixWorld ).applyMatrix4( _matrix );
 			_forward.set( 0, 0, - 1 ).transformDirection( camera.matrixWorld ).transformDirection( _matrix );
-
 			for ( let i = 0, l = instanceInfo.length; i < l; i ++ ) {
 
 				if ( instanceInfo[ i ].visible && instanceInfo[ i ].active ) {
@@ -1262,27 +1261,31 @@ class BatchedLodMesh extends Mesh {
 					this.getMatrixAt( i, _matrix );
 					this.getBoundingSphereAt( geometryId, _sphere ).applyMatrix4( _matrix );
 
+					const instance = instanceInfo[ i ];
+
+					this.setMatrixAt( i, instance.getWorldMatrix() );
+
 					// determine whether the batched geometry is within the frustum
 					let culled = false;
+
 					if ( perObjectFrustumCulled ) {
-
 						culled = ! _frustum.intersectsSphere( _sphere );
-
 					}
 
 					if ( ! culled ) {
-
 						// get the distance from camera used for sorting
 						const geometryInfo = geometryInfoList[ geometryId ];
+
 						const z = _temp.subVectors( _sphere.center, _vector ).dot( _forward );
-						_renderList.push( geometryInfo.start, geometryInfo.count, z, i );
 
+						if(z >= instance.lodRange[0] && z < instance.lodRange[1])
+						{
+							_renderList.push( geometryInfo.start, geometryInfo.count, z, i );
+						}
 					}
-
 				}
 
 			}
-
 			// Sort the draw ranges and prep for rendering
 			const list = _renderList.list;
 			const customSort = this.customSort;
@@ -1309,7 +1312,6 @@ class BatchedLodMesh extends Mesh {
 			_renderList.reset();
 
 		} else {
-
 			for ( let i = 0, l = instanceInfo.length; i < l; i ++ ) {
 
 				if ( instanceInfo[ i ].visible && instanceInfo[ i ].active ) {
@@ -1328,6 +1330,7 @@ class BatchedLodMesh extends Mesh {
 					}
 
 					if ( ! culled ) {
+
 
 						const geometryInfo = geometryInfoList[ geometryId ];
 						multiDrawStarts[ multiDrawCount ] = geometryInfo.start * bytesPerElement;

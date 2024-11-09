@@ -42,40 +42,42 @@ class MyScene extends Elysia.Scene.Scene
 			const lodGroup = Elysia.Actors.createLodGroup({
 				levels: [
 					{
-						geometry: new Three.SphereGeometry(1, 256, 256),
+						geometry: new Three.SphereGeometry(1, 128, 128),
 						material: new Three.MeshStandardMaterial({ color: "blue" }),
 						distance: 0
 					},
 					{
-						geometry: new Three.SphereGeometry(1, 128, 128),
-						material: new Three.MeshStandardMaterial({ color: "cyan" }),
-						distance: 20
-					},
-					{
 						geometry: new Three.SphereGeometry(1, 64, 64),
-						material: new Three.MeshStandardMaterial({ color: "yellow" }),
-						distance: 50
+						material: new Three.MeshStandardMaterial({ color: "cyan" }),
+						distance: 12
 					},
 					{
-						geometry: new Three.SphereGeometry(1, 16, 16),
+						geometry: new Three.SphereGeometry(1, 32, 32),
+						material: new Three.MeshStandardMaterial({ color: "yellow" }),
+						distance: 30
+					},
+					{
+						geometry: new Three.SphereGeometry(1, 8, 8),
 						material: new Three.MeshStandardMaterial({ color: "white" }),
-						distance: 120
+						distance: 60
 					},
 				],
 				maxDrawDistance: 300,
 			})
 
 			const mesh = new Three.Mesh(
-				new Three.SphereGeometry(1, 256, 256),
+				new Three.SphereGeometry(1, 128, 128),
 				new Three.MeshStandardMaterial({ color: "red" })
 			)
 
-			for(let i = 0; i < 1; i++)
+			for(let i = 0; i < 100_000; i++)
 			{
 
 				const cube = new Elysia.Actors.MeshActor(lodGroup)
-				cube.scale.setScalar(1)
+				cube.static = true;
+				cube.scale.setScalar(.5)
 				cube.position.set(Math.random() * 100 - 50, Math.random() * 100 - 50, Math.random() * 100 - 50);
+				// cube.position.set(Math.random() * 5 - 2.5, Math.random() * 5 - 2.5, Math.random() * 5 - 2.5);
 				this.addComponent(cube);
 			}
 		}

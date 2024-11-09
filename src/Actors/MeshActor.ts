@@ -16,6 +16,7 @@ import { Actor } from "../Scene/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 import { isArray } from "../Core/Asserts.ts";
+// @ts-types="npm:@types/three@^0.169/objects/BatchedMesh.ts"
 import { BatchedLodMesh } from "../WebGL/BatchedLodMesh.js"
 
 /*
@@ -74,12 +75,19 @@ const validateMaterial = (material: Three.Material | Array<Three.Material>): Thr
 export class MeshActor extends Actor
 {
 
-	get visible() { return this.#userVisibility }
-	set visible(value: boolean)
+	public get visible() { return this.#userVisibility }
+	public set visible(value: boolean)
 	{
 		if(this.#userVisibility === value) return;
 		this.#userVisibility = value;
-		this.updateVisibility();
+		for(let i = 0; i < this.#lods.length; i++)
+		{
+			for(let l = 0; l < this.#lods[i].meshes.length; l++)
+			{
+				const mesh = this.#lods[i].meshes[l];
+				this.#meshMap!.get(mesh.key)?.batchedMesh.setVisibleAt(mesh.instanceId, value);
+			}
+		}
 	}
 
 	get maxDrawDistance() { return this.#maxDrawDistance }
@@ -87,7 +95,7 @@ export class MeshActor extends Actor
 	{
 		if(this.#maxDrawDistance === value) return;
 		this.#maxDrawDistance = value;
-		this.updateVisibility()
+		// todo: update instance
 	}
 
 	get minDrawDistance() { return this.#minDrawDistance }
@@ -95,7 +103,7 @@ export class MeshActor extends Actor
 	{
 		if(this.#minDrawDistance === value) return;
 		this.#minDrawDistance = value;
-		this.updateVisibility()
+		// todo: update instance
 	}
 
 	constructor(lodGroup: LodGroup)
@@ -174,7 +182,7 @@ export class MeshActor extends Actor
 			}
 		}
 
-		this.updateMeshKeys();
+		this.setMeshKeys();
 	}
 
 	override onCreate()
@@ -187,22 +195,12 @@ export class MeshActor extends Actor
 
 	override onEnterScene()
 	{
-		this.performDistanceCheck();
 		this.addActorToBatchedMesh()
-		this.updateVisibility();
-		this.updateMatrices();
 	}
 
 	override onLeaveScene()
 	{
 		this.removeActorFromBatchedMesh();
-	}
-
-	override onUpdate()
-	{
-		this.performDistanceCheck();
-		this.updateVisibility();
-		this.updateMatrices();
 	}
 
 	private addActorToBatchedMesh()
@@ -273,6 +271,13 @@ export class MeshActor extends Actor
 				// create our instance
 				meshInstance.instanceId = mesh.batchedMesh.addInstance(geometryId);
 
+				mesh.batchedMesh._instanceInfo[meshInstance.instanceId].lodRange = [
+					this.#lods[l]?.distance ?? this.#minDrawDistance,
+					this.#lods[l+1]?.distance ?? this.#maxDrawDistance
+				]
+
+				mesh.batchedMesh._instanceInfo[meshInstance.instanceId].getWorldMatrix = () => this.worldMatrix;
+
 				// register actor
 				mesh.actors.add(this);
 				mesh.refs++;
@@ -310,7 +315,7 @@ export class MeshActor extends Actor
 		}
 	}
 
-	protected updateMeshKeys()
+	protected setMeshKeys()
 	{
 		for(let instance = 0; instance < this.#lods.length; instance++)
 		{
@@ -322,93 +327,6 @@ export class MeshActor extends Actor
 			}
 		}
 
-	}
-
-	protected getActiveLod()
-	{
-		// only one lod
-		if(this.#lods.length === 1)
-		{
-			return 0
-		}
-
-		// no update if not visible
-		if(!this.#userVisibility)
-		{
-			return this.#activeLod;
-		}
-
-		// find active
-		let activeLod = 0;
-
-		for(let i = 0; i < this.#lods.length; i++)
-		{
-			if(this.#distanceFromCamera > this.#lods[i].distance)
-			{
-				activeLod = i;
-			}
-		}
-		return activeLod;
-	}
-
-	private updateVisibility()
-	{
-		let activeLod = this.getActiveLod()
-
-		if(!this.#userVisibility ||
-			this.#distanceFromCamera > this.#maxDrawDistance
-			|| this.#distanceFromCamera < this.#minDrawDistance
-		) { activeLod = -1 }
-
-		for(let i = 0; i < this.#lods.length; i++)
-		{
-			for(let l = 0; l < this.#lods[i].meshes.length; l++)
-			{
-				const mesh = this.#lods[i].meshes[l];
-				this.#meshMap!.get(mesh.key)?.batchedMesh.setVisibleAt(mesh.instanceId, i === activeLod);
-			}
-		}
-
-	}
-
-	private updateMatrices()
-	{
-		if(!this.#userVisibility || !this.enabled || this.destroyed) return;
-
-		const meshMap = this.#meshMap!;
-
-		// if only one lod, we can just update it's meshes
-		if(this.#lods.length === 1)
-		{
-			for(let i = 0; i < this.#lods[0].meshes.length; i++)
-			{
-				const mesh = this.#lods[0].meshes[i];
-				meshMap.get(mesh.key)?.batchedMesh.setMatrixAt(mesh.instanceId, this.worldMatrix);
-			}
-		}
-		else
-		{
-			// update active lod
-			const activeLod = this.getActiveLod();
-			for(let i = 0; i < this.#lods[activeLod].meshes.length; i++)
-			{
-				const mesh = this.#lods[activeLod].meshes[i];
-				meshMap.get(mesh.key)?.batchedMesh.setMatrixAt(mesh.instanceId, this.worldMatrix);
-			}
-		}
-	}
-
-	private performDistanceCheck()
-	{
-		if(!this.#userVisibility) return;
-
-		if(!this.scene?.activeCamera) return 1;
-
-		_v1.setFromMatrixPosition(this.worldMatrix);
-		_v2.setFromMatrixPosition(this.scene.activeCamera.userData.actor.worldMatrix);
-
-		this.#distanceFromCamera = _v1.distanceTo(_v2);
-		this.#activeLod = this.getActiveLod();
 	}
 
 	#meshMap?: BatchedMeshPool;
@@ -423,9 +341,7 @@ export class MeshActor extends Actor
 		}>
 	}> = [];
 
-	#activeLod = 0;
 	#userVisibility = true;
-	#distanceFromCamera = 0;
 	#maxDrawDistance = Infinity;
 	#minDrawDistance = -Infinity;
 }
