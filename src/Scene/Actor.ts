@@ -28,7 +28,7 @@ import {
 	s_OnEnterScene,
 	s_OnLeaveScene,
 	s_OnResize,
-	s_OnStart, s_OnTransformUpdate,
+	s_OnStart,
 	s_OnUpdate,
 	s_Parent,
 	s_Scene,
@@ -48,6 +48,7 @@ export class Actor implements ActorLifecycle, Destroyable
 	 * Set the actor as static. Static actors and their children do not participate in update loop, although other lifecycle methods are still called.
 	 * onUpdate, onBeforePhysicsUpdate, and onTransformUpdate are not called for static actors or their children.
 	 * Other actors can "wake" static actors by setting this to false.
+	 * Setting this to true when applicable can improve performance.
 	 */
 	get static () { return this[s_Static]; }
 	set static (value: boolean) {

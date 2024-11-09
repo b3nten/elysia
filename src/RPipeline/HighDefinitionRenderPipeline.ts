@@ -134,6 +134,8 @@ export class HDRenderPipeline extends RenderPipeline
 		});
 
 		this.renderer.outputColorSpace = Three.SRGBColorSpace;
+		this.renderer.shadowMap.enabled = true;
+		this.renderer.shadowMap.type = Three.PCFSoftShadowMap
 
 		this.effectComposer.setRenderer(this.renderer);
 		this.effectComposer.setMainScene(scene.object3d);

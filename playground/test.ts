@@ -18,7 +18,7 @@ class MyScene extends Elysia.Scene.Scene
 {
 	camera = new Elysia.Actors.PerspectiveCameraActor();
 
-	env = new Elysia.Actors.EnvironmentActor();
+	sky = new Elysia.Actors.SkyActor();
 
 	override async onLoad() {
 		await assets.load();
@@ -34,9 +34,8 @@ class MyScene extends Elysia.Scene.Scene
 		}
 
 		{
-			this.env.background = true;
-			this.env.backgroundBlur = 3;
-			this.addComponent(this.env);
+			this.sky.elevation = 30
+			this.addComponent(this.sky);
 		}
 
 		{
@@ -63,25 +62,41 @@ class MyScene extends Elysia.Scene.Scene
 						distance: 60
 					},
 				],
-				minDrawDistance: 13,
 				maxDrawDistance: 300,
 			})
 
+			// this.addComponent(new Elysia.Actors.AmbientLightActor)
+
 			const mesh = new Three.Mesh(
-				new Three.SphereGeometry(1, 128, 128),
+				new Three.BoxGeometry(2,2,2),
 				new Three.MeshStandardMaterial({ color: "red" })
 			)
 
-			for(let i = 0; i < 20_000; i++)
-			{
+			const cube = new Elysia.Actors.MeshActor(mesh)
+			cube.static = true;
+			cube.scale.setScalar(2)
+			cube.position.set(0, 0, 0);
+			this.addComponent(cube);
 
-				const cube = new Elysia.Actors.MeshActor(lodGroup)
-				cube.static = true;
-				cube.scale.setScalar(2)
-				cube.position.set(Math.random() * 100 - 50, Math.random() * 100 - 50, Math.random() * 100 - 50);
-				// cube.position.set(Math.random() * 5 - 2.5, Math.random() * 5 - 2.5, Math.random() * 5 - 2.5);
-				this.addComponent(cube);
-			}
+			const plane = new Elysia.Actors.MeshActor(
+				new Three.PlaneGeometry(100, 100, 10, 10),
+				new Three.MeshStandardMaterial({  })
+			)
+			plane.static = true;
+			plane.position.set(0, -2, 0);
+			plane.rotation.setFromEuler(new Three.Euler(-Math.PI / 2, 0, 0));
+			this.addComponent(plane);
+
+			// for(let i = 0; i < 2000; i++)
+			// {
+			//
+			// 	const cube = new Elysia.Actors.MeshActor(lodGroup)
+			// 	cube.static = true;
+			// 	cube.scale.setScalar(2)
+			// 	cube.position.set(Math.random() * 100 - 50, Math.random() * 100 - 50, Math.random() * 100 - 50);
+			// 	// cube.position.set(Math.random() * 5 - 2.5, Math.random() * 5 - 2.5, Math.random() * 5 - 2.5);
+			// 	this.addComponent(cube);
+			// }
 		}
 	}
 }

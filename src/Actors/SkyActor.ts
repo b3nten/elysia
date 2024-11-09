@@ -6,19 +6,14 @@
  * See https://threejs.org/docs/#examples/en/objects/Skyfor more information.
  */
 
-import { Actor } from "../Scene/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 // @ts-types="npm:@types/three@^0.169.0/examples/jsm/Sky"
 import { Sky } from "three/examples/jsm/objects/Sky.js";
-import { isActor } from "../Scene/Component.ts";
+import { ThreeActor } from "../Scene/ThreeActor.ts";
 
-export const SkyDirectionalLightTag = Symbol.for("Elysia::SkyDirectionalLight");
-
-export class SkyActor extends Actor
+export class SkyActor extends ThreeActor<Sky>
 {
-	override type = "SkyActor";
-
 	/**
 	 * The turbidity of the sky.
 	 */
@@ -55,38 +50,41 @@ export class SkyActor extends Actor
 	get azimuth(): number { return this.#azimuth; }
 	set azimuth(v: number) { this.#azimuth = v; this.updateSunPosition(); }
 
+	public readonly directionalLight = new Three.DirectionalLight(0xffffff, 5);
+	public readonly skyLight = new Three.HemisphereLight(0xffffff, 0x444444);
+
 	constructor()
 	{
-		super();
-		this.object3d = new Sky();
-		this.sky.scale.setScalar( 450000 );
+		super(new Sky());
+		this.scale.setScalar( 450000 );
+		this.directionalLight.castShadow = true;
+		this.updatePositionRotationScale = true;
 	}
 
 	private updateSunPosition()
 	{
 		const phi = Three.MathUtils.degToRad( 90 - this.#elevation );
 		const theta = Three.MathUtils.degToRad( this.#azimuth );
-		this.#sunPosition.setFromSphericalCoords( 1, phi, theta );
+		this.#sunPosition.setFromSphericalCoords( 20, phi, theta );
 		this.material.uniforms.sunPosition.value.copy(this.#sunPosition);
-
-		this.scene?.getComponentsByTag(SkyDirectionalLightTag).forEach(sunTracker => {
-			if(isActor(sunTracker))
-			{
-				if(sunTracker.object3d instanceof Three.DirectionalLight)
-				{
-					sunTracker.object3d.position.copy(this.#sunPosition);
-					sunTracker.object3d.updateMatrix();
-				}
-			}
-		})
+		this.directionalLight.position.copy(this.#sunPosition);
+		this.directionalLight.updateMatrix();
 		this.sky.material.needsUpdate = true;
 		this.sky.matrixWorldNeedsUpdate = true;
 	}
 
-	override onStart()
+	override onEnterScene()
 	{
 		this.updateSunPosition();
+		this.scene.object3d.add(this.directionalLight);
+		this.scene.object3d.add(this.skyLight);
  	}
+
+	 override onLeaveScene()
+	 {
+		this.scene.object3d.remove(this.directionalLight);
+		this.scene.object3d.remove(this.skyLight);
+	 }
 
 	private get sky() { return this.object3d as Sky; }
 	private get material() { return this.sky.material as Three.ShaderMaterial; }

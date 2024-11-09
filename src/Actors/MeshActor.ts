@@ -19,56 +19,8 @@ import { isArray } from "../Core/Asserts.ts";
 // @ts-types="npm:@types/three@^0.169/objects/BatchedMesh.ts"
 import { BatchedLodMesh } from "../WebGL/BatchedLodMesh.js"
 
-/*
-	Todo:
-	- Implement skeletalBatchedMesh
- */
-
-type BatchedMeshPool = Map<string, {
-	batchedMesh: Three.BatchedMesh,
-	geoInstances: Map<Three.BufferGeometry, number>,
-	actors: Set<MeshActor>,
-	refs: number
-	maxVertices: number
-	maxIndices: number
-}>
-
-type Mesh = { geometry: Three.BufferGeometry, material: Three.Material | Array<Three.Material> }
-const isMeshObject = (obj: any): obj is Mesh => obj.geometry !== undefined && obj.material !== undefined;
-
-type MeshGroup = { children: Array<any> }
-const isMeshGroup = (obj: any): obj is MeshGroup => Array.isArray(obj.children);
-
-export function createLodGroup(mesh: LodGroup) { return mesh }
-
-type LodGroup = {
-	levels: Array<{
-		distance: number,
-		geometry: Three.BufferGeometry,
-		material: Three.Material
-	}>,
-	/** @experimental not functional */
-	billboard?: Three.Mesh
-	/** @experimental not functional */
-	occlusionMesh?: Three.Mesh
-	maxDrawDistance?: number
-}
-
-const isLodGroup = (obj: any): obj is LodGroup => Array.isArray(obj.levels);
-
-const validateMaterial = (material: Three.Material | Array<Three.Material>): Three.Material =>
-{
-	if(Array.isArray(material))
-	{
-		if(material.length > 1) throw Error("MeshActor: Array of materials is not supported.")
-		return material[0];
-	}
-	return material;
-}
-
 export class MeshActor extends Actor
 {
-
 	public get visible() { return this.#userVisibility }
 	public set visible(value: boolean)
 	{
@@ -85,12 +37,6 @@ export class MeshActor extends Actor
 	}
 
 	get maxDrawDistance() { return this.#maxDrawDistance }
-	set maxDrawDistance(value: number)
-	{
-		if(this.#maxDrawDistance === value) return;
-		this.#maxDrawDistance = value;
-		// todo: update instance
-	}
 
 	constructor(lodGroup: LodGroup)
 	constructor(mesh: Mesh )
@@ -263,6 +209,8 @@ export class MeshActor extends Actor
 
 				mesh.batchedMesh._instanceInfo[meshInstance.instanceId].getWorldMatrix = () => this.worldMatrix;
 
+				mesh.batchedMesh.castShadow = true;
+				mesh.batchedMesh.receiveShadow = true;
 				// register actor
 				mesh.actors.add(this);
 				mesh.refs++;
@@ -308,7 +256,8 @@ export class MeshActor extends Actor
 	}
 
 	#meshMap?: BatchedMeshPool;
-
+	#userVisibility = true;
+	#maxDrawDistance = Infinity;
 	#lods: Array<{
 		distance: number
 		meshes: Array<{
@@ -318,10 +267,47 @@ export class MeshActor extends Actor
 			key: string
 		}>
 	}> = [];
-
-	#userVisibility = true;
-	#maxDrawDistance = Infinity;
 }
+
+const validateMaterial = (material: Three.Material | Array<Three.Material>): Three.Material =>
+{
+	if(Array.isArray(material))
+	{
+		if(material.length > 1) throw Error("MeshActor: Array of materials is not supported.")
+		return material[0];
+	}
+	return material;
+}
+
+type BatchedMeshPool = Map<string, {
+	batchedMesh: Three.BatchedMesh,
+	geoInstances: Map<Three.BufferGeometry, number>,
+	actors: Set<MeshActor>,
+	refs: number
+	maxVertices: number
+	maxIndices: number
+}>
+
+type Mesh = { geometry: Three.BufferGeometry, material: Three.Material | Array<Three.Material> }
+const isMeshObject = (obj: any): obj is Mesh => obj.geometry !== undefined && obj.material !== undefined;
+
+type MeshGroup = { children: Array<any> }
+const isMeshGroup = (obj: any): obj is MeshGroup => Array.isArray(obj.children);
+
+export type LodGroup = {
+	levels: Array<{
+		distance: number,
+		geometry: Three.BufferGeometry,
+		material: Three.Material
+	}>,
+	/** @experimental not functional */
+	billboard?: Three.Mesh
+	/** @experimental not functional */
+	occlusionMesh?: Three.Mesh
+	maxDrawDistance?: number
+}
+export function createLodGroup(mesh: LodGroup) { return mesh }
+const isLodGroup = (obj: any): obj is LodGroup => Array.isArray(obj.levels);
 
 const _v1 = new Three.Vector3();
 const _v2 = new Three.Vector3();

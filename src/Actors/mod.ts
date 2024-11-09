@@ -14,4 +14,3 @@ export * from "./OrthographicCameraActor.ts";
 export * from "./Primitives.ts";
 export * from "./DirectionalLightActor.ts";
 export * from "./AmbientLightActor.ts";
-export * from "./TextActor.ts";

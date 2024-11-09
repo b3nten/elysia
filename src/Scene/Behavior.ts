@@ -25,6 +25,10 @@ export class Behavior implements ActorLifecycle, Destroyable
 {
 	[IsBehavior]: boolean = true;
 
+	/**
+	 * Static behaviors are not updated during onUpdate, onBeforePhysicsUpdate, or onTransformUpdate.
+	 * This can be toggled at any time.
+	 */
 	get static() { return this[s_Static]; }
 	set static(value: boolean)
 	{
