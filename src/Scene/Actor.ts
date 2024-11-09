@@ -44,6 +44,11 @@ export class Actor implements ActorLifecycle, Destroyable
 {
 	[s_IsActor]: boolean = true;
 
+	/**
+	 * Set the actor as static. Static actors and their children do not participate in update loop, although other lifecycle methods are still called.
+	 * onUpdate, onBeforePhysicsUpdate, and onTransformUpdate are not called for static actors or their children.
+	 * Other actors can "wake" static actors by setting this to false.
+	 */
 	get static () { return this[s_Static]; }
 	set static (value: boolean) {
 		this[s_Static] = value;
