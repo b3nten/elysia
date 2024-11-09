@@ -63,6 +63,7 @@ class MyScene extends Elysia.Scene.Scene
 						distance: 60
 					},
 				],
+				minDrawDistance: 13,
 				maxDrawDistance: 300,
 			})
 
@@ -76,7 +77,7 @@ class MyScene extends Elysia.Scene.Scene
 
 				const cube = new Elysia.Actors.MeshActor(lodGroup)
 				cube.static = true;
-				cube.scale.setScalar(2x)
+				cube.scale.setScalar(2)
 				cube.position.set(Math.random() * 100 - 50, Math.random() * 100 - 50, Math.random() * 100 - 50);
 				// cube.position.set(Math.random() * 5 - 2.5, Math.random() * 5 - 2.5, Math.random() * 5 - 2.5);
 				this.addComponent(cube);

@@ -52,7 +52,6 @@ type LodGroup = {
 	/** @experimental not functional */
 	occlusionMesh?: Three.Mesh
 	maxDrawDistance?: number
-	minDrawDistance?: number
 }
 
 const isLodGroup = (obj: any): obj is LodGroup => Array.isArray(obj.levels);
@@ -93,14 +92,6 @@ export class MeshActor extends Actor
 		// todo: update instance
 	}
 
-	get minDrawDistance() { return this.#minDrawDistance }
-	set minDrawDistance(value: number)
-	{
-		if(this.#minDrawDistance === value) return;
-		this.#minDrawDistance = value;
-		// todo: update instance
-	}
-
 	constructor(lodGroup: LodGroup)
 	constructor(mesh: Mesh )
 	constructor(meshGroup: MeshGroup)
@@ -114,7 +105,6 @@ export class MeshActor extends Actor
 		if(isLodGroup(arg1))
 		{
 			if(arg1.maxDrawDistance !== undefined) this.#maxDrawDistance = arg1.maxDrawDistance;
-			if(arg1.minDrawDistance !== undefined) this.#minDrawDistance = arg1.minDrawDistance;
 		}
 
 		const lods: Array<Mesh | MeshGroup | Array<Mesh>> = isLodGroup(arg1)
@@ -267,7 +257,7 @@ export class MeshActor extends Actor
 				meshInstance.instanceId = mesh.batchedMesh.addInstance(geometryId);
 
 				mesh.batchedMesh._instanceInfo[meshInstance.instanceId].lodRange = [
-					this.#lods[l]?.distance ?? this.#minDrawDistance,
+					this.#lods[l]?.distance,
 					this.#lods[l+1]?.distance ?? this.#maxDrawDistance
 				]
 
@@ -331,7 +321,6 @@ export class MeshActor extends Actor
 
 	#userVisibility = true;
 	#maxDrawDistance = Infinity;
-	#minDrawDistance = -Infinity;
 }
 
 const _v1 = new Three.Vector3();
