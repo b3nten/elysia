@@ -3,7 +3,8 @@ import * as Elysia from "../src/mod.ts";
 import * as Three from "three"
 
 const app = new Elysia.Core.Application({
-	renderPipeline: new Elysia.RPipeline.BasicRenderPipeline,
+	renderPipeline: new Elysia.RPipeline.HDRenderPipeline,
+	// renderPipeline: new Elysia.RPipeline.BasicRenderPipeline,
 	stats: true,
 })
 
@@ -70,12 +71,12 @@ class MyScene extends Elysia.Scene.Scene
 				new Three.MeshStandardMaterial({ color: "red" })
 			)
 
-			for(let i = 0; i < 100_000; i++)
+			for(let i = 0; i < 20_000; i++)
 			{
 
 				const cube = new Elysia.Actors.MeshActor(lodGroup)
 				cube.static = true;
-				cube.scale.setScalar(.5)
+				cube.scale.setScalar(2x)
 				cube.position.set(Math.random() * 100 - 50, Math.random() * 100 - 50, Math.random() * 100 - 50);
 				// cube.position.set(Math.random() * 5 - 2.5, Math.random() * 5 - 2.5, Math.random() * 5 - 2.5);
 				this.addComponent(cube);

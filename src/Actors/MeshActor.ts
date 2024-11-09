@@ -21,7 +21,6 @@ import { BatchedLodMesh } from "../WebGL/BatchedLodMesh.js"
 
 /*
 	Todo:
-	- Implement LOD system
 	- Implement skeletalBatchedMesh
  */
 
@@ -55,10 +54,6 @@ type LodGroup = {
 	maxDrawDistance?: number
 	minDrawDistance?: number
 }
-
-let _activeLod = 0;
-
-setTimeout(() => { _activeLod = 1 }, 5000);
 
 const isLodGroup = (obj: any): obj is LodGroup => Array.isArray(obj.levels);
 
@@ -115,6 +110,7 @@ export class MeshActor extends Actor
 	{
 		super();
 
+		// set up max and min draw distance
 		if(isLodGroup(arg1))
 		{
 			if(arg1.maxDrawDistance !== undefined) this.#maxDrawDistance = arg1.maxDrawDistance;
@@ -133,12 +129,13 @@ export class MeshActor extends Actor
 			if(isMeshObject(lod))
 			{
 				this.#lods[i] = {
+					// @ts-ignore shortcut for lodgroup as well
 					distance: lod.distance ?? 0,
 					meshes: [{
 						geometry: lod.geometry,
 						material: validateMaterial(lod.material),
 						instanceId: -1,
-						key: ""
+						key: this.generateMeshKey(lod.geometry, validateMaterial(lod.material))
 					}]
 				}
 			}
@@ -157,7 +154,7 @@ export class MeshActor extends Actor
 						geometry: child.geometry,
 						material: validateMaterial(child.material),
 						instanceId: -1,
-						key: ""
+						key: this.generateMeshKey(child.geometry, validateMaterial(child.material))
 					})
 				}
 			}
@@ -176,13 +173,11 @@ export class MeshActor extends Actor
 						geometry: child.geometry,
 						material: validateMaterial(child.material),
 						instanceId: -1,
-						key: ""
+						key: this.generateMeshKey(child.geometry, validateMaterial(child.material))
 					})
 				}
 			}
 		}
-
-		this.setMeshKeys();
 	}
 
 	override onCreate()
@@ -315,18 +310,11 @@ export class MeshActor extends Actor
 		}
 	}
 
-	protected setMeshKeys()
+	private generateMeshKey(geometry: Three.BufferGeometry, material: Three.Material)
 	{
-		for(let instance = 0; instance < this.#lods.length; instance++)
-		{
-			for(let lod = 0; lod < this.#lods[instance].meshes.length; lod++)
-			{
-				const mesh = this.#lods[instance].meshes[lod]
-				mesh.key = `${mesh.material.uuid}-${Boolean(mesh.geometry.index)}-`;
-				for(const key in mesh.geometry.attributes) mesh.key += `${key}`
-			}
-		}
-
+		let key = `${material.uuid}-${Boolean(geometry.index)}-`;
+		for (const attribute in geometry.attributes) key += `${attribute}`
+		return key;
 	}
 
 	#meshMap?: BatchedMeshPool;
