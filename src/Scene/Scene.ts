@@ -51,6 +51,7 @@ export class Scene implements Destroyable
 	set activeCamera(camera: Three.Camera | ThreeActor<Three.Camera>)
 	{
 		this[s_ActiveCamera] = isThreeActor(camera) ? camera.object3d : camera;
+		this.app?.renderPipeline.onCameraChange(this[s_ActiveCamera]);
 	}
 
 	constructor()
@@ -82,7 +83,7 @@ export class Scene implements Destroyable
 	 * Adds a component to this s_Scene.
 	 * @param component
 	 */
-	@bound public addComponent(...components: Component[]): this
+	public addComponent(...components: Component[]): this
 	{
 		for(const c of components)
 		{
@@ -96,7 +97,7 @@ export class Scene implements Destroyable
 	 * @param component
 	 * @returns `true` if the component was successfully added, `false` otherwise.
 	 */
-	@bound public removeComponent(...components: Component[]): this
+	public removeComponent(...components: Component[]): this
 	{
 		for(const c of components)
 		{
@@ -109,7 +110,7 @@ export class Scene implements Destroyable
 	 * Returns all actors in the s_Scene with the given tag.
 	 * @param tag
 	 */
-	@bound public getComponentsByTag(tag: any): ComponentSet<Component>
+	public getComponentsByTag(tag: any): ComponentSet<Component>
 	{
 		const set = this.#componentsByTag.get(tag);
 		if(!set)
@@ -124,7 +125,7 @@ export class Scene implements Destroyable
 	/**
 	 * Returns all actors in the s_Scene with the given type.
 	 */
-	@bound public getComponentsByType<T extends Actor | Behavior>(type: Constructor<T>): ComponentSet<T>
+	public getComponentsByType<T extends Actor | Behavior>(type: Constructor<T>): ComponentSet<T>
 	{
 		const set = this.#componentsByType.get(type);
 		if(!set)
@@ -140,7 +141,7 @@ export class Scene implements Destroyable
 	 * Returns the active camera in the s_Scene (if one is set via ActiveCameraTag).
 	 * If multiple cameras are set as active, the first one found is returned.
 	 */
-	@bound public getActiveCamera(): Three.Camera { return this[s_ActiveCamera]; }
+	public getActiveCamera(): Three.Camera { return this[s_ActiveCamera]; }
 
 	onLoad(): void | Promise<void> {}
 
@@ -159,7 +160,7 @@ export class Scene implements Destroyable
 		this[s_OnDestroy]();
 	}
 
-	@bound async [s_OnLoad]()
+	async [s_OnLoad]()
 	{
 		if(this[s_Loaded] || this[s_Destroyed]) return;
 
@@ -176,7 +177,7 @@ export class Scene implements Destroyable
 		this[s_SceneLoadPromise].resolve()
 	}
 
-	@bound [s_OnCreate]()
+	[s_OnCreate]()
 	{
 		if(this[s_Created] || !this[s_Loaded] || this[s_Destroyed]) return;
 
@@ -191,19 +192,16 @@ export class Scene implements Destroyable
 		this[Root][s_OnCreate]();
 	}
 
-	@bound [s_OnStart]()
+	[s_OnStart]()
 	{
 		if(this[s_Started] || !this[s_Created] || this[s_Destroyed]) return;
 		this.physics?.[s_OnStart]()
 		reportLifecycleError(this, this.onStart);
 		this[s_Started] = true;
 		this[Root][s_OnStart]();
-		// this[s_Object3D].matrixAutoUpdate = false;
-		// this[s_Object3D].matrixWorldAutoUpdate = false;
-		// this[s_Object3D].updateMatrixWorld();
 	}
 
-	@bound [s_OnBeforePhysicsUpdate](delta: number, elapsed: number)
+	[s_OnBeforePhysicsUpdate](delta: number, elapsed: number)
 	{
 		if(!this.physics) return;
 		if(this[s_Destroyed]) return;
@@ -213,7 +211,7 @@ export class Scene implements Destroyable
 		this.physics[s_OnUpdate](delta, elapsed);
 	}
 
-	@bound [s_OnUpdate](delta: number, elapsed: number)
+	[s_OnUpdate](delta: number, elapsed: number)
 	{
 		if(this[s_Destroyed]) return;
 		if(!this[s_Started]) this[s_OnStart]();
@@ -221,7 +219,7 @@ export class Scene implements Destroyable
 		this[Root][s_OnUpdate](delta, elapsed);
 	}
 
-	@bound [s_OnDestroy]()
+	[s_OnDestroy]()
 	{
 		if(this[s_Destroyed]) return;
 		reportLifecycleError(this, this[Root].destructor);

@@ -1,5 +1,7 @@
 export const s_Internal = Symbol.for("Elysia::s_Internal");
 
+export const s_Static = Symbol.for("Elysia::s_Static");
+
 export const s_OnCreate = Symbol.for("Elysia::s_OnCreate");
 
 export const s_OnStart = Symbol.for("Elysia::s_OnStart");

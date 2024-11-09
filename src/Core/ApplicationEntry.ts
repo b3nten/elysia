@@ -151,7 +151,7 @@ export class Application {
 	 * Load a s_Scene into the application. This will unload the previous s_Scene.
 	 * @param scene
 	 */
-	@bound public async loadScene(scene: Scene)
+	public async loadScene(scene: Scene)
 	{
 		ASSERT(
 			this.renderPipeline &&
@@ -202,7 +202,7 @@ export class Application {
 	}
 
 	/** Destroy the application and all of it's resources. */
-	@bound public destructor()
+	public destructor()
 	{
 		ELYSIA_LOGGER.debug("Destroying application")
 		this.#rendering = false;
@@ -215,7 +215,7 @@ export class Application {
 	}
 
 	/** The main update loop for the application. */
-	@bound public update()
+	public update()
 	{
 		try {
 			if(!this.#scene || !this.#rendering) throw Error("No s_Scene loaded")

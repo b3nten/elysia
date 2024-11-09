@@ -16,7 +16,7 @@ export class Map extends ModelActor {
 
 		const mesh = playgroundAssets.unwrap("Map").gltf.scene;
 
-		// create and position colliders for each mesh in the gltf
+		// create and position colliders for each meshes in the gltf
 		for(const child of mesh.children)
 		{
 			if(!(child instanceof Three.Mesh)) continue;

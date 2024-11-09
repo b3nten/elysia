@@ -33,6 +33,7 @@ export class ThreeActor<T extends Three.Object3D = Three.Object3D> extends Actor
 		this.object3d.matrixAutoUpdate = false;
 		this.object3d.matrixWorldAutoUpdate = false;
 		this.object3d.matrixWorld = this.worldMatrix;
+		this.object3d.userData.actor = this;
 	}
 
 	override [s_OnEnterScene]()

@@ -19,7 +19,6 @@ import { ThreeActor } from "../Scene/ThreeActor.ts";
 
 export class PerspectiveCameraActor extends ThreeActor<Three.PerspectiveCamera>
 {
-	override object3d = new Three.PerspectiveCamera(75, 1, 0.1, 1000);
 	/**
 	 * The field of view of the camera.
 	 */
@@ -104,10 +103,8 @@ export class PerspectiveCameraActor extends ThreeActor<Three.PerspectiveCamera>
 
 	constructor()
 	{
-		super();
+		super(new Three.PerspectiveCamera(75, 1, 0.1, 1000));
 		this.onResize = this.onResize.bind(this);
-		// this.object3d.matrixAutoUpdate = false;
-		// this.object3d.matrixWorldAutoUpdate = false;
 	}
 
 	override onCreate()

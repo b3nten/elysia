@@ -18,6 +18,11 @@
     "troika-three-text": "npm:troika-three-text@^0.50.1",
     "uhtml": "npm:uhtml@^4.5.11"
   },
+  "scopes": {
+    "npm:postprocessing@^6.36.3": {
+      "three": "npm:three@^0.170.0"
+    }
+  },
   "exports": {
     ".": "./src/mod.ts"
   },

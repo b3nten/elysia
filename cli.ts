@@ -9,12 +9,13 @@ const createPlaygroundEsbuildConfig = (mode: string): esbuild.BuildOptions => ({
 	bundle: true,
 	target: "ES2022",
 	format: "esm",
-	minify: mode === "build",
+	minify: false,
 	conditions: ["browser"],
 	treeShaking: true,
 	metafile: true,
 	splitting: true,
 	sourcemap: "linked",
+	external: ["three"],
 	entryNames: mode === 'build' ? "[name]-[hash]" : undefined,
 	define: {
 		"import.meta.DEV": mode === "dev" ? "true" : "false",
@@ -40,6 +41,15 @@ const constructPlaygroundHtml = (entry: string) => `
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Elysia Playground</title>
+	<script type="importmap">
+		{ 
+			"imports": 
+				{ 
+					"three": "https://esm.sh/three@0.170.0",
+					"three/": "https://esm.sh/three@0.170.0/"
+				} 
+		}
+	</script>
 	<script type="module" src="${entry}"></script>
 </head>
 <body></body>

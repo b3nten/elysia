@@ -1,7 +1,6 @@
 import * as Elysia from "../src/mod.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from "three"
-import * as BufferGeometryUtils from 'three/addons/utils/BufferGeometryUtils.js';
 
 const app = new Elysia.Core.Application({
 	renderPipeline: new Elysia.RPipeline.BasicRenderPipeline,
@@ -10,7 +9,6 @@ const app = new Elysia.Core.Application({
 
 const assets = new Elysia.Assets.AssetLoader({
 	Dummy: new Elysia.Assets.GLTFAsset("/assets/Dummy.glb"),
-	Magnum: new Elysia.Assets.GLTFAsset("/assets/Uzi.glb"),
 	Fox: new Elysia.Assets.GLTFAsset("/assets/Fox.glb"),
 	Box: new Elysia.Assets.GLTFAsset("/assets/Box.glb"),
 })
@@ -41,17 +39,42 @@ class MyScene extends Elysia.Scene.Scene
 		}
 
 		{
+			const lodGroup = Elysia.Actors.createLodGroup({
+				levels: [
+					{
+						geometry: new Three.SphereGeometry(1, 256, 256),
+						material: new Three.MeshStandardMaterial({ color: "blue" }),
+						distance: 0
+					},
+					{
+						geometry: new Three.SphereGeometry(1, 128, 128),
+						material: new Three.MeshStandardMaterial({ color: "cyan" }),
+						distance: 20
+					},
+					{
+						geometry: new Three.SphereGeometry(1, 64, 64),
+						material: new Three.MeshStandardMaterial({ color: "yellow" }),
+						distance: 50
+					},
+					{
+						geometry: new Three.SphereGeometry(1, 16, 16),
+						material: new Three.MeshStandardMaterial({ color: "white" }),
+						distance: 120
+					},
+				],
+				maxDrawDistance: 300,
+			})
 
-			const mesh = assets.unwrap("Box").clone().children[0] as Three.Group;
+			const mesh = new Three.Mesh(
+				new Three.SphereGeometry(1, 256, 256),
+				new Three.MeshStandardMaterial({ color: "red" })
+			)
 
-			for(let i = 0; i < 10000; i++)
+			for(let i = 0; i < 1; i++)
 			{
-				// const cube = new Elysia.Scene.ThreeActor(
-				// 	mesh.clone(true)
-				// )
-				const cube = new Elysia.Actors.MeshActor(
-					mesh
-				)
+
+				const cube = new Elysia.Actors.MeshActor(lodGroup)
+				cube.scale.setScalar(1)
 				cube.position.set(Math.random() * 100 - 50, Math.random() * 100 - 50, Math.random() * 100 - 50);
 				this.addComponent(cube);
 			}

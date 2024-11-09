@@ -18,7 +18,7 @@ const plane = new Three.PlaneGeometry();
 const ring = new Three.RingGeometry();
 
 /**
- * A basic cube mesh actor.
+ * A basic cube meshes actor.
  */
 export class PrimitiveActor extends MeshActor
 {

@@ -16,6 +16,7 @@ import { Actor } from "../Scene/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 import { isArray } from "../Core/Asserts.ts";
+import { BatchedLodMesh } from "../WebGL/BatchedLodMesh.js"
 
 /*
 	Todo:
@@ -38,63 +39,139 @@ const isMeshObject = (obj: any): obj is Mesh => obj.geometry !== undefined && ob
 type MeshGroup = { children: Array<any> }
 const isMeshGroup = (obj: any): obj is MeshGroup => Array.isArray(obj.children);
 
-type LodMesh = {
+export function createLodGroup(mesh: LodGroup) { return mesh }
+
+type LodGroup = {
 	levels: Array<{
 		distance: number,
-		mesh: Mesh | MeshGroup
+		geometry: Three.BufferGeometry,
+		material: Three.Material
 	}>,
+	/** @experimental not functional */
 	billboard?: Three.Mesh
+	/** @experimental not functional */
+	occlusionMesh?: Three.Mesh
+	maxDrawDistance?: number
+	minDrawDistance?: number
 }
 
-const isLodMesh = (obj: any): obj is LodMesh => Array.isArray(obj.levels);
+let _activeLod = 0;
+
+setTimeout(() => { _activeLod = 1 }, 5000);
+
+const isLodGroup = (obj: any): obj is LodGroup => Array.isArray(obj.levels);
+
+const validateMaterial = (material: Three.Material | Array<Three.Material>): Three.Material =>
+{
+	if(Array.isArray(material))
+	{
+		if(material.length > 1) throw Error("MeshActor: Array of materials is not supported.")
+		return material[0];
+	}
+	return material;
+}
 
 export class MeshActor extends Actor
 {
+
+	get visible() { return this.#userVisibility }
+	set visible(value: boolean)
+	{
+		if(this.#userVisibility === value) return;
+		this.#userVisibility = value;
+		this.updateVisibility();
+	}
+
+	get maxDrawDistance() { return this.#maxDrawDistance }
+	set maxDrawDistance(value: number)
+	{
+		if(this.#maxDrawDistance === value) return;
+		this.#maxDrawDistance = value;
+		this.updateVisibility()
+	}
+
+	get minDrawDistance() { return this.#minDrawDistance }
+	set minDrawDistance(value: number)
+	{
+		if(this.#minDrawDistance === value) return;
+		this.#minDrawDistance = value;
+		this.updateVisibility()
+	}
+
+	constructor(lodGroup: LodGroup)
 	constructor(mesh: Mesh )
 	constructor(meshGroup: MeshGroup)
 	constructor(meshes: Array<Mesh>)
 	constructor(geometry: Three.BufferGeometry, material?: Three.Material)
-	constructor(a1: Three.BufferGeometry | Mesh | MeshGroup | Array<Mesh>, a2?: Three.Material)
+	constructor(arg1: Three.BufferGeometry | Mesh | MeshGroup | Array<Mesh> | LodGroup, arg2?: Three.Material)
 	{
 		super();
-		// single object with geo and mat properties (like a Three.Mesh)
-		if(isMeshObject((a1)))
+
+		if(isLodGroup(arg1))
 		{
-			if(Array.isArray(a1.material)) throw Error("MeshActor: Array of materials is not supported yet.")
-			this.#geometries[0] = a1.geometry;
-			this.#materials[0] = a1.material;
+			if(arg1.maxDrawDistance !== undefined) this.#maxDrawDistance = arg1.maxDrawDistance;
+			if(arg1.minDrawDistance !== undefined) this.#minDrawDistance = arg1.minDrawDistance;
 		}
-		// object with children property (like a Three.Group containing meshes)
-		else if(isMeshGroup(a1))
+
+		const lods: Array<Mesh | MeshGroup | Array<Mesh>> = isLodGroup(arg1)
+			? arg1.levels.sort((a, b) => a.distance - b.distance)
+			: arg1 instanceof Three.BufferGeometry
+				? [{geometry: arg1, material: arg2!}]
+				: [arg1];
+
+		for(let i = 0; i < lods.length; i++)
 		{
-			for(const child of a1.children)
+			const lod = lods[i]
+			if(isMeshObject(lod))
 			{
-				if("geometry" in child && "material" in child)
-				{
-					if(Array.isArray(child.material)) throw Error("MeshActor: Array of materials is not supported yet.")
-					this.#geometries.push(child.geometry);
-					this.#materials.push(child.material)
+				this.#lods[i] = {
+					distance: lod.distance ?? 0,
+					meshes: [{
+						geometry: lod.geometry,
+						material: validateMaterial(lod.material),
+						instanceId: -1,
+						key: ""
+					}]
 				}
 			}
-		}
-		// array of objects with geo and mat properties
-		else if(isArray(a1))
-		{
-			for(const mesh of a1)
+			else if(isMeshGroup(lod))
 			{
-				if("geometry" in mesh && "material" in mesh)
+				this.#lods[i] = {
+					distance: 0,
+					meshes: []
+				}
+				for(let j = 0; j < lod.children.length; j++)
 				{
-					if(Array.isArray(mesh.material)) throw Error("MeshActor: Array of materials is not supported yet.")
-					this.#geometries.push(mesh.geometry);
-					this.#materials.push(mesh.material)
+					const child = lod.children[j];
+					if(!isMeshObject(child)) continue;
+
+					this.#lods[i].meshes.push({
+						geometry: child.geometry,
+						material: validateMaterial(child.material),
+						instanceId: -1,
+						key: ""
+					})
 				}
 			}
-		}
-		// separate geometry and material arguments
-		else if(a1 instanceof Three.BufferGeometry)
-		{
-			this.#geometries[0] = a1;
-			this.#materials[0] = a2!;
+			else if(isArray(lod))
+			{
+				this.#lods[i] = {
+					distance: 0,
+					meshes: []
+				}
+				for(let j = 0; j < lod.length; j++)
+				{
+					const child = lod[j];
+					if(!isMeshObject(child)) continue;
+
+					this.#lods[i].meshes.push({
+						geometry: child.geometry,
+						material: validateMaterial(child.material),
+						instanceId: -1,
+						key: ""
+					})
+				}
+			}
 		}
 
 		this.updateMeshKeys();
@@ -110,7 +187,10 @@ export class MeshActor extends Actor
 
 	override onEnterScene()
 	{
+		this.performDistanceCheck();
 		this.addActorToBatchedMesh()
+		this.updateVisibility();
+		this.updateMatrices();
 	}
 
 	override onLeaveScene()
@@ -120,123 +200,235 @@ export class MeshActor extends Actor
 
 	override onUpdate()
 	{
-		for(let i = 0; i < this.#geometries.length; i++)
-		{
-			if(this.#instanceIds[i] === undefined) return;
-			this.#meshMap!.get(this.#keys[i])?.batchedMesh.setMatrixAt(this.#instanceIds[i], this.worldMatrix);
-		}
+		this.performDistanceCheck();
+		this.updateVisibility();
+		this.updateMatrices();
 	}
 
 	private addActorToBatchedMesh()
 	{
 		const meshMap = this.scene.userData.get("BatchedMeshPool") as BatchedMeshPool;
 
-		for(let i = 0; i < this.#geometries.length; i++)
+		for(let l = 0; l < this.#lods.length; l++)
 		{
-			this.#meshMap = meshMap;
-
-			let mesh = meshMap.get(this.#keys[i]);
-
-			if(mesh === undefined)
+			for(let m = 0; m < this.#lods[l].meshes.length; m++)
 			{
-				// creating buffer space
-				const maxVertices = 1000;
-				const maxIndices = 3000;
-				const instanceCount = 10;
+				this.#meshMap = meshMap;
 
-				const batchedMesh = new Three.BatchedMesh(instanceCount, maxVertices, maxIndices, this.#materials[i]);
+				const meshInstance = this.#lods[l].meshes[m];
 
-				batchedMesh.perObjectFrustumCulled = true;
+				let mesh = meshMap.get(meshInstance.key);
 
-				this.scene.object3d.add(batchedMesh);
+				if(mesh === undefined)
+				{
+					// creating buffer space
+					const maxVertices = 1000;
+					const maxIndices = 3000;
+					const instanceCount = 10;
 
-				const geoInstances = new Map<Three.BufferGeometry, number>();
+					const batchedMesh = new BatchedLodMesh(instanceCount, maxVertices, maxIndices, meshInstance.material);
 
-				mesh = {
-					batchedMesh,
-					geoInstances,
-					maxVertices,
-					maxIndices,
-					refs: 0,
-					actors: new Set()
-				};
+					batchedMesh.perObjectFrustumCulled = true;
 
-				meshMap.set(this.#keys[i], mesh);
+					this.scene.object3d.add(batchedMesh);
+
+					const geoInstances = new Map<Three.BufferGeometry, number>();
+
+					mesh = {
+						batchedMesh,
+						geoInstances,
+						maxVertices,
+						maxIndices,
+						refs: 0,
+						actors: new Set()
+					};
+
+					meshMap.set(meshInstance.key, mesh);
+				}
+
+				let geometryId = mesh.geoInstances.get(meshInstance.geometry);
+
+				// add geometry to batched meshes, creating space for it
+				if(geometryId === undefined)
+				{
+					mesh.maxVertices = mesh.maxVertices
+						+ meshInstance.geometry.getAttribute("position").count
+
+					mesh.maxIndices = mesh.maxIndices +
+						(meshInstance.geometry.index?.count ?? meshInstance.geometry.getAttribute("position").count)
+
+					mesh.batchedMesh.setGeometrySize(mesh.maxVertices, mesh.maxIndices);
+
+					geometryId = mesh.batchedMesh.addGeometry(meshInstance.geometry);
+
+					mesh.geoInstances.set(meshInstance.geometry, geometryId);
+				}
+
+				// update instance count
+				if(mesh.batchedMesh.maxInstanceCount < mesh.refs + 1)
+				{
+					mesh.batchedMesh.setInstanceCount(mesh.batchedMesh.maxInstanceCount*2);
+				}
+
+				// create our instance
+				meshInstance.instanceId = mesh.batchedMesh.addInstance(geometryId);
+
+				// register actor
+				mesh.actors.add(this);
+				mesh.refs++;
 			}
-
-			let geometryId = mesh.geoInstances.get(this.#geometries[i]);
-
-			// add geometry to batched mesh, creating space for it
-			if(geometryId === undefined)
-			{
-				mesh.maxVertices = mesh.maxVertices
-					+ this.#geometries[i].getAttribute("position").count
-
-				mesh.maxIndices = mesh.maxIndices +
-					(this.#geometries[i].index?.count ?? this.#geometries[i].getAttribute("position").count)
-
-				mesh.batchedMesh.setGeometrySize(mesh.maxVertices, mesh.maxIndices);
-
-				geometryId = mesh.batchedMesh.addGeometry(this.#geometries[i]);
-
-				mesh.geoInstances.set(this.#geometries[i], geometryId);
-			}
-
-			// update instance count
-			if(mesh.batchedMesh.maxInstanceCount < mesh.refs + 1)
-			{
-				mesh.batchedMesh.setInstanceCount(mesh.batchedMesh.maxInstanceCount*2);
-			}
-
-			// create our instance
-			this.#instanceIds[i] = mesh.batchedMesh.addInstance(geometryId);
-
-			// mesh.batchedMesh.setVisibleAt(this.#instanceId, false);
-
-			// register actor
-			mesh.actors.add(this);
-			mesh.refs++;
 		}
+
 	}
 
 	private removeActorFromBatchedMesh()
 	{
 		const meshMap = this.#meshMap!
 
-		for(let i = 0; i < this.#geometries.length; i++)
+		for(let i = 0; i < this.#lods.length; i++)
 		{
-			const mesh = meshMap.get(this.#keys[i]);
-
-			if(mesh === undefined) return;
-
-			mesh.batchedMesh.deleteInstance(this.#instanceIds[i]!);
-			mesh.refs--;
-			mesh.actors.delete(this);
-
-			// if no actors are using this mesh, remove it
-			if(mesh.refs === 0)
+			for(let l = 0; l < this.#lods[i].meshes.length; l++)
 			{
-				meshMap.delete(this.#materials[i].uuid);
-				mesh.batchedMesh.dispose();
-				this.scene.object3d.remove(mesh.batchedMesh);
+				const lod = this.#lods[i].meshes[l];
+
+				const mesh = meshMap.get(lod.key);
+
+				if(mesh === undefined) return;
+
+				mesh.batchedMesh.deleteInstance(lod.instanceId);
+				mesh.refs--;
+				mesh.actors.delete(this);
+
+				// if no actors are using this meshes, remove it
+				if(mesh.refs === 0)
+				{
+					meshMap.delete(lod.material.uuid);
+					mesh.batchedMesh.dispose();
+					this.scene.object3d.remove(mesh.batchedMesh);
+				}
 			}
 		}
 	}
 
 	protected updateMeshKeys()
 	{
-		for(let i = 0; i < this.#geometries.length; i++)
+		for(let instance = 0; instance < this.#lods.length; instance++)
 		{
-			this.#keys[i] = `${this.#materials[i].uuid}-${Boolean(this.#geometries[i].index)}-`;
-			for(const key in this.#geometries[i].attributes) this.#keys[i] += `${key}`
+			for(let lod = 0; lod < this.#lods[instance].meshes.length; lod++)
+			{
+				const mesh = this.#lods[instance].meshes[lod]
+				mesh.key = `${mesh.material.uuid}-${Boolean(mesh.geometry.index)}-`;
+				for(const key in mesh.geometry.attributes) mesh.key += `${key}`
+			}
 		}
+
+	}
+
+	protected getActiveLod()
+	{
+		// only one lod
+		if(this.#lods.length === 1)
+		{
+			return 0
+		}
+
+		// no update if not visible
+		if(!this.#userVisibility)
+		{
+			return this.#activeLod;
+		}
+
+		// find active
+		let activeLod = 0;
+
+		for(let i = 0; i < this.#lods.length; i++)
+		{
+			if(this.#distanceFromCamera > this.#lods[i].distance)
+			{
+				activeLod = i;
+			}
+		}
+		return activeLod;
+	}
+
+	private updateVisibility()
+	{
+		let activeLod = this.getActiveLod()
+
+		if(!this.#userVisibility ||
+			this.#distanceFromCamera > this.#maxDrawDistance
+			|| this.#distanceFromCamera < this.#minDrawDistance
+		) { activeLod = -1 }
+
+		for(let i = 0; i < this.#lods.length; i++)
+		{
+			for(let l = 0; l < this.#lods[i].meshes.length; l++)
+			{
+				const mesh = this.#lods[i].meshes[l];
+				this.#meshMap!.get(mesh.key)?.batchedMesh.setVisibleAt(mesh.instanceId, i === activeLod);
+			}
+		}
+
+	}
+
+	private updateMatrices()
+	{
+		if(!this.#userVisibility || !this.enabled || this.destroyed) return;
+
+		const meshMap = this.#meshMap!;
+
+		// if only one lod, we can just update it's meshes
+		if(this.#lods.length === 1)
+		{
+			for(let i = 0; i < this.#lods[0].meshes.length; i++)
+			{
+				const mesh = this.#lods[0].meshes[i];
+				meshMap.get(mesh.key)?.batchedMesh.setMatrixAt(mesh.instanceId, this.worldMatrix);
+			}
+		}
+		else
+		{
+			// update active lod
+			const activeLod = this.getActiveLod();
+			for(let i = 0; i < this.#lods[activeLod].meshes.length; i++)
+			{
+				const mesh = this.#lods[activeLod].meshes[i];
+				meshMap.get(mesh.key)?.batchedMesh.setMatrixAt(mesh.instanceId, this.worldMatrix);
+			}
+		}
+	}
+
+	private performDistanceCheck()
+	{
+		if(!this.#userVisibility) return;
+
+		if(!this.scene?.activeCamera) return 1;
+
+		_v1.setFromMatrixPosition(this.worldMatrix);
+		_v2.setFromMatrixPosition(this.scene.activeCamera.userData.actor.worldMatrix);
+
+		this.#distanceFromCamera = _v1.distanceTo(_v2);
+		this.#activeLod = this.getActiveLod();
 	}
 
 	#meshMap?: BatchedMeshPool;
 
+	#lods: Array<{
+		distance: number
+		meshes: Array<{
+			geometry: Three.BufferGeometry,
+			material: Three.Material
+			instanceId: number
+			key: string
+		}>
+	}> = [];
 
-	#instanceIds: Array<number> = [];
-	#geometries: Array<Three.BufferGeometry> = [];
-	#materials: Array<Three.Material> = [];
-	#keys: Array<string> = [];
+	#activeLod = 0;
+	#userVisibility = true;
+	#distanceFromCamera = 0;
+	#maxDrawDistance = Infinity;
+	#minDrawDistance = -Infinity;
 }
+
+const _v1 = new Three.Vector3();
+const _v2 = new Three.Vector3();

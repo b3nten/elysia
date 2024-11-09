@@ -21,7 +21,7 @@ export abstract class RenderPipeline implements RenderPipelineLifecycle, Destroy
 	/**
 	 * Called when the active camera is changed.
 	 */
-	@bound onCameraChange(camera: Three.Camera) { }
+	onCameraChange(camera: Three.Camera) { }
 
 	/**
 	 * Retrieves the renderer used by the pipeline.
@@ -31,7 +31,7 @@ export abstract class RenderPipeline implements RenderPipelineLifecycle, Destroy
 	/**
 	 * Called when the canvas is resized.
 	 */
-	@bound onResize(width: number, height: number) {}
+	onResize(width: number, height: number) {}
 
 	/**
 	 * Called every frame to render the scene.

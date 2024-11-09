@@ -8,7 +8,7 @@ import { TagAddedEvent } from "../Core/ElysiaEvents.ts";
 import {
 	s_App, s_Created, s_Destroyed, s_Enabled, s_InScene, s_Internal, s_OnBeforePhysicsUpdate,
 	s_OnCreate, s_OnDestroy, s_OnDisable, s_OnEnable, s_OnEnterScene, s_OnLeaveScene,
-	s_OnReparent, s_OnResize, s_OnStart, s_OnUpdate, s_Parent, s_Scene, s_Started, s_Tags
+	s_OnReparent, s_OnResize, s_OnStart, s_OnUpdate, s_Parent, s_Scene, s_Started, s_Static, s_Tags
 } from "./Internal.ts";
 import { reportLifecycleError } from "./Errors.ts";
 // @ts-types="npm:@types/three@^0.169"
@@ -25,6 +25,24 @@ export class Behavior implements ActorLifecycle, Destroyable
 {
 	[IsBehavior]: boolean = true;
 
+	get static() { return this[s_Static]; }
+	set static(value: boolean)
+	{
+		this[s_Static] = value;
+		if(this.parent)
+		{
+			this.parent.components.delete(this);
+			this.parent.staticComponents.delete(this);
+			if(value)
+			{
+				this.parent.staticComponents.add(this);
+			}
+			else
+			{
+				this.parent.components.add(this);
+			}
+		}
+	}
 	/** If this behavior has completed it's onCreate() lifecycle. */
 	get created(): boolean { return this[s_Created]; }
 
@@ -122,6 +140,8 @@ export class Behavior implements ActorLifecycle, Destroyable
 	[s_Parent] : Actor | null = null;
 
 	[s_Tags]:Set<any> = new Set;
+
+	[s_Static] = false;
 
 	[s_Enabled] = true;
 

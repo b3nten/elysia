@@ -32,7 +32,7 @@ import {
 	s_OnUpdate,
 	s_Parent,
 	s_Scene,
-	s_Started,
+	s_Started, s_Static,
 	s_TransformDirty,
 	s_WorldMatrix
 } from "./Internal.ts";
@@ -43,6 +43,24 @@ const tempVec2 = new Three.Vector2();
 export class Actor implements ActorLifecycle, Destroyable
 {
 	[s_IsActor]: boolean = true;
+
+	get static () { return this[s_Static]; }
+	set static (value: boolean) {
+		this[s_Static] = value;
+		if(this.parent)
+		{
+			this.parent.components.delete(this);
+			this.parent.staticComponents.delete(this);
+			if(value)
+			{
+				this.parent.staticComponents.add(this);
+			}
+			else
+			{
+				this.parent.components.add(this);
+			}
+		}
+	}
 
 	/** Whether this actor has finished it's onCreate() lifecycle. */
 	get created(): boolean { return this[s_Created]; }
@@ -96,6 +114,9 @@ export class Actor implements ActorLifecycle, Destroyable
 
 	/** The child components of this actor. */
 	readonly components: Set<Component> = new Set;
+
+	/** The static components of this actor. */
+	readonly staticComponents: Set<Component> = new Set;
 
 	/** The tags of this actor. */
 	readonly tags: Set<any> = new Set;
@@ -185,7 +206,14 @@ export class Actor implements ActorLifecycle, Destroyable
 			return false;
 		}
 
-		this.components.add(component);
+		if(component.static)
+		{
+			this.staticComponents.add(component);
+		}
+		else
+		{
+			this.components.add(component);
+		}
 
 		if(!this[s_ComponentsByType].has(component.constructor as Constructor<Component>))
 		{
@@ -246,6 +274,7 @@ export class Actor implements ActorLifecycle, Destroyable
 		ElysiaEventDispatcher.dispatchEvent(new ComponentRemovedEvent({ parent: this, child: component }));
 
 		this.components.delete(component);
+		this.staticComponents.delete(component);
 
 		this[s_ComponentsByType].get(component.constructor as Constructor<Component>)?.delete(component);
 
@@ -366,6 +395,8 @@ export class Actor implements ActorLifecycle, Destroyable
 
 	[s_App]: Application | null = null;
 
+	[s_Static]: boolean = false;
+
 	[s_Created]: boolean = false;
 
 	[s_Started]: boolean = false;
@@ -400,10 +431,9 @@ export class Actor implements ActorLifecycle, Destroyable
 		this[s_Enabled] = true;
 		this[s_Internal]._enabled = true;
 		reportLifecycleError(this, this.onEnable);
-		for(const component of this.components)
-		{
-			component[s_OnEnable]();
-		}
+		for(const component of this.components) component[s_OnEnable]();
+		for(const component of this.staticComponents) component[s_OnEnable]();
+
 	}
 
 	[s_OnDisable]()
@@ -412,10 +442,8 @@ export class Actor implements ActorLifecycle, Destroyable
 		this[s_Enabled] = false;
 		this[s_Internal]._enabled = false;
 		reportLifecycleError(this, this.onDisable);
-		for(const component of this.components)
-		{
-			component[s_OnDisable]();
-		}
+		for(const component of this.components) component[s_OnDisable]();
+		for(const component of this.staticComponents) component[s_OnDisable]();
 	}
 
 	[s_OnCreate]()
@@ -437,6 +465,13 @@ export class Actor implements ActorLifecycle, Destroyable
 			component[s_Parent] = this;
 			if(!component.created) component[s_OnCreate]();
 		}
+		for(const component of this.staticComponents)
+		{
+			component[s_App] = this.app;
+			component[s_Scene] = this.scene;
+			component[s_Parent] = this;
+			if(!component.created) component[s_OnCreate]();
+		}
 	}
 
 	[s_OnEnterScene]()
@@ -449,10 +484,8 @@ export class Actor implements ActorLifecycle, Destroyable
 		}
 		reportLifecycleError(this, this.onEnterScene);
 		this[s_InScene] = true;
-		for(const component of this.components)
-		{
-			component[s_OnEnterScene]();
-		}
+		for(const component of this.components) component[s_OnEnterScene]();
+		for(const component of this.staticComponents) component[s_OnEnterScene]();
 	}
 
 	[s_OnStart]()
@@ -466,10 +499,8 @@ export class Actor implements ActorLifecycle, Destroyable
 		}
 		reportLifecycleError(this, this.onStart);
 		this[s_Started] = true;
-		for(const component of this.components)
-		{
-			if(!component.started) component[s_OnStart]();
-		}
+		for(const component of this.components) if(!component.started) component[s_OnStart]();
+
 	}
 
 	[s_OnBeforePhysicsUpdate](delta: number, elapsed: number)
@@ -515,10 +546,8 @@ export class Actor implements ActorLifecycle, Destroyable
 		if(!this[s_InScene]) return;
 		reportLifecycleError(this, this.onLeaveScene);
 		this[s_InScene] = false;
-		for(const component of this.components)
-		{
-			component[s_OnLeaveScene]();
-		}
+		for(const component of this.components) component[s_OnLeaveScene]();
+		for(const component of this.staticComponents) component[s_OnLeaveScene]();
 	}
 
 	[s_OnDestroy]()
@@ -527,15 +556,14 @@ export class Actor implements ActorLifecycle, Destroyable
 		reportLifecycleError(this, this.onDestroy)
 		this[s_Destroyed] = true;
 		for(const component of this.components) component[s_OnDestroy]();
+		for(const component of this.staticComponents) component[s_OnDestroy]();
 	}
 
 	[s_OnResize](width: number, height: number)
 	{
 		reportLifecycleError(this, this.onResize, width, height);
-		for(const component of this.components)
-		{
-			component[s_OnResize](width, height);
-		}
+		for(const component of this.components) component[s_OnResize](width, height);
+		for(const component of this.staticComponents) component[s_OnResize](width, height);
 	}
 }
 
@@ -557,7 +585,8 @@ class ActorVector extends Three.Vector3
 		Object.defineProperties(this, {
 			x: {
 				get() { return this._x },
-				set(value) {
+				set(value)
+				{
 					this.actor?.markTransformDirty();
 					this._x = value
 				}
@@ -595,3 +624,5 @@ class ActorQuaternion extends Three.Quaternion
 		this.actor?.markTransformDirty();
 	}
 }
+
+let dirtyTransforms = 0;

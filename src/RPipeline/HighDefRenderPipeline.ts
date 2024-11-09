@@ -142,8 +142,6 @@ export class HighDefRenderPipeline extends RenderPipeline
 			}
 		);
 
-		this.renderer.getContext().depthFunc
-
 		this.renderer.setPixelRatio(this.#devicePixelRatio);
 
 		this.effectComposer.setMainCamera(camera);

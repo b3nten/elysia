@@ -26,7 +26,7 @@ class ActorAdaptor
 	get matrixWorld() { return this.actor.worldMatrix}
 	get position() { return this.actor.position; }
 	get quaternion() { return this.actor.rotation; }
-	get rotation() { return this.euler }
+	get rotation() { return this.euler.setFromQuaternion(this.quaternion) }
 	get scale() { return this.actor.scale; }
 	get up() { return this.actor.object3d.up; }
 
@@ -81,10 +81,18 @@ class CameraActorAdaptor extends ActorAdaptor
 	get isPerspectiveCamera() { return this.actor.object3d instanceof Three.PerspectiveCamera; }
 	get projectionMatrix() { return (this.actor.object3d as Three.PerspectiveCamera).projectionMatrix; }
 	get projectionMatrixInverse() { return (this.actor.object3d as Three.PerspectiveCamera).projectionMatrixInverse; }
-
+	get fov(){ return (this.actor.object3d as Three.PerspectiveCamera).fov; }
+	set fov(value: number) { (this.actor.object3d as Three.PerspectiveCamera).fov = value; }
+	get aspect() { return (this.actor.object3d as Three.PerspectiveCamera).aspect; }
+	set aspect(value: number) { (this.actor.object3d as Three.PerspectiveCamera).aspect = value; }
+	get near() { return (this.actor.object3d as Three.PerspectiveCamera).near; }
+	set near(value: number) { (this.actor.object3d as Three.PerspectiveCamera).near = value; }
+	get far() { return (this.actor.object3d as Three.PerspectiveCamera).far; }
+	set far(value: number) { (this.actor.object3d as Three.PerspectiveCamera).far = value; }
 	updateProjectionMatrix() {
 		if (this.isPerspectiveCamera) {
 			const camera = this.actor.object3d as Three.PerspectiveCamera;
+			console.log("updateProjectionMatrix", camera);
 			camera.updateProjectionMatrix();
 		}
 	}
