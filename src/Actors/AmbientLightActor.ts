@@ -34,6 +34,7 @@ export class AmbientLightActor extends Actor
 	constructor(intensity?: number, color?: Three.Color)
 	{
 		super();
+		this.static = true;
 		this.object3d.intensity = intensity ?? 1;
 		this.object3d.color = color ?? new Three.Color(0xFFFFFF);
 	}

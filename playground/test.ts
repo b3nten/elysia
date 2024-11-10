@@ -3,7 +3,10 @@ import * as Elysia from "../src/mod.ts";
 import * as Three from "three"
 
 const app = new Elysia.Core.Application({
-	renderPipeline: new Elysia.RPipeline.HDRenderPipeline,
+	renderPipeline: new Elysia.RPipeline.HDRenderPipeline({
+		smaa: true,
+		// fog: new Elysia.RPipeline.ExponentialHeightFog('#323238'),
+	}),
 	// renderPipeline: new Elysia.RPipeline.BasicRenderPipeline,
 	stats: true,
 })
@@ -36,6 +39,7 @@ class MyScene extends Elysia.Scene.Scene
 		{
 			this.sky.elevation = 30
 			this.addComponent(this.sky);
+			this.addComponent(new Elysia.Actors.AmbientLightActor);
 		}
 
 		{
@@ -65,21 +69,19 @@ class MyScene extends Elysia.Scene.Scene
 				maxDrawDistance: 300,
 			})
 
-			// this.addComponent(new Elysia.Actors.AmbientLightActor)
-
 			const mesh = new Three.Mesh(
-				new Three.BoxGeometry(2,2,2),
+				new Three.BoxGeometry(2,20,2),
 				new Three.MeshStandardMaterial({ color: "red" })
 			)
 
 			const cube = new Elysia.Actors.MeshActor(mesh)
 			cube.static = true;
-			cube.scale.setScalar(2)
+			cube.scale.set(20, .5, 1)
 			cube.position.set(0, 0, 0);
 			this.addComponent(cube);
 
 			const plane = new Elysia.Actors.MeshActor(
-				new Three.PlaneGeometry(100, 100, 10, 10),
+				new Three.PlaneGeometry(1000, 1000, 10, 10),
 				new Three.MeshStandardMaterial({  })
 			)
 			plane.static = true;

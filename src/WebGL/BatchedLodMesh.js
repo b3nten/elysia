@@ -1,3 +1,7 @@
+/***********************************************************
+    Adapted from https://github.com/mrdoob/three.js/blob/dev/src/objects/BatchedMesh.js
+************************************************************/
+
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 
@@ -1214,9 +1218,7 @@ class BatchedLodMesh extends Mesh {
 		// if visibility has not changed and frustum culling and object sorting is not required
 		// then skip iterating over all items
 		if ( ! this._visibilityChanged && ! this.perObjectFrustumCulled && ! this.sortObjects ) {
-
 			return;
-
 		}
 
 		// the indexed version of the multi draw function requires specifying the start
@@ -1256,14 +1258,14 @@ class BatchedLodMesh extends Mesh {
 				if ( instanceInfo[ i ].visible && instanceInfo[ i ].active ) {
 
 					const geometryId = instanceInfo[ i ].geometryIndex;
+					const instance = instanceInfo[ i ];
+
+					// set it's new matrix
+					this.setMatrixAt( i, instance.getWorldMatrix() );
 
 					// get the bounds in world space
 					this.getMatrixAt( i, _matrix );
 					this.getBoundingSphereAt( geometryId, _sphere ).applyMatrix4( _matrix );
-
-					const instance = instanceInfo[ i ];
-
-					this.setMatrixAt( i, instance.getWorldMatrix() );
 
 					// determine whether the batched geometry is within the frustum
 					let culled = false;
@@ -1353,9 +1355,7 @@ class BatchedLodMesh extends Mesh {
 	}
 
 	onBeforeShadow( renderer, object, camera, shadowCamera, geometry, depthMaterial/* , group */ ) {
-
 		this.onBeforeRender( renderer, null, shadowCamera, geometry, depthMaterial );
-
 	}
 
 }

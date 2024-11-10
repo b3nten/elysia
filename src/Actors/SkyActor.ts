@@ -11,6 +11,7 @@ import * as Three from 'three';
 // @ts-types="npm:@types/three@^0.169.0/examples/jsm/Sky"
 import { Sky } from "three/examples/jsm/objects/Sky.js";
 import { ThreeActor } from "../Scene/ThreeActor.ts";
+import { installMaterialAddon } from "../RPipeline/InstallMaterialAddons.ts";
 
 export class SkyActor extends ThreeActor<Sky>
 {
@@ -58,7 +59,25 @@ export class SkyActor extends ThreeActor<Sky>
 		super(new Sky());
 		this.scale.setScalar( 450000 );
 		this.directionalLight.castShadow = true;
-		this.updatePositionRotationScale = true;
+		this.directionalLight.shadow.bias = -0.0001;
+		this.directionalLight.shadow.mapSize.width = 2048;
+		this.directionalLight.shadow.mapSize.height = 2048;
+		this.directionalLight.shadow.camera.left = - 100;
+		this.directionalLight.shadow.camera.right = 100;
+		this.directionalLight.shadow.camera.top = 100;
+		this.directionalLight.shadow.camera.bottom = - 100;
+		// this.updatePositionRotationScale = true;
+		this.material.onBeforeCompile = (shader: any, renderer: any) =>
+		{
+			shader.vertexShader = `${Three.ShaderChunk.fog_pars_vertex}\n` + shader.vertexShader.replace(
+				"void main() {",
+				`void main() { \n${Three.ShaderChunk.fog_vertex}\n`
+			);
+			shader.fragmentShader = `${Three.ShaderChunk.fog_pars_fragment}\n` + shader.fragmentShader.replace(
+				"#include <colorspace_fragment>\n",
+				`#include <colorspace_fragment>\n${Three.ShaderChunk.fog_fragment}\n`
+			)
+		}
 	}
 
 	private updateSunPosition()

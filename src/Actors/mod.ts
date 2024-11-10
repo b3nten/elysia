@@ -7,7 +7,6 @@ export * from "./SkyActor.ts";
 export * from "./PointLightActor.ts";
 export * from "./FirstPersonActor.ts";
 export * from "./EnvironmentActor.ts";
-export * from "./GridActor.ts";
 export * from "./MeshActor.ts";
 export * from "./PerspectiveCameraActor.ts";
 export * from "./OrthographicCameraActor.ts";

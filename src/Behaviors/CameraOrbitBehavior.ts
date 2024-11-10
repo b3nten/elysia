@@ -131,7 +131,7 @@ export class CameraOrbitBehavior extends Behavior
 			return
 		}
 
-		const adaptor = new CameraActorAdaptor(camera);
+		const adaptor = new CameraActorAdaptor(camera) as unknown as Three.Camera
 
 		this.controls = new OrbitControls(adaptor, this.app.renderPipeline.getRenderer().domElement);
 

@@ -4,7 +4,7 @@ import { Entity } from "./Entity.ts";
 import { CatchAndReport } from "./ErrorHandler.ts";
 import { World } from "./World.ts";
 import * as Internal from "./Internal.ts";
-import { Constructor, uuid } from "../Core/Utilities.ts";
+import { uuid } from "../Core/Utilities.ts";
 
 export abstract class System implements Destroyable
 {

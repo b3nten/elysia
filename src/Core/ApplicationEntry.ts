@@ -1,3 +1,5 @@
+// @ts-types="npm:@types/three@^0.169"
+import * as Three from 'three';
 import { LogLevel } from "../Logging/Levels.ts";
 import { ASSERT, isDestroyable, isDev } from "./Asserts.ts";
 import { MouseIntersections } from "../Input/MouseIntersections.ts";
@@ -24,9 +26,11 @@ import {
 	s_OnUpdate,
 	s_SceneLoadPromise
 } from "../Scene/Internal.ts";
-import { bound } from "./Utilities.ts";
 import { GameClock } from "./GameClock.ts";
+import { installMaterialAddonsToPrototypes } from "../RPipeline/InstallMaterialAddons.ts";
 
+// Install material addons to Three.Material prototypes
+installMaterialAddonsToPrototypes(Three);
 
 interface ApplicationConstructorArguments
 {
@@ -179,7 +183,7 @@ export class Application {
 
 			ELYSIA_LOGGER.debug("Scene loaded", scene)
 
-			this.#renderPipeline!.onCreate(this.#scene, this.#output);
+			this.#renderPipeline![s_OnCreate](this.#scene, this.#output);
 			this.#renderPipeline!.onResize(this.#resizeController.width, this.#resizeController.height);
 
 			this.#scene[s_OnCreate]();
