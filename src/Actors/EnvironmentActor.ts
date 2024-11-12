@@ -27,7 +27,7 @@ import {
 	Scene,
 } from 'three';
 import { Colors } from "../Shared/Colors.ts";
-import type { Maybe } from "../Core/mod.ts";
+import type { Maybe } from "../Shared/Utilities.ts";
 
 class RoomEnvironment extends Scene {
 	constructor()

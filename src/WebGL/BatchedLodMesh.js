@@ -1363,4 +1363,4 @@ class BatchedLodMesh extends Mesh {
 	}
 }
 
-export { BatchedLodMesh };
+export { BatchedLodMesh, BatchedLodMesh as BatchedMesh };

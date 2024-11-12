@@ -11,8 +11,6 @@ export enum RigidbodyType {
 
 export class RigidBody extends Behavior
 {
-	override type: string = "RigidBody";
-
 	description: Rapier.RigidBodyDesc;
 
 	get mass(): number

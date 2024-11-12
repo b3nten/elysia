@@ -16,8 +16,8 @@ import { Actor } from "../Core/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 import { isArray } from "../Shared/Asserts.ts";
-// @ts-types="npm:@types/three@^0.169/objects/BatchedMesh.ts"
-import { BatchedLodMesh } from "../WebGL/BatchedLodMesh.js"
+// @ts-types="npm:@types/three@^0.169/src/objects/BatchedMesh.js"
+import { BatchedMesh } from "../WebGL/BatchedLodMesh.js"
 
 export class MeshActor extends Actor
 {
@@ -157,9 +157,7 @@ export class MeshActor extends Actor
 					const maxIndices = 3000;
 					const instanceCount = 10;
 
-					const batchedMesh = new BatchedLodMesh(instanceCount, maxVertices, maxIndices, meshInstance.material);
-
-					// batchedMesh.perObjectFrustrumCulled = false;
+					const batchedMesh = new BatchedMesh(instanceCount, maxVertices, maxIndices, meshInstance.material);
 
 					this.scene.object3d.add(batchedMesh);
 
