@@ -1,6 +1,6 @@
 import { CubeActor, ModelActor } from "../../src/Actors/mod.ts"
 import { BoxCollider, MeshCollider, RigidBody, RigidbodyType } from "../../src/Physics/mod.ts"
-import { Colors } from "../../src/Core/Colors.ts"
+import { Colors } from "../../src/Shared/Colors.ts"
 import { playgroundAssets } from "./Assets.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three'

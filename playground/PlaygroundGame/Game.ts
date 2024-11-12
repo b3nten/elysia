@@ -1,9 +1,9 @@
-import { Application } from "../../src/Core/ApplicationEntry.ts";
-import { Scene } from "../../src/Scene/Scene.ts";
+import { Application } from "../../src/Core/Application.ts";
+import { Scene } from "../../src/Core/Scene.ts";
 import { DirectionalLightActor } from "../../src/Actors/DirectionalLightActor.ts";
-import { HighDefRenderPipeline } from "../../src/RPipeline/HighDefRenderPipeline.ts";
+import { HighDefRenderPipeline } from "../../src/Rendering/HighDefRenderPipeline.ts";
 import { SkyActor, SkyDirectionalLightTag } from "../../src/Actors/SkyActor.ts";
-import { Colors } from "../../src/Core/Colors.ts";
+import { Colors } from "../../src/Shared/Colors.ts";
 import { ElysiaCrossHair } from "../../src/UI/ElysiaCrossHair.ts";
 import { PlaygroundPlayer } from "./Player.ts"
 import { Map } from "./Map.ts";

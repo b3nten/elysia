@@ -1,5 +1,5 @@
 import { ElysiaEvent } from "./Event.ts";
-import { Constructor } from "../Core/Utilities.ts";
+import { Constructor } from "../Shared/Utilities.ts";
 
 /**
  * A synchronous event dispatcher that provides both static and instance-level event handling capabilities.

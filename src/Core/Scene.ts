@@ -1,12 +1,12 @@
 import { Actor } from "./Actor.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
-import { Destroyable } from "../Core/Lifecycle.ts";
+import { Destroyable } from "./Lifecycle.ts";
 import { Future } from "../Containers/Future.ts";
-import { bound, Constructor, noop } from "../Core/Utilities.ts";
+import { bound, Constructor, noop } from "../Shared/Utilities.ts";
 import { Behavior } from "./Behavior.ts";
 import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
-import { ComponentAddedEvent, ComponentRemovedEvent, TagAddedEvent, TagRemovedEvent } from "../Core/ElysiaEvents.ts";
+import { ComponentAddedEvent, ComponentRemovedEvent, TagAddedEvent, TagRemovedEvent } from "./ElysiaEvents.ts";
 import { Component, isThreeActor } from "./Component.ts";
 import { ComponentSet } from "../Containers/ComponentSet.ts";
 import {
@@ -20,12 +20,12 @@ import {
 	s_OnStart,
 	s_OnUpdate, s_Parent, s_Scene,
 	s_SceneLoadPromise, s_Started,
-} from "./Internal.ts";
-import { Application } from "../Core/ApplicationEntry.ts";
+} from "../Internal/mod.ts";
+import { Application } from "./Application.ts";
 import { LifeCycleError, reportLifecycleError } from "./Errors.ts";
 import { PhysicsWorld } from "../Physics/PhysicsWorld.ts";
 import { AutoInitializedMap } from "../Containers/AutoInitializedMap.ts";
-import { ThreeActor } from "./ThreeActor.ts";
+import { ThreeActor } from "../Actors/ThreeActor.ts";
 
 export const Root = Symbol.for("Elysia::Scene::Root");
 

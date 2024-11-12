@@ -12,7 +12,7 @@
 
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
-import { ThreeActor } from "../Scene/ThreeActor.ts";
+import { ThreeActor } from "./ThreeActor.ts";
 
 /**
  * A directional light actor.

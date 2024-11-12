@@ -1,5 +1,5 @@
 import { RenderPipeline } from "./RenderPipeline.ts";
-import { Scene } from "../Scene/Scene.ts";
+import { Scene } from "../Core/Scene.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
 

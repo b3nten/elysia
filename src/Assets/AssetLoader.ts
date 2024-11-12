@@ -1,8 +1,8 @@
 import { Asset } from "./Asset.ts";
-import { Constructor } from "../Core/Utilities.ts";
+import { Constructor } from "../Shared/Utilities.ts";
 import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
 import { LoadedEvent, ProgressEvent, ErrorEvent } from "../Events/Event.ts";
-import { ELYSIA_LOGGER } from "../Core/Logger.ts";
+import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
 
 export class AssetLoader<A extends Record<string, Asset<any>>>
 {

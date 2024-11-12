@@ -1,4 +1,14 @@
+/**
+ * @module
+ *
+ * @description Internal symbols used for cross-module internal properties.
+ */
+
 export const s_Internal = Symbol.for("Elysia::s_Internal");
+
+export const s_IsBehavior = Symbol.for("Elysia::s_IsBehavior");
+
+export const s_IsActor = Symbol.for("Elysia::s_IsActor");
 
 export const s_Static = Symbol.for("Elysia::s_Static");
 
@@ -11,8 +21,6 @@ export const s_OnDestroy = Symbol.for("Elysia::s_OnDestroy");
 export const s_OnEnable = Symbol.for("Elysia::s_OnEnable");
 
 export const s_OnDisable = Symbol.for("Elysia::s_OnDisable");
-
-export const s_OnTransformUpdate = Symbol.for("Elysia::s_OnTransformUpdate");
 
 export const s_OnUpdate = Symbol.for("Elysia::s_OnUpdate");
 
@@ -54,14 +62,6 @@ export const s_Loaded = Symbol.for("Elysia::Loaded");
 
 export const s_Object3D = Symbol.for("Elysia::Object3D");
 
-export const s_RegisterComponentWithScene = Symbol.for("Elysia::RegisterComponentWithScene");
-
-export const s_UnregisterComponentWithScene = Symbol.for("Elysia::UnregisterComponentWithScene");
-
-export const s_RegisterTagWithScene = Symbol.for("Elysia::RegisterTagWithScene");
-
-export const s_UnregisterTagWithScene = Symbol.for("Elysia::UnregisterTagWithScene");
-
 export const s_TransformDirty = Symbol.for("Elysia::TransformDirty");
 
 export const s_MatrixDirty = Symbol.for("Elysia::MatrixDirty");
@@ -69,9 +69,9 @@ export const s_MatrixDirty = Symbol.for("Elysia::MatrixDirty");
 export const s_WorldMatrix = Symbol.for("Elysia::WorldMatrix");
 
 export const s_LocalMatrix = Symbol.for("Elysia::LocalMatrix");
-// internal symbols
-export const s_IsActor = Symbol.for("Elysia::IsActor");
 
 export const s_ComponentsByType = Symbol("Elysia::Actor::ComponentsByType");
 
 export const s_ComponentsByTag = Symbol("Elysia::Actor::ComponentsByTag");
+
+export const s_Attributes = Symbol.for("ElysiaUI::s_Attributes");

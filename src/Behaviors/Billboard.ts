@@ -10,9 +10,9 @@
  * ```
  */
 
-import { Behavior } from "../Scene/Behavior.ts";
-import { isThreeActor } from "../Scene/Component.ts";
-import { ThreeActor } from "../Scene/ThreeActor.ts";
+import { Behavior } from "../Core/Behavior.ts";
+import { isThreeActor } from "../Core/Component.ts";
+import { ThreeActor } from "../Actors/ThreeActor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 

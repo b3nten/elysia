@@ -1,4 +1,4 @@
-import * as std_http from "jsr:@std/http";
+import * as std_http from "jsr:@std/http@^1.0.9";
 
 const fetch = (request: Request) =>
 	std_http.serveDir(request, { showIndex: true, fsRoot: "./playground/dist" })

@@ -12,15 +12,17 @@
  * ```
  */
 
-import { Actor } from "../Scene/Actor.ts";
+import { Actor } from "../Core/Actor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
-import { isArray } from "../Core/Asserts.ts";
+import { isArray } from "../Shared/Asserts.ts";
 // @ts-types="npm:@types/three@^0.169/objects/BatchedMesh.ts"
 import { BatchedLodMesh } from "../WebGL/BatchedLodMesh.js"
 
 export class MeshActor extends Actor
 {
+	static CreateLods = createLodGroup;
+
 	public get visible() { return this.#userVisibility }
 	public set visible(value: boolean)
 	{
@@ -157,7 +159,7 @@ export class MeshActor extends Actor
 
 					const batchedMesh = new BatchedLodMesh(instanceCount, maxVertices, maxIndices, meshInstance.material);
 
-					batchedMesh.perObjectFrustumCulled = true;
+					// batchedMesh.perObjectFrustrumCulled = false;
 
 					this.scene.object3d.add(batchedMesh);
 

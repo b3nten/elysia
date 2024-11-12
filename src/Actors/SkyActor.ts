@@ -10,8 +10,8 @@
 import * as Three from 'three';
 // @ts-types="npm:@types/three@^0.169.0/examples/jsm/Sky"
 import { Sky } from "three/examples/jsm/objects/Sky.js";
-import { ThreeActor } from "../Scene/ThreeActor.ts";
-import { installMaterialAddon } from "../RPipeline/InstallMaterialAddons.ts";
+import { ThreeActor } from "./ThreeActor.ts";
+import { installMaterialAddon } from "../WebGL/InstallMaterialAddons.ts";
 
 export class SkyActor extends ThreeActor<Sky>
 {

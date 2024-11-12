@@ -20,12 +20,12 @@ const ring = new Three.RingGeometry();
 /**
  * A basic cube meshes actor.
  */
-export class PrimitiveActor extends MeshActor
+export class PrimitiveMeshActor extends MeshActor
 {
 	// deno-lint-ignore constructor-super
 	constructor(geometry: Three.BufferGeometry, color?: Three.ColorRepresentation | Three.Material)
 	{
-		if(color === undefined) color = 0xff0000;
+		if(color === undefined) color = "gray";
 		if(color instanceof Three.Material)
 		{
 			super(geometry, color);
@@ -42,39 +42,39 @@ export class PrimitiveActor extends MeshActor
 		}
 	}
 
-	static Box(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
+	static Box(color?: Three.ColorRepresentation | Three.Material): PrimitiveMeshActor
 	{
-		return new PrimitiveActor(box, color);
+		return new PrimitiveMeshActor(box, color);
 	}
 
-	static Sphere(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
+	static Sphere(color?: Three.ColorRepresentation | Three.Material): PrimitiveMeshActor
 	{
-		return new PrimitiveActor(sphere, color);
+		return new PrimitiveMeshActor(sphere, color);
 	}
 
-	static Cone(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
+	static Cone(color?: Three.ColorRepresentation | Three.Material): PrimitiveMeshActor
 	{
-		return new PrimitiveActor(cone, color);
+		return new PrimitiveMeshActor(cone, color);
 	}
 
-	static Cylinder(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
+	static Cylinder(color?: Three.ColorRepresentation | Three.Material): PrimitiveMeshActor
 	{
-		return new PrimitiveActor(cylinder, color);
+		return new PrimitiveMeshActor(cylinder, color);
 	}
 
-	static Torus(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
+	static Torus(color?: Three.ColorRepresentation | Three.Material): PrimitiveMeshActor
 	{
-		return new PrimitiveActor(torus, color);
+		return new PrimitiveMeshActor(torus, color);
 	}
 
-	static Plane(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
+	static Plane(color?: Three.ColorRepresentation | Three.Material): PrimitiveMeshActor
 	{
-		return new PrimitiveActor(plane, color);
+		return new PrimitiveMeshActor(plane, color);
 	}
 
-	static Ring(color?: Three.ColorRepresentation | Three.Material): PrimitiveActor
+	static Ring(color?: Three.ColorRepresentation | Three.Material): PrimitiveMeshActor
 	{
-		return new PrimitiveActor(ring, color);
+		return new PrimitiveMeshActor(ring, color);
 	}
 
 }

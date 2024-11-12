@@ -13,7 +13,7 @@
 
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
-import { Actor } from "../Scene/Actor.ts";
+import { Actor } from "../Core/Actor.ts";
 
 /** An actor wrapping Three.AmbientLight. Setting transform properties will have no effect on this actor.n*/
 export class AmbientLightActor extends Actor

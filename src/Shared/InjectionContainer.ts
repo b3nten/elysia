@@ -25,9 +25,9 @@ type Key<T> = InjectionKey<T> | Constructor<T> | AbstractConstructor<T> | string
 export class OutOfScopeError extends Error {}
 export class ResolutionError extends Error {}
 
-export class Container
+export class InjectionContainer
 {
-	static current: Container | undefined;
+	static current: InjectionContainer | undefined;
 
 	instances: Map<Key<any>, Constructor<any>> = new Map();
 	singletons: Map<Key<any>, { instance: any; resolved: boolean; }> = new Map();
@@ -89,14 +89,14 @@ export class Container
 
 	resolve<T>(key: Key<T>): T
 	{
-		const prev = Container.current;
-		Container.current = this;
+		const prev = InjectionContainer.current;
+		InjectionContainer.current = this;
 		try {
 			const value = this.#resolveSingleton(key) ?? this.#resolveTransient(key) ?? this.#resolveValue(key);
 			if(!value) throw new ResolutionError(`Could not resolve ${String(key)}`);
 			return value;
 		} finally {
-			Container.current = prev;
+			InjectionContainer.current = prev;
 		}
 	}
 
@@ -114,12 +114,12 @@ export type Injected<T extends InjectionKey<T>> = T['brand'];
 
 export function inject<T>(key: Key<T>): Throws<T>
 {
-	if(!Container.current) throw new OutOfScopeError('No container in scope');
-	return Container.current.resolve(key);
+	if(!InjectionContainer.current) throw new OutOfScopeError('No container in scope');
+	return InjectionContainer.current.resolve(key);
 }
 
 export function injectSafe<T>(key: Key<T>): T | undefined
 {
-	if(!Container.current) return undefined;
-	return Container.current.resolveSafe(key);
+	if(!InjectionContainer.current) return undefined;
+	return InjectionContainer.current.resolveSafe(key);
 }

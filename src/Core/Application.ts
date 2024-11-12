@@ -1,33 +1,26 @@
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
 import { LogLevel } from "../Logging/Levels.ts";
-import { ASSERT, isDestroyable, isDev } from "./Asserts.ts";
-import { MouseIntersections } from "../Input/MouseIntersections.ts";
+import { ASSERT, isDestroyable, isDev } from "../Shared/Asserts.ts";
 import { ElysiaEventQueue } from "../Events/EventQueue.ts";
 import { InputQueue } from "../Input/InputQueue.ts";
 import { AssetLoader } from "../Assets/AssetLoader.ts";
 import { Profiler } from "./Profiler.ts";
 import { AudioPlayer } from "../Audio/AudioPlayer.ts";
 import { MouseObserver } from "../Input/Mouse.ts";
-import { Root, type Scene } from "../Scene/Scene.ts";
-import type { RenderPipeline } from "../RPipeline/RenderPipeline.ts";
-import { BasicRenderPipeline } from "../RPipeline/BasicRenderPipeline.ts";
-import { ELYSIA_LOGGER } from "./Logger.ts";
-import { ResizeController, ResizeEvent } from "./Resize.ts";
+import { Root, type Scene } from "./Scene.ts";
+import type { RenderPipeline } from "../Rendering/RenderPipeline.ts";
+import { BasicRenderPipeline } from "../Rendering/BasicRenderPipeline.ts";
+import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
+import { ResizeController, ResizeEvent } from "../Shared/Resize.ts";
 import { defaultScheduler } from "../UI/Scheduler.ts";
 import { ElysiaStats } from "../UI/ElysiaStats.ts";
 import {
-	s_App, s_OnBeforePhysicsUpdate,
-	s_OnCreate,
-	s_OnEnable,
-	s_OnEnterScene,
-	s_OnLoad,
-	s_OnResize,
-	s_OnUpdate,
-	s_SceneLoadPromise
-} from "../Scene/Internal.ts";
+	s_App, s_OnBeforePhysicsUpdate, s_OnCreate, s_OnEnable, s_OnEnterScene,
+	s_OnLoad, s_OnResize, s_OnUpdate, s_SceneLoadPromise
+} from "../Internal/mod.ts";
 import { GameClock } from "./GameClock.ts";
-import { installMaterialAddonsToPrototypes } from "../RPipeline/InstallMaterialAddons.ts";
+import { installMaterialAddonsToPrototypes } from "../WebGL/InstallMaterialAddons.ts";
 
 // Install material addons to Three.Material prototypes
 installMaterialAddonsToPrototypes(Three);
@@ -55,7 +48,7 @@ export class Application {
 
 	/**
 	 * The application instance's mouse observer.
-	 * The position of the mouse and intersecting objects are updated at the start of each frame.
+	 * The position of the mouse and is updated at the start of each frame.
 	 */
 	public readonly mouse: MouseObserver;
 
@@ -75,7 +68,7 @@ export class Application {
 	public readonly audio: AudioPlayer;
 
 	/**
-	 * If this s_App should call Elysia UIs `defaultScheduler.update()` in it's update loop.
+	 * If this App should call Elysia UIs `defaultScheduler.update()` in it's update loop.
 	 * @default true
 	 */
 	public updateDefaultUiScheduler: boolean;
@@ -88,22 +81,43 @@ export class Application {
 
 	/**
 	 * If the application should not schedule updates automatically.
-	 * If true, you must call Application.update() manually.
+	 * If true, you must call `Application.update()` manually.
 	*/
 	public manualUpdate: boolean;
 
 	/**
-	 * The active render pipeline.
+	 * The render pipeline.
 	 */
 	public get renderPipeline(): RenderPipeline { return this.#renderPipeline!; }
 
 	/**
-	 * The active s_Scene.
+	 * The active Scene.
 	*/
 	public get scene(): Scene | undefined { return this.#scene; }
 
 	/** The Application's AssetLoader instance */
 	get assets(): AssetLoader<any> { return this.#assets; }
+
+	/**
+	 * Checks if the current browser supports WebGL2.
+	 */
+	get isWebGl2Supported(): boolean
+	{
+		let canvas: HTMLCanvasElement | undefined;
+		try
+		{
+			canvas = document.createElement( 'canvas' );
+			return !!(globalThis.WebGL2RenderingContext && canvas.getContext( 'webgl2' ));
+		}
+		catch
+		{
+			return false;
+		}
+		finally
+		{
+			canvas?.remove();
+		}
+	}
 
 	constructor(config: ApplicationConstructorArguments = {})
 	{
@@ -152,7 +166,7 @@ export class Application {
 	}
 
 	/**
-	 * Load a s_Scene into the application. This will unload the previous s_Scene.
+	 * Load a Scene into the application. This will unload the previous Scene.
 	 * @param scene
 	 */
 	public async loadScene(scene: Scene)
@@ -205,19 +219,6 @@ export class Application {
 		}
 	}
 
-	/** Destroy the application and all of it's resources. */
-	public destructor()
-	{
-		ELYSIA_LOGGER.debug("Destroying application")
-		this.#rendering = false;
-
-		for(const prop of Object.values(this)) if(isDestroyable(prop)) prop.destructor();
-
-		this.#scene?.destructor();
-		this.#renderPipeline?.destructor();
-		this.#output.remove();
-	}
-
 	/** The main update loop for the application. */
 	public update()
 	{
@@ -235,14 +236,6 @@ export class Application {
 			}
 
 			this.#clock.capture();
-
-			// update mouse intersection
-			this.#mouseIntersectionController.cast(
-				this.#scene.getActiveCamera(),
-				this.#scene.object3d,
-				this.mouse.x / this.#output.clientWidth * 2 -1,
-				this.mouse.y / this.#output.clientHeight * 2 -1
-			);
 
 			// flush input and event queue callbacks
 			this.input.flush();
@@ -292,10 +285,22 @@ export class Application {
 		}
 	}
 
+	/** Destroy the application and all of its resources. */
+	public destructor()
+	{
+		ELYSIA_LOGGER.debug("Destroying application")
+		this.#rendering = false;
+
+		for(const prop of Object.values(this)) if(isDestroyable(prop)) prop.destructor();
+
+		this.#scene?.destructor();
+		this.#renderPipeline?.destructor();
+		this.#output.remove();
+	}
+
 	#resizeController: ResizeController;
 	#sizeHasChanged = false;
 	#assets: AssetLoader<any>;
-	#mouseIntersectionController = new MouseIntersections;
 	#errorCount = 0;
 	#stats: boolean | ElysiaStats = false;
 	#clock = new GameClock;

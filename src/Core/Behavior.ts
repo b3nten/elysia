@@ -1,21 +1,37 @@
-import { ActorLifecycle, Destroyable } from "../Core/Lifecycle.ts";
+import { ActorLifecycle, Destroyable } from "./Lifecycle.ts";
 import { Actor } from "./Actor.ts";
 import { Scene } from "./Scene.ts";
-import { Application } from "../Core/ApplicationEntry.ts";
-import { ELYSIA_LOGGER } from "../Core/Logger.ts";
+import { Application } from "./Application.ts";
+import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
 import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
-import { TagAddedEvent } from "../Core/ElysiaEvents.ts";
+import { TagAddedEvent } from "./ElysiaEvents.ts";
 import {
-	s_App, s_Created, s_Destroyed, s_Enabled, s_InScene, s_Internal, s_OnBeforePhysicsUpdate,
-	s_OnCreate, s_OnDestroy, s_OnDisable, s_OnEnable, s_OnEnterScene, s_OnLeaveScene,
-	s_OnReparent, s_OnResize, s_OnStart, s_OnUpdate, s_Parent, s_Scene, s_Started, s_Static, s_Tags
-} from "./Internal.ts";
+	s_App,
+	s_Created,
+	s_Destroyed,
+	s_Enabled,
+	s_InScene,
+	s_Internal,
+	s_IsBehavior,
+	s_OnBeforePhysicsUpdate,
+	s_OnCreate,
+	s_OnDestroy,
+	s_OnDisable,
+	s_OnEnable,
+	s_OnEnterScene,
+	s_OnLeaveScene,
+	s_OnResize,
+	s_OnStart,
+	s_OnUpdate,
+	s_Parent,
+	s_Scene,
+	s_Started,
+	s_Static,
+	s_Tags
+} from "../Internal/mod.ts";
 import { reportLifecycleError } from "./Errors.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
-import { isDev } from "../Core/Asserts.ts";
-
-export const IsBehavior = Symbol.for("Elysia::IsBehavior");
 
 /**
  * A behavior is a component that can be attached to an actor to add functionality.
@@ -23,11 +39,13 @@ export const IsBehavior = Symbol.for("Elysia::IsBehavior");
  */
 export class Behavior implements ActorLifecycle, Destroyable
 {
-	[IsBehavior]: boolean = true;
+	[s_IsBehavior]: boolean = true;
 
 	/**
 	 * Static behaviors are not updated during onUpdate, onBeforePhysicsUpdate, or onTransformUpdate.
 	 * This can be toggled at any time.
+	 *
+	 * @default false
 	 */
 	get static() { return this[s_Static]; }
 	set static(value: boolean)
@@ -110,6 +128,8 @@ export class Behavior implements ActorLifecycle, Destroyable
 	onStart() {}
 
 	onBeforePhysicsUpdate(delta: number, elapsed: number) {}
+
+	onTransformUpdate() {}
 
 	onUpdate(delta: number, elapsed: number) {}
 

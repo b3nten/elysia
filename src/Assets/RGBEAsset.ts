@@ -6,17 +6,15 @@ import { RGBELoader } from "three/examples/jsm/Addons.js";
 
 export class RGBEAsset extends Asset<Three.DataTexture>
 {
-	constructor(public url: string) { super(); }
-
 	static Loader: RGBELoader = new RGBELoader;
-
+	constructor(public url: string) { super(); }
 	override loader(): Promise<Three.DataTexture>
 	{
 		return new Promise<Three.DataTexture>((resolve) =>
 			RGBEAsset.Loader.load(
 				this.url,
 				(texture) => resolve(texture),
-				(p) => {this.updateProgress(p.loaded / p.total)}
+				(p) => { this.updateProgress(p.loaded / p.total) }
 			),
 		)
 	}

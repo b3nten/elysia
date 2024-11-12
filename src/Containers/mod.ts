@@ -4,13 +4,13 @@
  * A collection of common data structures.
  */
 
-export * from "./AutoInitializedMap.ts";
-export * from "./Future.ts";
-export * from "./ObjectPool.ts";
-export * from "./RefMap.ts";
-export * from "./Stack.ts";
-export * from "./SparseSet.ts";
-export * from "./ReverseMap.ts";
-export * from "./LinkedList.ts";
-export * from "./ComponentSet.ts";
-export * from "./Queue.ts";
+export { AutoInitializedMap } from "./AutoInitializedMap.ts";
+export { Future } from "./Future.ts";
+export { ObjectPool } from "./ObjectPool.ts";
+export { RefMap } from "./RefMap.ts";
+export { Stack } from "./Stack.ts";
+export { SparseSet } from "./SparseSet.ts";
+export { ReverseMap } from "./ReverseMap.ts";
+export { SinglyLinkedList, SinglyLinkedListNode } from "./LinkedList.ts";
+export { ComponentSet } from "./ComponentSet.ts";
+export { Queue } from "./Queue.ts";

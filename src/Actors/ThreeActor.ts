@@ -1,12 +1,12 @@
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
-import { Actor } from "./Actor.ts";
+import { Actor } from "../Core/Actor.ts";
 import {
 	s_Destroyed,
 	s_OnEnterScene,
 	s_OnLeaveScene,
 	s_OnUpdate, s_TransformDirty,
-} from "./Internal.ts";
+} from "../Internal/mod.ts";
 
 export class ThreeActor<T extends Three.Object3D = Three.Object3D> extends Actor {
 

@@ -1,5 +1,5 @@
 import type { System } from "./System.ts";
-import type { Constructor } from "../Core/Utilities.ts"
+import type { Constructor } from "../Shared/Utilities.ts"
 import * as Internal from "./Internal.ts";
 import type { Entity } from "./Entity.ts";
 import type { Component } from "./Component.ts";

@@ -1,12 +1,12 @@
-import { Behavior } from "../../src/Scene/Behavior.ts";
+import { Behavior } from "../../src/Core/Behavior.ts";
 import { MouseCode } from "../../src/Input/MouseCode.ts";
-import { SphereActor } from "../../src/Actors/Primitives.ts";
+import { SphereActor } from "../../src/Actors/PrimitiveMeshActor.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 import { RigidBody, RigidbodyType } from "../../src/Physics/RigidBody.ts";
 import { SphereCollider } from "../../src/Physics/Collider.ts";
 import { OutOfBoundsBehavior } from "./OutOfBoundsBehavior.ts";
-import { tick } from "../../src/Core/Utilities.ts"
+import { tick } from "../../src/Shared/Utilities.ts"
 
 export class ProjectileBehavior extends Behavior
 {

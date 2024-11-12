@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import * as esbuild from "npm:esbuild"
 import { copy } from "npm:esbuild-plugin-copy";
-import { denoPlugins } from "jsr:@luca/esbuild-deno-loader"
+import { denoPlugins } from "jsr:@luca/esbuild-deno-loader@^0.11.0"
 
 const createPlaygroundEsbuildConfig = (mode: string): esbuild.BuildOptions => ({
 	entryPoints: ["./playground/entry.ts"],
@@ -15,7 +15,7 @@ const createPlaygroundEsbuildConfig = (mode: string): esbuild.BuildOptions => ({
 	metafile: true,
 	splitting: true,
 	sourcemap: "linked",
-	external: ["three"],
+	// external: ["three"],
 	entryNames: mode === 'build' ? "[name]-[hash]" : undefined,
 	define: {
 		"import.meta.DEV": mode === "dev" ? "true" : "false",
@@ -41,15 +41,6 @@ const constructPlaygroundHtml = (entry: string) => `
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Elysia Playground</title>
-	<script type="importmap">
-		{ 
-			"imports": 
-				{ 
-					"three": "https://esm.sh/three@0.170.0",
-					"three/": "https://esm.sh/three@0.170.0/"
-				} 
-		}
-	</script>
 	<script type="module" src="${entry}"></script>
 </head>
 <body></body>

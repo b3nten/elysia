@@ -7,8 +7,8 @@
 
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three'
-import type { Application } from "../Core/ApplicationEntry.ts";
-import type { Scene } from "../Scene/Scene.ts";
+import type { Application } from "../Core/Application.ts";
+import type { Scene } from "../Core/Scene.ts";
 interface Uniform<T>
 {
 	value: T

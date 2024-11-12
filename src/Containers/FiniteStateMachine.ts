@@ -1,6 +1,6 @@
-import { ReverseMap } from "../Containers/ReverseMap.ts";
-import { ELYSIA_LOGGER } from "./Logger.ts";
-import { isFunction, isPropertyKey } from "./Asserts.ts";
+import { ReverseMap } from "./ReverseMap.ts";
+import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
+import { isFunction, isPropertyKey } from "../Shared/Asserts.ts";
 
 const ExitCurrentState = Symbol.for("Elysia::FiniteStateMachine::ExitCurrentState");
 const onEnter = Symbol.for("Elysia::FiniteStateMachine::onEnter");

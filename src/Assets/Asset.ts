@@ -1,6 +1,6 @@
 import { Future } from "../Containers/Future.ts";
 import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
-import { Maybe, MaybePromise } from "../Core/Utilities.ts";
+import { Maybe, MaybePromise } from "../Shared/Utilities.ts";
 import { clamp } from "../Math/Other.ts";
 import { BeginLoadEvent, LoadedEvent, ErrorEvent, ProgressEvent } from "../Events/Event.ts";
 

@@ -1,4 +1,4 @@
-import { Behavior } from "../../src/Scene/Behavior.ts";
+import { Behavior } from "../../src/Core/Behavior.ts";
 
 export class OutOfBoundsBehavior extends Behavior
 {

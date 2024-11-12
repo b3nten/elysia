@@ -1,5 +1,5 @@
-import { Actor } from "../Scene/Actor.ts";
-import { Scene } from "../Scene/Scene.ts";
+import { Actor } from "./Actor.ts";
+import { Scene } from "./Scene.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
 

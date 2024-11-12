@@ -10,10 +10,10 @@
 import * as Three from 'three';
 // @ts-types="npm:@types/three@^0.169.0/examples/jsm/controls/OrbitControls"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
-import { Behavior } from "../Scene/Behavior.ts";
-import { ELYSIA_LOGGER } from "../Core/Logger.ts";
-import { isThreeActor } from "../Scene/Component.ts";
-import { ThreeActor } from "../Scene/ThreeActor.ts";
+import { Behavior } from "../Core/Behavior.ts";
+import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
+import { isThreeActor } from "../Core/Component.ts";
+import { ThreeActor } from "../Actors/ThreeActor.ts";
 
 const _q1 = new Three.Quaternion();
 const _m1 = new Three.Matrix4();

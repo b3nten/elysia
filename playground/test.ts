@@ -3,7 +3,7 @@ import * as Elysia from "../src/mod.ts";
 import * as Three from "three"
 
 const app = new Elysia.Core.Application({
-	renderPipeline: new Elysia.RPipeline.HDRenderPipeline({
+	renderPipeline: new Elysia.Rendering.HDRenderPipeline({
 		smaa: true,
 		// fog: new Elysia.RPipeline.ExponentialHeightFog('#323238'),
 	}),
@@ -17,7 +17,7 @@ const assets = new Elysia.Assets.AssetLoader({
 	Box: new Elysia.Assets.GLTFAsset("/assets/Box.glb"),
 })
 
-class MyScene extends Elysia.Scene.Scene
+class MyScene extends Elysia.Core.Scene
 {
 	camera = new Elysia.Actors.PerspectiveCameraActor();
 
@@ -43,27 +43,27 @@ class MyScene extends Elysia.Scene.Scene
 		}
 
 		{
-			const lodGroup = Elysia.Actors.createLodGroup({
+			const lodGroup = Elysia.Actors.MeshActor.CreateLods({
 				levels: [
 					{
-						geometry: new Three.SphereGeometry(1, 128, 128),
+						geometry: new Three.SphereGeometry(1, 256, 256),
 						material: new Three.MeshStandardMaterial({ color: "blue" }),
 						distance: 0
 					},
 					{
-						geometry: new Three.SphereGeometry(1, 64, 64),
+						geometry: new Three.SphereGeometry(1, 128, 128),
 						material: new Three.MeshStandardMaterial({ color: "cyan" }),
-						distance: 12
+						distance: 25
 					},
 					{
 						geometry: new Three.SphereGeometry(1, 32, 32),
 						material: new Three.MeshStandardMaterial({ color: "yellow" }),
-						distance: 30
+						distance: 75
 					},
 					{
 						geometry: new Three.SphereGeometry(1, 8, 8),
 						material: new Three.MeshStandardMaterial({ color: "white" }),
-						distance: 60
+						distance: 100
 					},
 				],
 				maxDrawDistance: 300,
@@ -71,6 +71,11 @@ class MyScene extends Elysia.Scene.Scene
 
 			const mesh = new Three.Mesh(
 				new Three.BoxGeometry(2,20,2),
+				new Three.MeshStandardMaterial({ color: "red" })
+			)
+
+			const sphere = new Three.Mesh(
+				new Three.BoxGeometry(1,1,1),
 				new Three.MeshStandardMaterial({ color: "red" })
 			)
 
@@ -89,16 +94,16 @@ class MyScene extends Elysia.Scene.Scene
 			plane.rotation.setFromEuler(new Three.Euler(-Math.PI / 2, 0, 0));
 			this.addComponent(plane);
 
-			// for(let i = 0; i < 2000; i++)
-			// {
-			//
-			// 	const cube = new Elysia.Actors.MeshActor(lodGroup)
-			// 	cube.static = true;
-			// 	cube.scale.setScalar(2)
-			// 	cube.position.set(Math.random() * 100 - 50, Math.random() * 100 - 50, Math.random() * 100 - 50);
-			// 	// cube.position.set(Math.random() * 5 - 2.5, Math.random() * 5 - 2.5, Math.random() * 5 - 2.5);
-			// 	this.addComponent(cube);
-			// }
+			for(let i = 0; i < 50000; i++)
+			{
+
+				const cube = new Elysia.Actors.MeshActor(sphere)
+				cube.static = true;
+				cube.scale.setScalar(2)
+				cube.position.set(Math.random() * 100 - 50, Math.random() * 100 - 50, Math.random() * 100 - 50);
+				// cube.position.set(Math.random() * 5 - 2.5, Math.random() * 5 - 2.5, Math.random() * 5 - 2.5);
+				this.addComponent(cube);
+			}
 		}
 	}
 }

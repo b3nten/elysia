@@ -1,7 +1,7 @@
 import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
 import { ElysiaEvent } from "../Events/Event.ts";
-import { Actor } from "../Scene/Actor.ts";
-import { Component } from "../Scene/Component.ts";
+import { Actor } from "./Actor.ts";
+import { Component } from "./Component.ts";
 
 export const ElysiaEvents: ElysiaEventDispatcher = new ElysiaEventDispatcher;
 

@@ -1,4 +1,4 @@
-import { Behavior } from "../Scene/Behavior.ts";
+import { Behavior } from "../Core/Behavior.ts";
 import { Vector3Like } from "../Math/Vectors.ts";
 import * as Rapier from "@dimforge/rapier3d-compat";
 

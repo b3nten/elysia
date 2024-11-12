@@ -2,8 +2,8 @@ import { AudioPlayer } from "./AudioPlayer.ts";
 import { Queue } from "../Containers/Queue.ts";
 import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
 import * as Events from "./AudioEvents.ts";
-import { ASSERT } from "../Core/Asserts.ts";
-import { isBrowser } from "../Core/Asserts.ts";
+import { ASSERT } from "../Shared/Asserts.ts";
+import { isBrowser } from "../Shared/Asserts.ts";
 import { clamp } from "../Math/Other.ts";
 
 export interface AudioConstructorArguments {

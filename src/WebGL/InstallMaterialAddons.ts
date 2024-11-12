@@ -2,11 +2,11 @@
  * @module
  * @description
  * A common usecase in Three.js is running code before the compilation of a material's shader, or before rendering a material.
- * This module provides a way to add global callbacks to any material's onBeforeRender, onBeforeCompile, and onAfterRender events,
+ * This module provides a way to add global callbacks to any material's onBeforeRender andonBeforeCompile events,
  * without overriding the existing instance callbacks and allowing other users to set their own callback to the material.
- * It also provides a way to propagate global uniforms from Three.WebGlRenderer.globalUniforms property to each material's shader.
+ * It also provides a way to propagate global uniforms from Three.WebGlRenderer to each material's shader.
  *
- * Warning: This does not work as expected if the material callback is overrided in the prototype of a custom material class.
+ * Warning: This may not work as expected if the material callback is overrided in the prototype of a custom material class.
  *
  * @example
  * ```ts
@@ -15,12 +15,17 @@
  * installMaterialAddonsToPrototypes(Three);
  *
  * const renderer = new Three.WebGLRenderer();
- * renderer.globalUniforms = { time: { value: 0 } };
+ * setGlobalUnform(renderer, "fogTime", 0)
  * ```
  */
 
 // @ts-types="npm:@types/three@^0.169"
 import type * as Three from "three"
+
+/**
+ * Internal symbol for the material addon.
+ */
+export const Internal = Symbol("MaterialAddonInternal");
 
 /**
  * Installs the material addons to all the material prototypes.
@@ -64,51 +69,47 @@ export function installMaterialAddon(material: any)
 {
 	Object.defineProperty(material, "onBeforeRender", {
 		get() {
-			if(!this.__cachedOnBeforeRender) {
-				this.__cachedOnBeforeRender = (...args: any[]) => {
-					this.userOnBeforeRender?.(...args);
-					for(const callback of args[0]?.materialOnBeforeRenderCallbacks ?? [])
+			ASSERT_INTERNAL(this);
+			if(!this[Internal].cachedOnBeforeRender)
+			{
+				this[Internal].cachedOnBeforeRender = (...args: any[]) =>
+				{
+					this[Internal].userOnBeforeRender?.(...args);
+					ASSERT_INTERNAL(args[0]);
+					for(const callback of args[0][Internal].materialOnBeforeRenderCallbacks ?? [])
 					{
 						callback(this,...args);
 					}
 				}
 			}
-			return this.__cachedOnBeforeRender
+			return this[Internal].cachedOnBeforeRender
 		},
-		set (v: Function) { this.userOnBeforeRender = v; }
+		set (v: Function) {
+			ASSERT_INTERNAL(this);
+			this[Internal].userOnBeforeRender = v;
+		}
 	})
 
 	Object.defineProperty(material, "onBeforeCompile", {
 		get() {
+			ASSERT_INTERNAL(this);
 			return (shader: any, renderer: any) => {
-				for(const key in renderer.globalUniforms)
+				ASSERT_INTERNAL(renderer);
+				for(const key in renderer[Internal].globalUniforms ?? [])
 				{
-					shader.uniforms[key] = renderer.globalUniforms[key];
+					shader.uniforms[key] = renderer[Internal].globalUniforms[key];
 				}
-				this.userOnBeforeCompile?.(shader, renderer);
-				for(const callback of shader?.materialOnBeforeCompileCallbacks ?? [])
+				this[Internal].userOnBeforeCompile?.(shader, renderer);
+				for(const callback of renderer[Internal]?.materialOnBeforeCompileCallbacks ?? [])
 				{
 					callback(this, shader, renderer);
 				}
 			}
 		},
-		set (v: Function) { this.userOnBeforeCompile = v; }
-	})
-
-	Object.defineProperty(material, "onAfterRender", {
-		get()
-		{
-			if(!this.__cachedOnAfterRender) {
-				this.__cachedOnAfterRender = (...args: any[]) => {
-					this.userOnAfterRender?.(...args);
-					for (const callback of args[0]?.materialOnAfterRenderCallbacks ?? []) {
-						callback(this, ...args);
-					}
-				}
-			}
-			return this.__cachedOnAfterRender;
-		},
-		set (v: Function) { this.userOnAfterRender = v; }
+		set (v: Function) {
+			ASSERT_INTERNAL(this);
+			this[Internal].userOnBeforeCompile = v;
+		}
 	})
 }
 
@@ -120,8 +121,11 @@ export function installMaterialAddon(material: any)
  */
 export function addMaterialBeforeRenderCallback(renderer: Three.WebGLRenderer, callback: (material: Three.Material) => void)
 {
-	if(!renderer.materialOnBeforeRenderCallbacks) renderer.materialOnBeforeRenderCallbacks = [];
-	renderer.materialOnBeforeRenderCallbacks.push(callback);
+	ASSERT_INTERNAL(renderer);
+	// @ts-ignore - extension
+	if(!renderer[Internal]?.materialOnBeforeRenderCallbacks) renderer[Internal].materialOnBeforeRenderCallbacks = [];
+	// @ts-ignore - extension
+	renderer[Internal].materialOnBeforeRenderCallbacks.push(callback);
 }
 
 /**
@@ -132,25 +136,23 @@ export function addMaterialBeforeRenderCallback(renderer: Three.WebGLRenderer, c
  */
 export function addMaterialBeforeCompileCallback(renderer: Three.WebGLRenderer, callback: (material: Three.Material, shader: string) => void)
 {
-	if(!renderer.materialOnBeforeCompileCallbacks) renderer.materialOnBeforeCompileCallbacks = [];
-	renderer.materialOnBeforeCompileCallbacks.push(callback);
+	ASSERT_INTERNAL(renderer);
+	// @ts-ignore - extension
+	if(!renderer[Internal].materialOnBeforeCompileCallbacks) renderer[Internal].materialOnBeforeCompileCallbacks = [];
+	// @ts-ignore - extension
+	renderer[Internal].materialOnBeforeCompileCallbacks.push(callback);
 }
 
 /**
- * Adds a Material.onAfterRender callback without overriding the existing one.
- * Requires the addon's to be installed via installMaterialAddonsToPrototypes or installMaterialAddon.
+ * Gets a global uniform from the WebGLRenderer that is propagated to all materials.
  * @param renderer
- * @param callback
+ * @param key
  */
-export function addMaterialAfterRenderCallback(renderer: Three.WebGLRenderer, callback: (material: Three.Material) => void)
-{
-	if(!renderer.materialOnAfterRenderCallbacks) renderer.materialOnAfterRenderCallbacks = [];
-	renderer.materialOnAfterRenderCallbacks.push(callback);
-}
-
 export function getGlobalUniform<T>(renderer: Three.WebGLRenderer, key: string): T | undefined
 {
-	return renderer.globalUniforms?.[key]?.value;
+	ASSERT_INTERNAL(renderer);
+	// @ts-ignore - extension
+	return renderer[Internal].globalUniforms?.[key]?.value;
 }
 
 /**
@@ -161,7 +163,13 @@ export function getGlobalUniform<T>(renderer: Three.WebGLRenderer, key: string):
  */
 export function setGlobalUniform(renderer: Three.WebGLRenderer, key: string, value: any)
 {
-	if(!renderer.globalUniforms) renderer.globalUniforms = {};
-	if(!renderer.globalUniforms[key]) renderer.globalUniforms[key] = { value };
-	else renderer.globalUniforms[key].value = value;
+	ASSERT_INTERNAL(renderer);
+	// @ts-ignore - extension
+	if(!renderer[Internal].globalUniforms) renderer[Internal].globalUniforms = {};
+	// @ts-ignore - extension
+	if(!renderer[Internal].globalUniforms[key]) renderer[Internal].globalUniforms[key] = { value };
+	// @ts-ignore - extension
+	else renderer[Internal].globalUniforms[key].value = value;
 }
+
+const ASSERT_INTERNAL = (obj: any) => obj[Internal] ?? (obj[Internal] = {});

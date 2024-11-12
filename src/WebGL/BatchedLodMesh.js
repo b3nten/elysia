@@ -1261,7 +1261,7 @@ class BatchedLodMesh extends Mesh {
 					const instance = instanceInfo[ i ];
 
 					// set it's new matrix
-					this.setMatrixAt( i, instance.getWorldMatrix() );
+					this.setMatrixAt(i, instance.getWorldMatrix());
 
 					// get the bounds in world space
 					this.getMatrixAt( i, _matrix );
@@ -1313,12 +1313,16 @@ class BatchedLodMesh extends Mesh {
 
 			_renderList.reset();
 
-		} else {
+		}
+		else {
 			for ( let i = 0, l = instanceInfo.length; i < l; i ++ ) {
 
 				if ( instanceInfo[ i ].visible && instanceInfo[ i ].active ) {
 
 					const geometryId = instanceInfo[ i ].geometryIndex;
+					const instance = instanceInfo[ i ];
+					// set it's new matrix
+					this.setMatrixAt(i, instance.getWorldMatrix());
 
 					// determine whether the batched geometry is within the frustum
 					let culled = false;
@@ -1357,7 +1361,6 @@ class BatchedLodMesh extends Mesh {
 	onBeforeShadow( renderer, object, camera, shadowCamera, geometry, depthMaterial/* , group */ ) {
 		this.onBeforeRender( renderer, null, shadowCamera, geometry, depthMaterial );
 	}
-
 }
 
 export { BatchedLodMesh };

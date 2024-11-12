@@ -1,13 +1,13 @@
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
-import type { ActorLifecycle, Destroyable } from "../Core/Lifecycle.ts";
-import { ELYSIA_LOGGER } from "../Core/Logger.ts";
+import type { ActorLifecycle, Destroyable } from "./Lifecycle.ts";
+import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
 import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
-import { ComponentAddedEvent, ComponentRemovedEvent, TagAddedEvent } from "../Core/ElysiaEvents.ts";
+import { ComponentAddedEvent, ComponentRemovedEvent, TagAddedEvent } from "./ElysiaEvents.ts";
 import { type Component, isActor } from "./Component.ts";
 import type { Scene } from "./Scene.ts";
-import type { Application } from "../Core/ApplicationEntry.ts";
-import type { Constructor } from "../Core/Utilities.ts";
+import type { Application } from "./Application.ts";
+import type { Constructor } from "../Shared/Utilities.ts";
 import { ComponentSet } from "../Containers/ComponentSet.ts";
 import {
 	s_App,
@@ -35,7 +35,7 @@ import {
 	s_Started, s_Static,
 	s_TransformDirty,
 	s_WorldMatrix
-} from "./Internal.ts";
+} from "../Internal/mod.ts";
 import { reportLifecycleError } from "./Errors.ts";
 
 const tempVec2 = new Three.Vector2();

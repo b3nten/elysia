@@ -47,7 +47,6 @@
  * - Loading operations: Use built-in events (BeginLoadEvent, ProgressEvent, etc.)
  */
 
-export * from "./mod.ts";
-export * from "./EventQueue.ts";
-export * from "./Event.ts";
-export * from "./EventDispatcher.ts";
+export { ElysiaEventQueue } from "./EventQueue.ts";
+export { ProgressEvent, ErrorEvent, LoadedEvent, BeginLoadEvent, ElysiaEvent} from "./Event.ts";
+export { ElysiaEventDispatcher } from "./EventDispatcher.ts";

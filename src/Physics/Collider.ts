@@ -1,4 +1,4 @@
-import { Actor } from "../Scene/Actor.ts";
+import { Actor } from "../Core/Actor.ts";
 import { Vector3Like } from "../Math/Vectors.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';

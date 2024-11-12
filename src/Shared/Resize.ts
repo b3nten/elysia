@@ -1,4 +1,4 @@
-import { Destroyable } from "./Lifecycle.ts";
+import { Destroyable } from "../Core/Lifecycle.ts";
 import { isBrowser } from "./Asserts.ts";
 import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
 import { ElysiaEvent } from "../Events/Event.ts";

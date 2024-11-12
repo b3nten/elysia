@@ -1,9 +1,9 @@
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
 import { RenderPipeline } from "./RenderPipeline.ts";
-import { Scene } from "../Scene/Scene.ts";
+import { Scene } from "../Core/Scene.ts";
 import * as Postprocessing from "postprocessing"
-import { ExponentialHeightFog } from "./ExponentialHeightFog.ts";
+import { ExponentialHeightFog } from "../WebGL/ExponentialHeightFog.ts";
 
 Postprocessing.OverrideMaterialManager.workaroundEnabled = true;
 
@@ -87,6 +87,7 @@ class DepthPrePass extends Postprocessing.RenderPass {
 		deltaTime?: number | undefined,
 		stencilTest?: boolean | undefined
 	): void {
+
 		renderer.getContext().depthFunc(renderer.getContext().LEQUAL);
 		_PREPASS_DEPTH = true;
 		super.render(renderer, inputBuffer, outputBuffer, deltaTime, stencilTest);
@@ -200,17 +201,13 @@ export class HDRenderPipeline extends RenderPipeline
 		this.renderer.shadowMap.enabled = true;
 		this.renderer.shadowMap.type = Three.PCFSoftShadowMap;
 
-		// @ts-ignore - custom data
-		this.renderer.globalUniforms = {
-			foo: { value: 0 }
-		}
-
 		if(this.#fog)
 		{
 			// @ts-ignore - custom fog type
 			scene.object3d.fog = this.#fog;
 			if(this.#fog instanceof ExponentialHeightFog)
 			{
+				// see ExponentialHeightFog.ts
 				this.#fog.renderer = this.renderer;
 			}
 		}

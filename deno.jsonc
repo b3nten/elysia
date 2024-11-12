@@ -9,19 +9,9 @@
   },
   "imports": {
     "@dimforge/rapier3d-compat": "npm:@dimforge/rapier3d-compat@^0.14.0",
-    "@luca/esbuild-deno-loader": "jsr:@luca/esbuild-deno-loader@^0.11.0",
-    "@std/http": "jsr:@std/http@^1.0.9",
-    "corel-color-picker": "npm:corel-color-picker@^0.2.3",
     "lit-html": "npm:lit-html@^3.2.1",
-    "postprocessing": "npm:postprocessing@^6.36.3",
-    "three": "npm:three@^0.170.0",
-    "troika-three-text": "npm:troika-three-text@^0.50.1",
-    "uhtml": "npm:uhtml@^4.5.11"
-  },
-  "scopes": {
-    "npm:postprocessing@^6.36.3": {
-      "three": "npm:three@^0.170.0"
-    }
+    "postprocessing": "npm:postprocessing@^6.36.4",
+    "three": "npm:three@^0.170.0"
   },
   "exports": {
     ".": "./src/mod.ts"

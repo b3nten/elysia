@@ -1,4 +1,4 @@
-import type { Constructor } from "../Core/Utilities.ts";
+import type { Constructor } from "../Shared/Utilities.ts";
 import { ElysiaImmediateElement } from "./ElysiaImmediateElement.ts";
 import { ElysiaElement } from "./ElysiaElement.ts";
 

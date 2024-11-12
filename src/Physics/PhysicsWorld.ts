@@ -1,15 +1,15 @@
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
 import * as Rapier from "@dimforge/rapier3d-compat";
-import { s_OnLoad, s_OnStart, s_OnUpdate } from "../Scene/Internal.ts";
+import { s_OnLoad, s_OnStart, s_OnUpdate } from "../Internal/mod.ts";
 import { PhysicsDebugRenderer } from "./Debug.ts";
-import { Scene } from "../Scene/Scene.ts";
-import { ASSERT } from "../Core/Asserts.ts";
+import { Scene } from "../Core/Scene.ts";
+import { ASSERT } from "../Shared/Asserts.ts";
 import { Collider } from "./Collider.ts";
 import { RigidBody } from "./RigidBody.ts";
 import { findAncestorRigidbody } from "./FindAncestorRigidbody.ts";
-import { Actor } from "../Scene/Actor.ts";
-import { isActor } from "../Scene/Component.ts";
+import { Actor } from "../Core/Actor.ts";
+import { isActor } from "../Core/Component.ts";
 
 interface PhysicsWorldConstructorArguments
 {

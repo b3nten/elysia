@@ -1,5 +1,5 @@
 import { ElysiaEvent } from "./Event.ts";
-import { Constructor } from "../Core/Utilities.ts";
+import { Constructor } from "../Shared/Utilities.ts";
 
 /**
  * A double-buffered event queue system that manages event dispatching and subscriptions.

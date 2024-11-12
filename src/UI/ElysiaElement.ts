@@ -1,8 +1,8 @@
 import * as LitHtml from "lit-html"
 import { type Scheduler, defaultScheduler } from "./Scheduler.ts";
-import { isFunction } from "../Core/Asserts.ts";
+import { isFunction } from "../Shared/Asserts.ts";
 import { OffscreenUpdateStrategy } from "./UpdateStrategy.ts";
-import { Attributes, Internal } from "./Internal.ts";
+import { s_Attributes, s_Internal } from "../Internal/mod.ts";
 import _css from "./Css.ts";
 import _defineComponent from "./DefineComponent.ts";
 
@@ -125,7 +125,7 @@ export abstract class ElysiaElement extends HTMLElement
 
 	public connectedCallback(): void
 	{
-		for(const [propName, attr] of Object.entries(this[Attributes]))
+		for(const [propName, attr] of Object.entries(this[s_Attributes]))
 		{
 			const attrValue = this.getAttribute(attr.attrName);
 			// @ts-ignore - sigh
@@ -337,8 +337,8 @@ export abstract class ElysiaElement extends HTMLElement
 		}
 	}
 
-	[Internal]: Record<PropertyKey, unknown> = {};
-	[Attributes]: Record<string, { attrName: string, converter?: () => unknown }> = {};
+	[s_Internal]: Record<PropertyKey, unknown> = {};
+	[s_Attributes]: Record<string, { attrName: string, converter?: () => unknown }> = {};
 
 	#renderResult: RenderOutput | null = null
 	#offscreen: boolean = true;

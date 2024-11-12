@@ -1,4 +1,4 @@
-import { isDev } from "../Core/Asserts.ts";
+import { isDev } from "../Shared/Asserts.ts";
 
 export class LifeCycleError extends Error
 {

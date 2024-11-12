@@ -1,4 +1,4 @@
-import { Constructor } from "../Core/Utilities.ts";
+import { Constructor } from "../Shared/Utilities.ts";
 
 export class Component {}
 

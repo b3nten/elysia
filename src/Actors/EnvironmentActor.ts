@@ -16,7 +16,7 @@
 
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
-import { Actor } from "../Scene/Actor.ts";
+import { Actor } from "../Core/Actor.ts";
 import {
 	BackSide,
 	BoxGeometry,
@@ -26,7 +26,7 @@ import {
 	PointLight,
 	Scene,
 } from 'three';
-import { Colors } from "../Core/Colors.ts";
+import { Colors } from "../Shared/Colors.ts";
 import type { Maybe } from "../Core/mod.ts";
 
 class RoomEnvironment extends Scene {

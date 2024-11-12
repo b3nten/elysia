@@ -1,4 +1,4 @@
-import { ASSERT, isBrowser } from "../Core/Asserts.ts";
+import { ASSERT, isBrowser } from "../Shared/Asserts.ts";
 import { Audio, type AudioConstructorArguments } from "./Audio.ts";
 
 export class AudioPlayer

@@ -18,3 +18,4 @@ if(import.meta.DEV)
 // 	.then(() => setTimeout(() => splash.goodbye(), 2000));
 
 import("./test.ts")
+// import("./uitest.ts")

@@ -1,5 +1,5 @@
 import { ElysiaElement, defineComponent, html } from "./ElysiaElement.ts";
-import { ELYSIA_VERSION } from "../Core/Constants.ts";
+import { ELYSIA_VERSION } from "../Shared/Constants.ts";
 import { css, defaultScheduler } from "./mod.ts";
 
 export class ElysiaStats extends ElysiaElement

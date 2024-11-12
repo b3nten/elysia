@@ -1,5 +1,5 @@
 import { defineComponent, ElysiaElement, html } from "./ElysiaElement.ts";
-import { Colors } from "../Core/Colors.ts";
+import { Colors } from "../Shared/Colors.ts";
 
 export class ElysiaTheme extends ElysiaElement
 {

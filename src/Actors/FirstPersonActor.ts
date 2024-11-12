@@ -1,11 +1,11 @@
-import { Actor } from "../Scene/Actor.ts";
+import { Actor } from "../Core/Actor.ts";
 import { KeyCode } from "../Input/KeyCode.ts";
 import Rapier from "@dimforge/rapier3d-compat";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 import { RigidBody, RigidbodyType } from "../Physics/RigidBody.ts";
 import { PerspectiveCameraActor } from "./PerspectiveCameraActor.ts";
-import { Behavior } from "../Scene/Behavior.ts";
+import { Behavior } from "../Core/Behavior.ts";
 import { clamp } from "../Math/Other.ts";
 import { CapsuleCollider } from "../Physics/Collider.ts";
 import type { PerspectiveCamera } from "npm:@types/three@^0.169.0";
