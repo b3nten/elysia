@@ -29,32 +29,11 @@ export const Internal = Symbol("MaterialAddonInternal");
 
 /**
  * Installs the material addons to all the material prototypes.
- * @param Three
+ * @param materials
  */
-export function installMaterialAddonsToPrototypes(Three: typeof import("three"))
+export function installMaterialAddonsToPrototypes(materials: typeof Three.Material[])
 {
-	const Materials = [
-		Three.ShadowMaterial,
-		Three.SpriteMaterial,
-		Three.RawShaderMaterial,
-		Three.ShaderMaterial,
-		Three.PointsMaterial,
-		Three.MeshPhysicalMaterial,
-		Three.MeshStandardMaterial,
-		Three.MeshPhongMaterial,
-		Three.MeshToonMaterial,
-		Three.MeshNormalMaterial,
-		Three.MeshLambertMaterial,
-		Three.MeshDepthMaterial,
-		Three.MeshDistanceMaterial,
-		Three.MeshBasicMaterial,
-		Three.MeshMatcapMaterial,
-		Three.LineDashedMaterial,
-		Three.LineBasicMaterial,
-		Three.Material,
-	];
-
-	for (const Material of Materials)
+	for (const Material of materials)
 	{
 		if(!Material?.prototype) continue;
 		installMaterialAddon(Material.prototype);

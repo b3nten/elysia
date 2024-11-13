@@ -23,7 +23,6 @@ import {
 } from "../Internal/mod.ts";
 import { Application } from "./Application.ts";
 import { LifeCycleError, reportLifecycleError } from "./Errors.ts";
-import { PhysicsWorld } from "../Physics/PhysicsWorld.ts";
 import { AutoInitializedMap } from "../Containers/AutoInitializedMap.ts";
 import { ThreeActor } from "../Actors/ThreeActor.ts";
 

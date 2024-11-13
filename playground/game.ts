@@ -1,15 +1,8 @@
 import * as Elysia from "../src/mod.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from "three"
-import { JoltPhysicsBehavior } from "../src/Jolt/JoltBehavior.ts";
-import { PhysicsBodyBehavior } from "../src/Jolt/JoltBehavior.ts";
-
-const app = new Elysia.Core.Application({
-	renderPipeline: new Elysia.Rendering.HDRenderPipeline({
-		smaa: true,
-	}),
-	stats: true,
-})
+// import { JoltPhysicsBehavior } from "../src/Jolt/JoltBehavior.ts";
+// import { PhysicsBodyBehavior } from "../src/Jolt/JoltBehavior.ts";
 
 const assets = new Elysia.Assets.AssetLoader({
 	Dummy: new Elysia.Assets.GLTFAsset("/Dummy.glb"),
@@ -17,9 +10,17 @@ const assets = new Elysia.Assets.AssetLoader({
 	Box: new Elysia.Assets.GLTFAsset("/Box.glb"),
 })
 
+const app = new Elysia.Core.Application({
+	renderPipeline: new Elysia.Rendering.HDRenderPipeline({
+		smaa: true,
+	}),
+	stats: true,
+	assets,
+})
+
 class MyScene extends Elysia.Core.Scene
 {
-	override physics = new JoltPhysicsBehavior;
+	// override physics = new JoltPhysicsBehavior;
 
 	camera = new Elysia.Actors.PerspectiveCameraActor();
 
@@ -56,9 +57,8 @@ class MyScene extends Elysia.Core.Scene
 				new Three.BoxGeometry(1, 1, 1),
 				new Three.MeshStandardMaterial({ color: 0x00ff00 })
 			)
-			cube.addComponent(new PhysicsBodyBehavior);
+			// cube.addComponent(new PhysicsBodyBehavior);
 			this.addComponent(cube);
-			console.log(cube)
 		}
 	}
 }

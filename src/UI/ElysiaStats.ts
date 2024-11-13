@@ -59,8 +59,15 @@ export class ElysiaStats extends ElysiaElement
 		setTimeout(() => this.visible = true, 500);
 	}
 
+	lastTenFrames: number[] = [];
+
 	override onRender()
 	{
+		this.lastTenFrames.push(this.stats.fps);
+		if (this.lastTenFrames.length > 10) this.lastTenFrames.shift();
+		const frameAverage = this.lastTenFrames.reduce((a, b) => a + b, 0) / this.lastTenFrames.length;
+		this.stats.fps = Math.round(frameAverage);
+
 		return html`
 			<aside id="stats" class=${this.visible ? '' : 'inv'}>
 				<div class="purple">elsyia ${ELYSIA_VERSION}</div>

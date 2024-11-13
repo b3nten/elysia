@@ -12,5 +12,5 @@ document.body.style.margin = "0";
 // 	.then(({ scene, app }) => app.loadScene(scene))
 // 	.then(() => setTimeout(() => splash.goodbye(), 2000));
 
-import("./test.ts")
+import("./game.ts")
 // import("./uitest.ts")

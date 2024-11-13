@@ -1,12 +1,11 @@
 import type { Constructor } from "../Shared/Utilities.ts";
-import { ElysiaImmediateElement } from "./ElysiaImmediateElement.ts";
 import { ElysiaElement } from "./ElysiaElement.ts";
 
 /**
  * Define a custom element component with a static `Tag` property.
  * @param component
  */
-export default function defineComponent(component: Constructor<ElysiaElement | ElysiaImmediateElement> & { Tag: string })
+export default function defineComponent(component: Constructor<ElysiaElement> & { Tag: string })
 {
 	if(!component.Tag || component.Tag === "unknown-elysia-element")
 	{

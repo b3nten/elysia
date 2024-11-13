@@ -51,17 +51,19 @@ if(/* todo: check if dev */ true)
 {
 	const esbuild = await import("npm:esbuild").then(m => m.default)
 	const denoPlugins = await import("jsr:@luca/esbuild-deno-loader@^0.11.0").then(m => m.denoPlugins)
+
 	const createEsbuildConfig = (mode: string): esbuild.BuildOptions => ({
 		entryPoints: ["./entry.ts"],
 		outdir: "./dist",
 		bundle: true,
 		target: "ES2022",
 		format: "esm",
-		minify: false,
+		minify: true,
 		conditions: ["browser"],
 		treeShaking: true,
 		splitting: true,
 		sourcemap: "linked",
+		metafile: true,
 		define: {
 			"DEFINE_IS_DEV": mode === "dev" ? "true" : "false",
 		},
@@ -70,11 +72,31 @@ if(/* todo: check if dev */ true)
 			...denoPlugins(),
 		],
 	})
+
 	const ctx = await esbuild.context(createEsbuildConfig("dev"))
+
 	rebuild = async () => {
 		await Deno.remove("./dist", { recursive: true })
 		await ctx.rebuild()
 	}
+
+	router.get("/metafile.json", async () => {
+		const build = await esbuild.build(createEsbuildConfig("dev"))
+		return new Response(JSON.stringify(build.metafile), {
+			headers: {
+				...headers.toObject(),
+				"Content-Type": "application/json",
+				"Content-Disposition": "attachment; filename=metafile.json"
+			}
+		})
+	})
+
+	Deno.addSignalListener("SIGTERM",
+		async () => {
+			await ctx.dispose()
+			Deno.exit()
+		}
+	)
 }
 
 router.get("/",
@@ -88,15 +110,25 @@ router.get("/",
 		}
 	))
 
-router.get("*", async (request) => {
-
-	let res = await std_http.serveDir(request, { fsRoot: "./assets", headers: headers.toArray(), quiet: true });
-	if(!res.ok) res = (
-		await rebuild(),
-		await std_http.serveDir(request, { fsRoot: "./dist", headers: headers.toArray(), quiet: true })
+router.get("/entry.js", async () => {
+	await rebuild()
+	return new Response(
+		await Deno.readTextFile("./dist/entry.js"),
+		{
+			headers: {
+				"Content-Type": "application/javascript",
+				...headers.toObject(),
+			}
+		}
 	)
+})
 
-	return res;
+// serve assets
+router.get("*", async (request) =>
+{
+	let res = await std_http.serveDir(request, { fsRoot: "./assets", headers: headers.toArray(), quiet: true });
+	if(!res.ok) res = await std_http.serveDir(request, { fsRoot: "./dist", headers: headers.toArray(), quiet: true })
+	return res
 })
 
 export default { fetch: router.fetch }

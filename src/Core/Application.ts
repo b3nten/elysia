@@ -23,7 +23,15 @@ import { GameClock } from "./GameClock.ts";
 import { installMaterialAddonsToPrototypes } from "../WebGL/InstallMaterialAddons.ts";
 
 // Install material addons to Three.Material prototypes
-installMaterialAddonsToPrototypes(Three);
+installMaterialAddonsToPrototypes([
+	Three.MeshBasicMaterial,
+	Three.MeshStandardMaterial,
+	Three.MeshPhysicalMaterial,
+	Three.MeshPhongMaterial,
+	Three.MeshToonMaterial,
+	Three.MeshLambertMaterial,
+	Three.ShaderMaterial,
+]);
 
 interface ApplicationConstructorArguments
 {
