@@ -9,15 +9,27 @@
     "deploy": "deno cli.ts playground:deploy"
   },
   "imports": {
-    "@dimforge/rapier3d-compat": "npm:@dimforge/rapier3d-compat@^0.14.0",
-    "itty-router": "npm:itty-router@^5.0.18",
     "jolt-physics": "npm:jolt-physics@^0.29.0",
     "lit-html": "npm:lit-html@^3.2.1",
     "postprocessing": "npm:postprocessing@^6.36.4",
     "three": "npm:three@^0.170.0"
   },
   "exports": {
-    ".": "./src/mod.ts"
+    ".": "./src/mod.ts",
+    "./actors": "./src/Actors/mod.ts",
+    "./assets": "./src/Assets/mod.ts",
+    "./audio": "./src/Audio/mod.ts",
+    "./behaviors": "./src/Behaviors/mod.ts",
+    "./containers": "./src/Containers/mod.ts",
+    "./core": "./src/Core/mod.ts",
+    "./events": "./src/Events/mod.ts",
+    "./input": "./src/Input/mod.ts",
+    "./logging": "./src/Logging/mod.ts",
+    "./math": "./src/Math/mod.ts",
+    "./rendering": "./src/Rendering/mod.ts",
+    "./shared": "./src/Shared/mod.ts",
+    "./ui": "./src/UI/mod.ts",
+    "./webgl": "./src/WebGL/mod.ts"
   },
   "compilerOptions": {
     "lib": [
@@ -34,5 +46,10 @@
       "playground/**"
     ],
     "entrypoint": "playground/server.ts"
+  },
+  "publish": {
+    "include": [
+      "./src"
+    ]
   }
 }

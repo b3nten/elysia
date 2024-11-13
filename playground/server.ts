@@ -1,6 +1,6 @@
-import { serveDir } from "jsr:@std/http@^1.0.9";
-import type esbuild from "npm:esbuild"
-import { AutoRouter } from 'npm:itty-router';
+import { serveDir } from "jsr:@std/http@1.0.9";
+import type esbuild from "npm:esbuild@0.24.0"
+import { AutoRouter } from 'npm:itty-router@5.0.18';
 
 const shell = (entry: string) => `
 <!DOCTYPE html>
