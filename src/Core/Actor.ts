@@ -2,7 +2,7 @@
 import * as Three from 'three';
 import type { ActorLifecycle, Destroyable } from "./Lifecycle.ts";
 import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
-import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
+import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { ComponentAddedEvent, ComponentRemovedEvent, TagAddedEvent } from "./ElysiaEvents.ts";
 import { type Component, isActor } from "./Component.ts";
 import type { Scene } from "./Scene.ts";
@@ -180,7 +180,7 @@ export class Actor implements ActorLifecycle, Destroyable
 	 */
 	addTag(tag: any)
 	{
-		ElysiaEventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
+		EventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
 		this.tags.add(tag);
 	}
 
@@ -190,7 +190,7 @@ export class Actor implements ActorLifecycle, Destroyable
 	 */
 	removeTag(tag: any)
 	{
-		ElysiaEventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
+		EventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
 		this.tags.delete(tag);
 	}
 
@@ -240,7 +240,7 @@ export class Actor implements ActorLifecycle, Destroyable
 			}
 		}
 
-		ElysiaEventDispatcher.dispatchEvent(new ComponentAddedEvent({ parent: this, child: component }));
+		EventDispatcher.dispatchEvent(new ComponentAddedEvent({ parent: this, child: component }));
 
 		component[s_Parent] = this;
 		component[s_Scene] = this[s_Scene];
@@ -277,7 +277,7 @@ export class Actor implements ActorLifecycle, Destroyable
 			return false;
 		}
 
-		ElysiaEventDispatcher.dispatchEvent(new ComponentRemovedEvent({ parent: this, child: component }));
+		EventDispatcher.dispatchEvent(new ComponentRemovedEvent({ parent: this, child: component }));
 
 		this.components.delete(component);
 		this.staticComponents.delete(component);

@@ -53,7 +53,7 @@ export class MouseObserver implements Destroyable
 	 * Subscribe to mouse events.
 	 * @param type - The type of event to subscribe to.
 	 * @param callback - The callback function to be called when the event is triggered.
-	*/
+	 */
 	addEventListener(type: "mousemove" | "mousedown" | "mouseup", callback: (event: MouseEvent) => void): () => void
 	{
 		this.#subscribers.set(type, this.#subscribers.get(type) ?? new Set());
@@ -65,7 +65,7 @@ export class MouseObserver implements Destroyable
 	 * Unsubscribe from mouse events.
 	 * @param type - The type of event to unsubscribe from.
 	 * @param callback - The callback function to be removed.
-	*/
+	 */
 	removeEventListener(type: "mousemove" | "mousedown" | "mouseup", callback: (event: MouseEvent) => void): void
 	{
 		const subs = this.#subscribers.get(type);

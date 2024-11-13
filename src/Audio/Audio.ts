@@ -1,6 +1,6 @@
 import { AudioPlayer } from "./AudioPlayer.ts";
 import { Queue } from "../Containers/Queue.ts";
-import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
+import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import * as Events from "./AudioEvents.ts";
 import { ASSERT } from "../Shared/Asserts.ts";
 import { isBrowser } from "../Shared/Asserts.ts";
@@ -317,8 +317,8 @@ export class Audio
 		});
 	}
 
-	addEventListener!: ElysiaEventDispatcher["addEventListener"]
-	removeEventListener!: ElysiaEventDispatcher["removeEventListener"]
+	addEventListener!: EventDispatcher["addEventListener"]
+	removeEventListener!: EventDispatcher["removeEventListener"]
 
 	private onAudioEnd()
 	{
@@ -336,7 +336,7 @@ export class Audio
 		source.removeEventListener("ended", this.onAudioEnd);
 	}
 
-	#eventDispatcher = new ElysiaEventDispatcher;
+	#eventDispatcher = new EventDispatcher;
 	#paused = false;
 	#stopped = true;
 	#playing = false;

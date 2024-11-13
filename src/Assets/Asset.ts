@@ -1,5 +1,5 @@
 import { Future } from "../Containers/Future.ts";
-import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
+import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { Maybe, MaybePromise } from "../Shared/Utilities.ts";
 import { clamp } from "../Math/Other.ts";
 import { BeginLoadEvent, LoadedEvent, ErrorEvent, ProgressEvent } from "../Events/Event.ts";
@@ -16,7 +16,7 @@ export abstract class Asset<T> {
 
 	constructor()
 	{
-		this.#eventDispatcher = new ElysiaEventDispatcher;
+		this.#eventDispatcher = new EventDispatcher;
 		this.addEventListener = this.#eventDispatcher.addEventListener.bind(this.#eventDispatcher);
 		this.removeEventListener = this.#eventDispatcher.removeEventListener.bind(this.#eventDispatcher);
 
@@ -63,8 +63,8 @@ export abstract class Asset<T> {
 		}
 	}
 
-	addEventListener: ElysiaEventDispatcher["addEventListener"];
-	removeEventListener: ElysiaEventDispatcher["removeEventListener"];
+	addEventListener: EventDispatcher["addEventListener"];
+	removeEventListener: EventDispatcher["removeEventListener"];
 
 	protected async fetch(url: string, options?: RequestInit & { onProgress?: (progress: number) => void }): Promise<Response>
 	{
@@ -117,7 +117,7 @@ export abstract class Asset<T> {
 		this.#eventDispatcher.dispatchEvent(new ProgressEvent(this.#progress));
 	}
 
-	#eventDispatcher: ElysiaEventDispatcher;
+	#eventDispatcher: EventDispatcher;
 	#future = new Future<Maybe<T>>(() => {});
 	#loading = false;
 	#loaded = false;

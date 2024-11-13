@@ -5,7 +5,7 @@ import { Destroyable } from "./Lifecycle.ts";
 import { Future } from "../Containers/Future.ts";
 import { bound, Constructor, noop } from "../Shared/Utilities.ts";
 import { Behavior } from "./Behavior.ts";
-import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
+import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { ComponentAddedEvent, ComponentRemovedEvent, TagAddedEvent, TagRemovedEvent } from "./ElysiaEvents.ts";
 import { Component, isThreeActor } from "./Component.ts";
 import { ComponentSet } from "../Containers/ComponentSet.ts";
@@ -31,13 +31,22 @@ export const Root = Symbol.for("Elysia::Scene::Root");
 
 export const IsScene = Symbol.for("Elysia::IsScene");
 
+export interface Physics extends Behavior
+{
+	onLoad(scene: Scene): void | Promise<void>;
+}
+
 export class Scene implements Destroyable
 {
 	[IsScene]: boolean = true;
 
 	public readonly userData: Map<any, any> = new Map;
 
-	public physics?: PhysicsWorld;
+	/**
+	 * The physics world for this Scene.
+	 * This runs before other behaviors & actors.
+	 */
+	public physics?: Physics;
 
 	/** Get the root Three.Scene */
 	get object3d(): Three.Scene { return this[s_Object3D]; }
@@ -56,12 +65,12 @@ export class Scene implements Destroyable
 
 	constructor()
 	{
-		ElysiaEventDispatcher.addEventListener(ComponentAddedEvent, (e) => {
+		EventDispatcher.addEventListener(ComponentAddedEvent, (e) => {
 			const type = e.child.constructor as Constructor<Component>
 			this.#componentsByType.get(type).add(e.child);
 		})
 
-		ElysiaEventDispatcher.addEventListener(ComponentRemovedEvent, (e) => {
+		EventDispatcher.addEventListener(ComponentRemovedEvent, (e) => {
 			const type = e.child.constructor as Constructor<Component>
 			this.#componentsByType.get(type).delete(e.child);
 			for(const tag of e.child.tags)
@@ -70,11 +79,11 @@ export class Scene implements Destroyable
 			}
 		})
 
-		ElysiaEventDispatcher.addEventListener(TagAddedEvent, (event) => {
+		EventDispatcher.addEventListener(TagAddedEvent, (event) => {
 			this.#componentsByTag.get(event.tag).add(event.target);
 		})
 
-		ElysiaEventDispatcher.addEventListener(TagRemovedEvent, (event) => {
+		EventDispatcher.addEventListener(TagRemovedEvent, (event) => {
 			this.#componentsByTag.get(event.tag).delete(event.target);
 		})
 	}
@@ -166,7 +175,7 @@ export class Scene implements Destroyable
 
 		try
 		{
-			await Promise.all([this.onLoad(), this.physics?.[s_OnLoad](this) ?? Promise.resolve()]);
+			await Promise.all([this.onLoad(), this.physics?.onLoad(this) ?? Promise.resolve()]);
 		}
 		catch(error)
 		{
@@ -185,6 +194,9 @@ export class Scene implements Destroyable
 		this[Root][s_Scene] = this;
 		this[Root][s_Parent] = null;
 
+		// create physics behavior before other behaviors
+		this.physics?.[s_OnCreate]();
+
 		reportLifecycleError(this, this.onCreate);
 
 		this[s_Created] = true;
@@ -195,6 +207,7 @@ export class Scene implements Destroyable
 	[s_OnStart]()
 	{
 		if(this[s_Started] || !this[s_Created] || this[s_Destroyed]) return;
+		// start physics behavior before other behaviors
 		this.physics?.[s_OnStart]()
 		reportLifecycleError(this, this.onStart);
 		this[s_Started] = true;
@@ -207,6 +220,7 @@ export class Scene implements Destroyable
 		if(this[s_Destroyed]) return;
 		if(!this[s_Started]) this[s_OnStart]();
 		reportLifecycleError(this, this.onBeforePhysicsUpdate, delta, elapsed);
+		this.physics[s_OnBeforePhysicsUpdate](delta, elapsed);
 		this[Root][s_OnBeforePhysicsUpdate](delta, elapsed);
 		this.physics[s_OnUpdate](delta, elapsed);
 	}
@@ -224,6 +238,7 @@ export class Scene implements Destroyable
 		if(this[s_Destroyed]) return;
 		reportLifecycleError(this, this[Root].destructor);
 		reportLifecycleError(this, this.onDestroy);
+		this.physics?.destructor();
 		this.#componentsByTag.clear();
 		this.#componentsByType.clear();
 		this[s_App] = null;

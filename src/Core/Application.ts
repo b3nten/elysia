@@ -2,7 +2,7 @@
 import * as Three from 'three';
 import { LogLevel } from "../Logging/Levels.ts";
 import { ASSERT, isDestroyable, isDev } from "../Shared/Asserts.ts";
-import { ElysiaEventQueue } from "../Events/EventQueue.ts";
+import { EventQueue } from "../Events/EventQueue.ts";
 import { InputQueue } from "../Input/InputQueue.ts";
 import { AssetLoader } from "../Assets/AssetLoader.ts";
 import { Profiler } from "./Profiler.ts";
@@ -29,7 +29,7 @@ interface ApplicationConstructorArguments
 {
 	output?: HTMLCanvasElement,
 	logLevel?: LogLevel,
-	eventQueue?: ElysiaEventQueue,
+	eventQueue?: EventQueue,
 	profiler?: Profiler,
 	assets?: AssetLoader<any>,
 	audio?: AudioPlayer
@@ -44,7 +44,7 @@ export class Application {
 	/**
 	 * The application instance's event queue.
 	 */
-	public readonly events: ElysiaEventQueue;
+	public readonly events: EventQueue;
 
 	/**
 	 * The application instance's mouse observer.
@@ -129,7 +129,7 @@ export class Application {
 		globalThis.SET_ELYSIA_LOGLEVEL(config.logLevel ?? isDev() ? LogLevel.Debug : LogLevel.Production)
 
 		this.manualUpdate = config.manualUpdate ?? false;
-		this.events = config.eventQueue ?? new ElysiaEventQueue
+		this.events = config.eventQueue ?? new EventQueue
 		this.profiler = config.profiler ?? new Profiler
 		this.audio = config.audio ?? new AudioPlayer
 		this.#assets = config.assets ?? new AssetLoader({});
@@ -171,11 +171,7 @@ export class Application {
 	 */
 	public async loadScene(scene: Scene)
 	{
-		ASSERT(
-			this.renderPipeline &&
-			this.#output &&
-			scene,
-		)
+		ASSERT(this.renderPipeline && this.#output && scene)
 
 		try
 		{
@@ -183,7 +179,8 @@ export class Application {
 
 			if(this.#scene)
 			{
-				ELYSIA_LOGGER.debug("Unloading previous s_Scene", this.#scene)
+				ELYSIA_LOGGER.debug("Unloading previous Scene", this.#scene)
+				// need to finish loading the scene before we can unload it to prevent race conditions
 				await this.#scene[s_SceneLoadPromise];
 				this.#scene.destructor?.();
 				this.#clock = new GameClock;
@@ -194,8 +191,6 @@ export class Application {
 			scene[s_App] = this;
 			this.#scene = scene
 			await this.#scene[s_OnLoad]();
-
-			ELYSIA_LOGGER.debug("Scene loaded", scene)
 
 			this.#renderPipeline![s_OnCreate](this.#scene, this.#output);
 			this.#renderPipeline!.onResize(this.#resizeController.width, this.#resizeController.height);
@@ -237,9 +232,9 @@ export class Application {
 
 			this.#clock.capture();
 
-			// flush input and event queue callbacks
+			// dispatchQueue input and event queue callbacks
 			this.input.flush();
-			this.events.flush();
+			this.events.dispatchQueue();
 
 			// update stats
 			if(this.#stats instanceof ElysiaStats)

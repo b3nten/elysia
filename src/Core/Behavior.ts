@@ -3,7 +3,7 @@ import { Actor } from "./Actor.ts";
 import { Scene } from "./Scene.ts";
 import { Application } from "./Application.ts";
 import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
-import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
+import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { TagAddedEvent } from "./ElysiaEvents.ts";
 import {
 	s_App,
@@ -101,7 +101,7 @@ export class Behavior implements ActorLifecycle, Destroyable
 	 */
 	addTag(tag: any)
 	{
-		ElysiaEventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
+		EventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
 		this.tags.add(tag);
 	}
 
@@ -111,7 +111,7 @@ export class Behavior implements ActorLifecycle, Destroyable
 	 */
 	removeTag(tag: any)
 	{
-		ElysiaEventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
+		EventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
 		this.tags.delete(tag);
 	}
 
@@ -203,10 +203,7 @@ export class Behavior implements ActorLifecycle, Destroyable
 			ELYSIA_LOGGER.warn(`Trying to create a destroyed actor: ${this}`);
 			return;
 		}
-		// reportLifecycleError(this, this.onCreate);
-		this.onCreate();
-		this.app!.renderPipeline.getRenderer().getSize(tempVec2)
-		this.onResize(tempVec2.x,tempVec2.y)
+		reportLifecycleError(this, this.onCreate);
 		this[s_Created] = true;
 	}
 

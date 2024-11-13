@@ -1,16 +1,18 @@
-import { ElysiaEvent } from "./Event.ts";
-import { Constructor } from "../Shared/Utilities.ts";
+import type { BaseEvent } from "./Event.ts";
+import type { Constructor } from "../Shared/Utilities.ts";
 
 /**
  * A double-buffered event queue system that manages event dispatching and subscriptions.
+ * This class allows you to queue events and dispatch them in a controlled manner, while queueing
+ * additional events during processing.
  *
  * @example
  * ```ts
  * // Define an event
- * class UserLoginEvent extends ElysiaEvent<{ userId: string }> {}
+ * class UserLoginEvent extends BaseEvent<{ userId: string }> {}
  *
  * // Create the event queue
- * const eventQueue = new ElysiaEventQueue();
+ * const eventQueue = new EventQueue();
  *
  * // Subscribe to events
  * const unsubscribe = eventQueue.subscribe(UserLoginEvent, (data) => {
@@ -21,7 +23,9 @@ import { Constructor } from "../Shared/Utilities.ts";
  * eventQueue.push(new UserLoginEvent({ userId: "123" }));
  *
  * // Process all queued events
- * eventQueue.flush();
+ * eventQueue.dispatchQueue();
+ *
+ * // Do other work here that can read the queue.
  *
  * // Clean up the queue and prepare for next batch
  * eventQueue.clear();
@@ -30,13 +34,13 @@ import { Constructor } from "../Shared/Utilities.ts";
  * unsubscribe();
  * ```
  */
-export class ElysiaEventQueue
+export class EventQueue
 {
 
 	constructor()
 	{
-		this.flush = this.flush.bind(this);
-		this.flushAndClear = this.flushAndClear.bind(this);
+		this.dispatchQueue = this.dispatchQueue.bind(this);
+		this.dispatchAndClear = this.dispatchAndClear.bind(this);
 		this.clear = this.clear.bind(this);
 		this.push = this.push.bind(this);
 		this.subscribe = this.subscribe.bind(this);
@@ -48,9 +52,9 @@ export class ElysiaEventQueue
 	 * Push an event to the queue.
 	 * @param event
 	 */
-	public push(event: ElysiaEvent<any>)
+	public push(event: BaseEvent<any>)
 	{
-		if(this.#hasFlushed)
+		if(this.hasFlushed)
 		{
 			this.nextQueue.push(event);
 			return;
@@ -61,20 +65,20 @@ export class ElysiaEventQueue
 	/**
 	 * Iterate over the queue.
 	 */
-	public iterator(): IterableIterator<ElysiaEvent<any>>
+	public iterator(): IterableIterator<BaseEvent<any>>
 	{
 		return this.queue[Symbol.iterator]();
 	}
 
 	/**
-	 * Flush the queue. This does NOT clear the queue.
+	 * Dispatch all events in the queue.
 	 */
-	public flush()
+	public dispatchQueue()
 	{
-		this.#hasFlushed = true;
+		this.hasFlushed = true;
 		for(const event of this.queue)
 		{
-			const listeners = this.listeners.get(event.constructor as Constructor<ElysiaEvent<any>>);
+			const listeners = this.listeners.get(event.constructor as Constructor<BaseEvent<any>>);
 			if(!listeners)
 			{
 				continue;
@@ -95,11 +99,11 @@ export class ElysiaEventQueue
 	}
 
 	/**
-	 * Flush and clear the queue.
+	 * Dispatch all events in the queue and clear it.
 	 */
-	public flushAndClear()
+	public dispatchAndClear()
 	{
-		this.flush();
+		this.dispatchQueue();
 		this.clear();
 	}
 
@@ -112,7 +116,7 @@ export class ElysiaEventQueue
 		temp.length = 0;
 		this.queue = this.nextQueue;
 		this.nextQueue = temp;
-		this.#hasFlushed = false;
+		this.hasFlushed = false;
 	}
 
 	/**
@@ -120,7 +124,7 @@ export class ElysiaEventQueue
 	 * @param type
 	 * @param listener
 	 */
-	public subscribe<T extends Constructor<ElysiaEvent<any>>>(type: T, listener: (value: InstanceType<T>['value']) => void): () => void
+	public subscribe<T extends Constructor<BaseEvent<any>>>(type: T, listener: (value: InstanceType<T>['value']) => void): () => void
 	{
 		const listeners = this.listeners.get(type) ?? new Set();
 		listeners.add(listener);
@@ -134,7 +138,7 @@ export class ElysiaEventQueue
 	 * @param type
 	 * @param listener
 	 */
-	public unsubscribe<T extends Constructor<ElysiaEvent<any>>>(type: T, listener: (value: InstanceType<T>['value']) => void): void
+	public unsubscribe<T extends Constructor<BaseEvent<any>>>(type: T, listener: (value: InstanceType<T>['value']) => void): void
 	{
 		const listeners = this.listeners.get(type);
 		if(!listeners)
@@ -145,11 +149,11 @@ export class ElysiaEventQueue
 		listeners.delete(listener);
 	}
 
-	private readonly listeners: Map<new (value: any) => ElysiaEvent<any>, Set<(value: any) => void>> = new Map;
+	protected readonly listeners: Map<new (value: any) => BaseEvent<any>, Set<(value: any) => void>> = new Map;
 
-	private queue: ElysiaEvent<any>[] = [];
+	protected queue: BaseEvent<any>[] = [];
 
-	private nextQueue: ElysiaEvent<any>[] = [];
+	protected nextQueue: BaseEvent<any>[] = [];
 
-	#hasFlushed = false;
+	protected hasFlushed = false;
 }

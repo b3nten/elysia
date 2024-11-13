@@ -8,6 +8,14 @@ import type { MouseCode } from "./MouseCode.ts";
 interface InputQueueConstructorArguments
 {
 	mouseTarget?: HTMLElement;
+	/**
+	 * A worker or array of workers to send input events to.
+	 */
+	worker?: Worker | Worker[]
+	/**
+	 * Receive input events from the main thread.
+	 */
+	receiveFromMainThread?: boolean;
 }
 
 /**

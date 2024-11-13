@@ -1,9 +1,9 @@
 import { Destroyable } from "../Core/Lifecycle.ts";
 import { isBrowser } from "./Asserts.ts";
-import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
-import { ElysiaEvent } from "../Events/Event.ts";
+import { EventDispatcher } from "../Events/EventDispatcher.ts";
+import { BaseEvent } from "../Events/Event.ts";
 
-export class ResizeEvent extends ElysiaEvent<{ x: number, y: number }> {}
+export class ResizeEvent extends BaseEvent<{ x: number, y: number }> {}
 
 export class ResizeController implements Destroyable
 {
@@ -40,9 +40,9 @@ export class ResizeController implements Destroyable
 		this.removeEventListener = this.#event.removeEventListener.bind(this.#event);
 	}
 
-	addEventListener!: ElysiaEventDispatcher["addEventListener"];
+	addEventListener!: EventDispatcher["addEventListener"];
 
-	removeEventListener!: ElysiaEventDispatcher["removeEventListener"];
+	removeEventListener!: EventDispatcher["removeEventListener"];
 
 	destructor() {
 		window.removeEventListener("resize", this.#onResize);
@@ -50,7 +50,7 @@ export class ResizeController implements Destroyable
 		this.#event.clear();
 	}
 
-	#event = new ElysiaEventDispatcher;
+	#event = new EventDispatcher;
 
 	#observer?: ResizeObserver;
 

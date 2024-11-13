@@ -22,3 +22,13 @@ export function isColorSupported(): boolean
 {
 	return typeof document !== "undefined" || (!toBoolean(env().NO_COLOR) && (toBoolean(env().FORCE_COLOR) || ((hasTTY() || isWindows()) && env().TERM !== "dumb")))
 }
+
+export function isWorker()
+{
+	return typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+}
+
+export function isSecureContext()
+{
+	return typeof window !== "undefined" && globalThis.isSecureContext;
+}

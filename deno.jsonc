@@ -4,11 +4,14 @@
   "license": "MIT",
   "tasks": {
     "build": "deno run -A cli.ts playground:build",
-    "dev": "deno run -A cli.ts dev",
+    "dev": "cd playground && deno serve -A server.ts",
+    "watcher": "deno run -A cli.ts playground:dev",
     "deploy": "deno cli.ts playground:deploy"
   },
   "imports": {
     "@dimforge/rapier3d-compat": "npm:@dimforge/rapier3d-compat@^0.14.0",
+    "itty-router": "npm:itty-router@^5.0.18",
+    "jolt-physics": "npm:jolt-physics@^0.29.0",
     "lit-html": "npm:lit-html@^3.2.1",
     "postprocessing": "npm:postprocessing@^6.36.4",
     "three": "npm:three@^0.170.0"

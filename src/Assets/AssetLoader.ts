@@ -1,6 +1,6 @@
 import { Asset } from "./Asset.ts";
 import { Constructor } from "../Shared/Utilities.ts";
-import { ElysiaEventDispatcher } from "../Events/EventDispatcher.ts";
+import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { LoadedEvent, ProgressEvent, ErrorEvent } from "../Events/Event.ts";
 import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
 
@@ -15,7 +15,7 @@ export class AssetLoader<A extends Record<string, Asset<any>>>
 	constructor(assets: A)
 	{
 		this.#assets = assets;
-		this.#eventDispatcher = new ElysiaEventDispatcher;
+		this.#eventDispatcher = new EventDispatcher;
 		this.addEventListener = this.#eventDispatcher.addEventListener.bind(this.#eventDispatcher);
 		this.removeEventListener = this.#eventDispatcher.removeEventListener.bind(this.#eventDispatcher);
 
@@ -78,10 +78,10 @@ export class AssetLoader<A extends Record<string, Asset<any>>>
 		return this.#assets[a] as T;
 	}
 
-	addEventListener: ElysiaEventDispatcher["addEventListener"];
-	removeEventListener: ElysiaEventDispatcher["removeEventListener"];
+	addEventListener: EventDispatcher["addEventListener"];
+	removeEventListener: EventDispatcher["removeEventListener"];
 
-	#eventDispatcher = new ElysiaEventDispatcher;
+	#eventDispatcher = new EventDispatcher;
 	#progress: number = 0;
 	#loaded = false;
 	#loading = false;
