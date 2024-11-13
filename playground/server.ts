@@ -1,4 +1,4 @@
-import * as std_http from "jsr:@std/http@^1.0.9";
+import { serveDir } from "jsr:@std/http@^1.0.9";
 import type esbuild from "npm:esbuild"
 import { AutoRouter } from 'npm:itty-router';
 
@@ -126,8 +126,8 @@ router.get("/entry.js", async () => {
 // serve assets
 router.get("*", async (request) =>
 {
-	let res = await std_http.serveDir(request, { fsRoot: "./assets", headers: headers.toArray(), quiet: true });
-	if(!res.ok) res = await std_http.serveDir(request, { fsRoot: "./dist", headers: headers.toArray(), quiet: true })
+	let res = await serveDir(request, { fsRoot: "./assets", headers: headers.toArray(), quiet: true });
+	if(!res.ok) res = await serveDir(request, { fsRoot: "./dist", headers: headers.toArray(), quiet: true })
 	return res
 })
 

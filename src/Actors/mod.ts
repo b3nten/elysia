@@ -1,6 +1,6 @@
 /**
- * @module
- * This module provides a collection of actors that can be used in a scene.
+ * @module Actors
+ * @description This module provides a collection of actors that can be used in a scene.
  */
 
 export { AmbientLightActor } from "./AmbientLightActor.ts";
