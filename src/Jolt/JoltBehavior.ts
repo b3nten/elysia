@@ -15,8 +15,9 @@ export class JoltPhysicsWorldComponent extends Behavior
 	async onLoad()
 	{
 		await JoltWorld.LoadJoltInstance();
-		this.world = new JoltWorld();
+		this.world = new JoltWorld;
 		this.world.init();
+		console.log("Jolt physics engine initialized.");
 	}
 
 	override onCreate()
@@ -73,11 +74,8 @@ export class JoltPhysicsWorldComponent extends Behavior
 
 	public createBody(body: Jolt.BodyCreationSettings): Jolt.BodyID
 	{
-		const Jolt = JoltWorld.GetJoltInstance();
 		const joltBody = this.world!.bodyInterface.CreateBody(body);
-		const id = joltBody.GetID();
-		this.world!.bodyInterface.AddBody(id, Jolt.EActivation_Activate);
-		return id;
+		return joltBody.GetID();
 	}
 
 	// todo: implement batch addition

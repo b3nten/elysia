@@ -10,7 +10,7 @@ import {
 	s_Internal, s_IsBehavior, s_OnBeforePhysicsUpdate, s_OnCreate,
 	s_OnDestroy, s_OnDisable, s_OnEnable, s_OnEnterScene,
 	s_OnLeaveScene, s_OnResize, s_OnStart, s_OnUpdate, s_Parent,
-	s_Scene, s_Started, s_Static, s_Tags
+	s_Scene, s_Started, s_Static, s_Tags, s_UserEnabled
 } from "../Internal/mod.ts";
 import { reportLifecycleError } from "./Errors.ts";
 
@@ -69,11 +69,25 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 	/** The tags associated with this behavior. */
 	get tags(): Set<any> { return this[s_Tags]; }
 
-	/** Enable this behavior. */
-	enable() { this[s_OnEnable]() }
+	/**
+	 * Enables this behavior. This means it receives updates and is visible.
+	 */
+	public enable()
+	{
+		if(this[s_UserEnabled]) return;
+		this[s_UserEnabled] = true;
+		this[s_OnEnable]();
+	}
 
-	/** Disable this behavior. */
-	disable() { this[s_OnDisable]() }
+	/**
+	 * Disables this behavior. This means it does not receive updates and is not visible.
+	 */
+	public disable()
+	{
+		if(!this[s_UserEnabled]) return;
+		this[s_UserEnabled] = false;
+		this[s_OnDisable]();
+	}
 
 	/**
 	 * Adds a tag to this behavior
@@ -121,9 +135,9 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 
 	[s_Static] = false;
 
-	[s_Enabled] = true;
+	[s_Enabled] = false;
 
-	[s_Internal] = { _enabled: false };
+	[s_UserEnabled] = true;
 
 	[s_Created] = false;
 
@@ -133,12 +147,10 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 
 	[s_Destroyed] = false;
 
-	[s_OnEnable](force = false)
+	[s_OnEnable]()
 	{
-		if(!force && !this[s_Enabled]) return;
-		if(this[s_Internal]._enabled || this[s_Destroyed])  return;
+		if(this[s_Enabled] || !this[s_UserEnabled]) return;
 		this[s_Enabled] = true;
-		this[s_Internal]._enabled = true;
 		reportLifecycleError(this, this.onEnable);
 	}
 

@@ -53,6 +53,7 @@ let rebuild = async () => {};
 if(args.dev || args.build)
 {
 	const esbuild = await import("npm:esbuild").then(m => m.default)
+
 	const denoPlugins = await import("jsr:@luca/esbuild-deno-loader@^0.11.0").then(m => m.denoPlugins)
 
 	const createEsbuildConfig = (mode: string): esbuild.BuildOptions => ({
@@ -61,7 +62,7 @@ if(args.dev || args.build)
 		bundle: true,
 		target: "ES2022",
 		format: "esm",
-		minify: true,
+		minify: mode === "build",
 		conditions: ["browser"],
 		treeShaking: true,
 		splitting: true,
@@ -70,7 +71,7 @@ if(args.dev || args.build)
 		define: {
 			"DEFINE_IS_DEV": mode === "dev" ? "true" : "false",
 		},
-		logLevel: "error",
+		// logLevel: "error",
 		plugins: [
 			...denoPlugins(),
 		],
@@ -82,7 +83,9 @@ if(args.dev || args.build)
 
 		rebuild = async () => {
 			await Deno.remove("./dist", { recursive: true })
+			console.log("Rebuilding...")
 			await ctx.rebuild()
+			console.log("Rebuilt.")
 		}
 
 		router.get("/metafile.json", async () => {

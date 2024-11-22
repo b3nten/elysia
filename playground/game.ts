@@ -20,8 +20,6 @@ const app = new Elysia.Core.Application({
 	assets,
 })
 
-const ids = []
-
 class MyScene extends Elysia.Core.Scene
 {
 	override physics = new JoltPhysicsWorldComponent;
@@ -56,13 +54,16 @@ class MyScene extends Elysia.Core.Scene
 				new Three.MeshStandardMaterial({ color: 0x00ff00 })
 			)
 
-			cube.position.y = 1;
+			cube.position.y = 5;
 
-			const cubeBodySettings = new Jolt.BodyCreationSettings();
-			cubeBodySettings.set_mObjectLayer(PhysicsLayer.Dynamic);
-			cubeBodySettings.set_mMotionType(Jolt.EMotionType_Dynamic);
-			cubeBodySettings.SetShape(new Jolt.BoxShape(new Jolt.Vec3(.5, .5, .5)));
-
+			const cubeBodySettings = new Jolt.BodyCreationSettings(
+				new Jolt.BoxShape(new Jolt.Vec3(.5, .5, .5)),
+				new Jolt.RVec3(0, 5, 0),
+				new Jolt.Quat(0, 0, 0, 1),
+				Jolt.EMotionType_Dynamic,
+				PhysicsLayer.Dynamic,
+			);
+			cubeBodySettings.mRestitution = 0.5;
 			cube.addComponent(new PhysicsBodyBehavior({ bodyCreationSettings: cubeBodySettings }))
 			this.addComponent(cube);
 		}
@@ -74,11 +75,14 @@ class MyScene extends Elysia.Core.Scene
 			)
 			floor.position.set(0, -.75, 0);
 
-			const floorBodySettings = new Jolt.BodyCreationSettings();
-			floorBodySettings.set_mObjectLayer(PhysicsLayer.Static);
-			floorBodySettings.set_mMotionType(Jolt.EMotionType_Static);
-			floorBodySettings.SetShape(new Jolt.BoxShape(new Jolt.Vec3(50, .25, 50)));
-
+			const floorBodySettings = new Jolt.BodyCreationSettings(
+				new Jolt.BoxShape(new Jolt.Vec3(50, 1, 50)),
+				new Jolt.RVec3(0, -.75, 0),
+				new Jolt.Quat(0, 0, 0, 1),
+				Jolt.EMotionType_Static,
+				PhysicsLayer.Static,
+			);
+			floorBodySettings.mRestitution = 0.5;
 			floor.addComponent(new PhysicsBodyBehavior({ bodyCreationSettings: floorBodySettings }))
 			this.addComponent(floor);
 		}
@@ -90,7 +94,11 @@ class MyScene extends Elysia.Core.Scene
 		{
 			const id = body.joltBodyID;
 			const bodyInterface = this.physics.world!.bodyInterface;
-		}
+			if(!id || !bodyInterface) continue;
+
+			const worldTransform = bodyInterface.GetWorldTransform(id);
+			const position = worldTransform.GetTranslation();
+			const rotation = worldTransform.GetQuaternion();}
 	}
 }
 

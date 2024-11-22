@@ -43,14 +43,12 @@ export class Mesh extends Actor
 	constructor(meshGroup: MeshGroup)
 	constructor(lodGroup: LodGroup)
 	constructor(geometry: Three.BufferGeometry, material?: Three.Material)
-	constructor(arg1: Three.BufferGeometry | Mesh | MeshGroup | Array<Mesh> | LodGroup, arg2?: Three.Material)
-	{
+	constructor(arg1: Three.BufferGeometry | Mesh | MeshGroup | Array<Mesh> | LodGroup, arg2?: Three.Material) {
 		super();
 
 		// set up max and min draw distance
-		if(isLodGroup(arg1))
-		{
-			if(arg1.maxDrawDistance !== undefined) this.#maxDrawDistance = arg1.maxDrawDistance;
+		if (isLodGroup(arg1)) {
+			if (arg1.maxDrawDistance !== undefined) this.#maxDrawDistance = arg1.maxDrawDistance;
 		}
 
 		const lods: Array<Mesh | MeshGroup | Array<Mesh>> = isLodGroup(arg1)
@@ -59,11 +57,9 @@ export class Mesh extends Actor
 				? [{geometry: arg1, material: arg2!}]
 				: [arg1];
 
-		for(let i = 0; i < lods.length; i++)
-		{
+		for (let i = 0; i < lods.length; i++) {
 			const lod = lods[i]
-			if(isMeshObject(lod))
-			{
+			if (isMeshObject(lod)) {
 				this.#lods[i] = {
 					// @ts-ignore shortcut for lodgroup as well
 					distance: lod.distance ?? 0,
@@ -74,17 +70,14 @@ export class Mesh extends Actor
 						key: this.generateMeshKey(lod.geometry, validateMaterial(lod.material))
 					}]
 				}
-			}
-			else if(isMeshGroup(lod))
-			{
+			} else if (isMeshGroup(lod)) {
 				this.#lods[i] = {
 					distance: 0,
 					meshes: []
 				}
-				for(let j = 0; j < lod.children.length; j++)
-				{
+				for (let j = 0; j < lod.children.length; j++) {
 					const child = lod.children[j];
-					if(!isMeshObject(child)) continue;
+					if (!isMeshObject(child)) continue;
 
 					this.#lods[i].meshes.push({
 						geometry: child.geometry,
@@ -93,17 +86,14 @@ export class Mesh extends Actor
 						key: this.generateMeshKey(child.geometry, validateMaterial(child.material))
 					})
 				}
-			}
-			else if(isArray(lod))
-			{
+			} else if (isArray(lod)) {
 				this.#lods[i] = {
 					distance: 0,
 					meshes: []
 				}
-				for(let j = 0; j < lod.length; j++)
-				{
+				for (let j = 0; j < lod.length; j++) {
 					const child = lod[j];
-					if(!isMeshObject(child)) continue;
+					if (!isMeshObject(child)) continue;
 
 					this.#lods[i].meshes.push({
 						geometry: child.geometry,
@@ -128,6 +118,10 @@ export class Mesh extends Actor
 	{
 		this.addActorToBatchedMesh()
 	}
+
+	override onEnable(): void { this.visible = true; }
+
+	override onDisable(): void { this.visible = false; }
 
 	override onLeaveScene()
 	{

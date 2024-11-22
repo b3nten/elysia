@@ -11,7 +11,7 @@ import type { Constructor } from "../Shared/Utilities.ts";
 import { ComponentSet } from "../Containers/ComponentSet.ts";
 import {
 	s_App, s_ComponentsByTag, s_ComponentsByType, s_Created,
-	s_Destroyed, s_Enabled, s_InScene, s_Internal, s_IsActor,
+	s_Destroyed, s_Enabled, s_InScene, s_IsActor,
 	s_LocalMatrix, s_MatrixDirty, s_OnBeforePhysicsUpdate,
 	s_OnCreate, s_OnDestroy, s_OnDisable, s_OnEnable,
 	s_OnEnterScene, s_OnLeaveScene, s_OnResize, s_OnStart,
@@ -219,9 +219,8 @@ export class Actor extends ActorLifecycle implements IDestroyable
 		if(this[s_InScene])
 		{
 			component[s_OnEnterScene]();
+			component[s_OnEnable]();
 		}
-
-		if(this[s_InScene] && this[s_Enabled]) component[s_OnEnable]();
 
 		return true;
 	}
@@ -262,6 +261,7 @@ export class Actor extends ActorLifecycle implements IDestroyable
 
 		component[s_OnLeaveScene]();
 		component[s_OnDisable]();
+
 		return true;
 	}
 
@@ -375,7 +375,7 @@ export class Actor extends ActorLifecycle implements IDestroyable
 
 	[s_Started]: boolean = false;
 
-	[s_Enabled]: boolean = true;
+	[s_Enabled]: boolean = false;
 
 	[s_UserEnabled]: boolean = true;
 
@@ -398,11 +398,10 @@ export class Actor extends ActorLifecycle implements IDestroyable
 
 	[s_ComponentsByTag]: Map<any, ComponentSet<Component>> = new Map;
 
-	[s_OnEnable](force = false)
+	[s_OnEnable]()
 	{
-		if(!force && this[s_Enabled]) return;
+		if(this[s_Enabled] || !this[s_UserEnabled]) return;
 		this[s_Enabled] = true;
-		this[s_UserEnabled] = true;
 		reportLifecycleError(this, this.onEnable);
 		for(const component of this.components) component[s_OnEnable]();
 		for(const component of this.staticComponents) component[s_OnEnable]();
@@ -412,7 +411,6 @@ export class Actor extends ActorLifecycle implements IDestroyable
 	{
 		if(!this[s_Enabled] || this[s_Destroyed]) return;
 		this[s_Enabled] = false;
-		this[s_UserEnabled] = false;
 		reportLifecycleError(this, this.onDisable);
 		for(const component of this.components) component[s_OnDisable]();
 		for(const component of this.staticComponents) component[s_OnDisable]();
@@ -499,7 +497,6 @@ export class Actor extends ActorLifecycle implements IDestroyable
 			ELYSIA_LOGGER.warn(`Trying to update a destroyed actor: ${this}`);
 			return;
 		}
-		if(!this[s_Started]) this[s_OnStart]();
 		if(this[s_TransformDirty])
 		{
 			this.onTransformUpdate();
