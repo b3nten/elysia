@@ -6,7 +6,7 @@
  *
  * @example
  * ```ts
- * const env = new EnvironmentActor;
+ * const env = new Environment;
  * env.texture = app.assets.unwrap("envMap");
  * env.background = true;
  * env.backgroundIntensity = 0.5;
@@ -28,6 +28,141 @@ import {
 } from 'three';
 import { Colors } from "../Shared/Colors.ts";
 import type { Maybe } from "../Shared/Utilities.ts";
+
+export interface EnvironmentConstructorArguments
+{
+	texture?: Three.Texture | Three.CubeTexture;
+	envScene?: Three.Scene;
+	rotation?: Three.Euler;
+	environmentIntensity?: number;
+	background?: boolean;
+	backgroundIntensity?: number;
+	backgroundBlur?: number;
+}
+
+export class Environment extends Actor
+{
+	/**
+	 * The texture or cube texture to use as the environment map.
+	 */
+	get texture(): Three.Texture | null { return this.#texture; }
+	set texture(v: Three.Texture | Three.CubeTexture | null) { this.#texture = v; this.updateState(); }
+
+	/**
+	 * The scene to use as the environment map.
+	 */
+	get envScene(): Maybe<Three.Scene> { return this.#envScene; }
+	set envScene(v: Maybe<Three.Scene>) { this.#envScene = v; this.updateState(); }
+
+	/**
+	 * The intensity of the environment map.
+	 */
+	get intensity(): number { return this.#environmentIntensity; }
+	set intensity(v: number) { this.#environmentIntensity = v; this.updateState(); }
+
+	/**
+	 * Whether the environment map should be used as the background.
+	 */
+	get background(): boolean { return this.#background; }
+	set background(v: boolean) { this.#background = v; this.updateState(); }
+
+	/**
+	 * The intensity of the background.
+	 */
+	get backgroundIntensity(): number { return this.#backgroundIntensity; }
+	set backgroundIntensity(v: number) { this.#backgroundIntensity = v; this.updateState(); }
+
+	/**
+	 * The blur of the background.
+	 */
+	get backgroundBlur(): number { return this.#backgroundBlur; }
+	set backgroundBlur(v: number) { this.#backgroundBlur = v; this.updateState(); }
+
+	constructor(args: EnvironmentConstructorArguments = {})
+	{
+		super();
+		this.#texture = args.texture ?? null;
+		this.#envScene = args.envScene ?? null;
+		this.#environmentIntensity = args.environmentIntensity ?? 1;
+		this.#background = args.background ?? false;
+		this.#backgroundIntensity = args.backgroundIntensity ?? 1;
+		this.#backgroundBlur = args.backgroundBlur ?? 0;
+	}
+
+	/**
+	 * Update the state of the environment.
+	 * This is usually called automatically, in most cases is unnecessary to call manually.
+	 */
+	updateState()
+	{
+		const renderer = this.app?.renderPipeline.getRenderer();
+		const pmremGenerator = this.#pmremGenerator;
+
+		if (!this.scene || !renderer) return;
+
+		if (this.#texture) this.scene.object3d.environment = this.#texture;
+		else if (this.#envScene && pmremGenerator)
+		{
+			this.#texture = constructScene(
+				pmremGenerator,
+				this.#envScene,
+			);
+			this.scene.object3d.environment = this.#texture;
+		}
+		else if(pmremGenerator)
+		{
+			const roomEnv = new RoomEnvironment();
+			this.#texture = constructScene(
+				pmremGenerator,
+				roomEnv,
+			);
+			this.scene.object3d.environment = this.#texture;
+		}
+
+		if (this.#background)
+		{
+			this.scene.object3d.backgroundIntensity = this.#backgroundIntensity;
+			this.scene.object3d.backgroundRotation = new Three.Euler().setFromQuaternion(this.rotation);
+			this.scene.object3d.backgroundBlurriness = this.#backgroundBlur;
+			this.scene.object3d.background = this.#texture;
+		}
+		else
+		{
+			this.scene.object3d.background = null;
+		}
+
+		this.scene.object3d.environmentIntensity = this.#environmentIntensity;
+		this.scene.object3d.environmentRotation = new Three.Euler().setFromQuaternion(this.rotation);
+	}
+
+	override onCreate()
+	{
+		const renderer = this.app?.renderPipeline.getRenderer();
+		if(!renderer) throw new Error("Renderer not found");
+		this.#pmremGenerator = new Three.PMREMGenerator(renderer);
+		this.updateState();
+	}
+
+	override onEnable()
+	{
+		this.updateState();
+	}
+
+	override onDisable()
+	{
+		if(this.scene?.object3d?.background === this.#texture) { this.scene.object3d.background = null; }
+	}
+
+	override onDestroy() { this.#pmremGenerator?.dispose(); }
+
+	#pmremGenerator?: Three.PMREMGenerator;
+	#texture: Three.Texture | Three.CubeTexture | null;
+	#envScene: Maybe<Three.Scene>;
+	#environmentIntensity: number;
+	#background: boolean;
+	#backgroundIntensity: number;
+	#backgroundBlur: number;
+}
 
 class RoomEnvironment extends Scene {
 	constructor()
@@ -125,10 +260,10 @@ class RoomEnvironment extends Scene {
 	}
 }
 
-function createAreaLightMaterial( intensity: number ) {
-
+function createAreaLightMaterial(intensity: number)
+{
 	const material = new MeshBasicMaterial();
-	material.color.setScalar( intensity );
+	material.color.setScalar(intensity);
 	return material;
 }
 
@@ -137,137 +272,4 @@ function constructScene(pmremGenerator: Three.PMREMGenerator, envScene: Three.Sc
 	const envMap = pmremGenerator.fromScene(envScene).texture;
 	pmremGenerator.dispose();
 	return envMap;
-}
-
-type EnvironmentArgs = {
-	texture?: Three.Texture | Three.CubeTexture;
-	envScene?: Three.Scene;
-	rotation?: Three.Euler;
-	environmentIntensity?: number;
-	background?: boolean;
-	backgroundIntensity?: number;
-	backgroundBlur?: number;
-};
-
-export class EnvironmentActor extends Actor
-{
-	/**
-	 * The texture or cube texture to use as the environment map.
-	 */
-	get texture(): Three.Texture | null { return this.#texture; }
-	set texture(v: Three.Texture | Three.CubeTexture | null) { this.#texture = v; this.updateState(); }
-
-	/**
-	 * The scene to use as the environment map.
-	 */
-	get envScene(): Maybe<Three.Scene> { return this.#envScene; }
-	set envScene(v: Maybe<Three.Scene>) { this.#envScene = v; this.updateState(); }
-
-	/**
-	 * The intensity of the environment map.
-	 */
-	get intensity(): number { return this.#environmentIntensity; }
-	set intensity(v: number) { this.#environmentIntensity = v; this.updateState(); }
-
-	/**
-	 * Whether the environment map should be used as the background.
-	 */
-	get background(): boolean { return this.#background; }
-	set background(v: boolean) { this.#background = v; this.updateState(); }
-
-	/**
-	 * The intensity of the background.
-	 */
-	get backgroundIntensity(): number { return this.#backgroundIntensity; }
-	set backgroundIntensity(v: number) { this.#backgroundIntensity = v; this.updateState(); }
-
-	/**
-	 * The blur of the background.
-	 */
-	get backgroundBlur(): number { return this.#backgroundBlur; }
-	set backgroundBlur(v: number) { this.#backgroundBlur = v; this.updateState(); }
-
-	constructor(args: EnvironmentArgs = {})
-	{
-		super();
-		this.#texture = args.texture ?? null;
-		this.#envScene = args.envScene ?? null;
-		this.#environmentIntensity = args.environmentIntensity ?? 1;
-		this.#background = args.background ?? false;
-		this.#backgroundIntensity = args.backgroundIntensity ?? 1;
-		this.#backgroundBlur = args.backgroundBlur ?? 0;
-	}
-
-	/**
-	 * Update the state of the environment.
-	 * This is usually called automatically, in most cases is unnecessary to call manually.
-	 */
-	updateState()
-	{
-		const renderer = this.app?.renderPipeline.getRenderer();
-		const pmremGenerator = this.#pmremGenerator;
-
-		if (!this.scene || !renderer)
-			return;
-
-		if (this.#texture) { this.scene.object3d.environment = this.#texture; }
-		else if (this.#envScene && pmremGenerator)
-		{
-			this.#texture = constructScene(
-				pmremGenerator,
-				this.#envScene,
-			);
-			this.scene.object3d.environment = this.#texture;
-		}
-		else if(pmremGenerator)
-		{
-			const roomEnv = new RoomEnvironment();
-			this.#texture = constructScene(
-				pmremGenerator,
-				roomEnv,
-			);
-			this.scene.object3d.environment = this.#texture;
-		}
-
-		if (this.#background)
-		{
-			this.scene.object3d.backgroundIntensity = this.#backgroundIntensity;
-			this.scene.object3d.backgroundRotation = new Three.Euler().setFromQuaternion(this.rotation);
-			this.scene.object3d.backgroundBlurriness = this.#backgroundBlur;
-			this.scene.object3d.background = this.#texture;
-		}
-		else
-		{
-			this.scene.object3d.background = null;
-		}
-
-		this.scene.object3d.environmentIntensity = this.#environmentIntensity;
-		this.scene.object3d.environmentRotation = new Three.Euler().setFromQuaternion(this.rotation);
-	}
-
-	override onCreate()
-	{
-		const renderer = this.app?.renderPipeline.getRenderer();
-		if(!renderer) throw new Error("Renderer not found");
-
-		this.#pmremGenerator = new Three.PMREMGenerator(renderer);
-		this.updateState();
-	}
-
-	override onEnable() { this.updateState(); }
-
-	override onDisable()
-	{
-		if(this.scene?.object3d?.background === this.#texture) { this.scene.object3d.background = null; }
-	}
-
-	override onDestroy() { this.#pmremGenerator?.dispose(); }
-
-	#pmremGenerator?: Three.PMREMGenerator;
-	#texture: Three.Texture | Three.CubeTexture | null;
-	#envScene: Maybe<Three.Scene>;
-	#environmentIntensity: number;
-	#background: boolean;
-	#backgroundIntensity: number;
-	#backgroundBlur: number;
 }

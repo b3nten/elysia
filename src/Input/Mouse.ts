@@ -1,11 +1,11 @@
-import type { Destroyable } from "../Core/Lifecycle.ts";
+import type { IDestroyable } from "../Core/Lifecycle.ts";
 
 /**
  * Observes and manages mouse interactions on a specified HTML element.
  * Tracks mouse position and button states (left, middle, right, and auxiliary buttons).
  * Provides event subscription capabilities for mousemove, mousedown, and mouseup events.
  *
- * @implements {Destroyable}
+ * @implements {IDestroyable}
  * @example
  * ```ts
  * const mouseObserver = new MouseObserver(document.body);
@@ -24,7 +24,7 @@ import type { Destroyable } from "../Core/Lifecycle.ts";
  * });
  * ```
  */
-export class MouseObserver implements Destroyable
+export class MouseObserver implements IDestroyable
 {
 	/** Current x position of the mouse cursor. */
 	public get x(): number { return this.#x; }

@@ -50,6 +50,8 @@ export const s_Tags = Symbol.for("Elysia::Tags");
 
 export const s_Enabled = Symbol.for("Elysia::Enabled");
 
+export const s_UserEnabled = Symbol.for("Elysia::UserEnabled");
+
 export const s_Created = Symbol.for("Elysia::Created");
 
 export const s_Started = Symbol.for("Elysia::Started");

@@ -1,23 +1,23 @@
 /**
  * @module
  *
- * This module contains the PerspectiveCameraActor class, which can be used to render Three.PerspectiveCameras.
+ * This module contains the PerspectiveCamera class, which can be used to render Three.PerspectiveCameras.
  * It automatically handles canvas resize and aspect ratio.
  *
  * It can be set as the active camera in a scene via the scene.activeCamera property.
  *
  * @example
  * ```ts
- * const camera = new PerspectiveCameraActor;
+ * const camera = new PerspectiveCamera;
  * scene.activeCamera = camera;
  * ```
  */
 
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
-import { ThreeActor } from "./ThreeActor.ts";
+import { ThreeObject } from "./ThreeObject.ts";
 
-export class PerspectiveCameraActor extends ThreeActor<Three.PerspectiveCamera>
+export class PerspectiveCamera extends ThreeObject<Three.PerspectiveCamera>
 {
 	/**
 	 * The field of view of the camera.
@@ -104,7 +104,6 @@ export class PerspectiveCameraActor extends ThreeActor<Three.PerspectiveCamera>
 	constructor()
 	{
 		super(new Three.PerspectiveCamera(75, 1, 0.1, 1000));
-		this.onResize = this.onResize.bind(this);
 	}
 
 	override onCreate()

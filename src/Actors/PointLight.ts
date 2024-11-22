@@ -1,14 +1,14 @@
 /**
  * @module
  *
- * This module contains the PointLightActor class, which can be used to render Three.PointLights.
+ * This module contains the PointLight class, which can be used to render Three.PointLights.
  * Point lights can be expensive to render, so use them sparingly.
  *
  * See Three.PointLight for more information.
  *
  * @example
  * ```ts
- * const light = new PointLightActor();
+ * const light = new PointLight();
  * light.position.set(0, 10, 0);
  * scene.add(light);
  * ```
@@ -16,13 +16,11 @@
 
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
-import { ThreeActor } from "./ThreeActor.ts";
+import { ThreeObject } from "./ThreeObject.ts";
 import { isUndefined } from "../Shared/Asserts.ts";
 
-export class PointLightActor extends ThreeActor<Three.PointLight>
+export class PointLight extends ThreeObject<Three.PointLight>
 {
-	override readonly object3d = new Three.PointLight();
-
 	get intensity(): number { return this.object3d.intensity; }
 	set intensity(value: number) { this.object3d.intensity = value; }
 
@@ -61,7 +59,7 @@ export class PointLightActor extends ThreeActor<Three.PointLight>
 
 	constructor(color?: Three.Color, intensity?: number, distance?: number, decay?: number)
 	{
-		super();
+		super(new Three.PointLight);
 
 		if(!isUndefined(color)) this.color = color;
 		if(!isUndefined(intensity)) this.intensity = intensity;

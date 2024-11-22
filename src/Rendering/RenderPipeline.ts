@@ -1,4 +1,4 @@
-import { Destroyable, RenderPipelineLifecycle } from "../Core/Lifecycle.ts";
+import { IDestroyable, RenderPipelineLifecycle } from "../Core/Lifecycle.ts";
 import { Scene } from "../Core/Scene.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
@@ -11,7 +11,7 @@ import {
 /**
  * Abstract base RenderPipeline class used to implement custom render pipelines.
  */
-export abstract class RenderPipeline implements RenderPipelineLifecycle, Destroyable {
+export abstract class RenderPipeline implements RenderPipelineLifecycle, IDestroyable {
 
 	/**
 	 * Called when the pipeline is created for a given scene.

@@ -1,25 +1,25 @@
 /**
  * @module
  *
- * This module contains the MeshActor class, which can be used to render Three.BufferGeometries.
+ * This module contains the Mesh class, which can be used to render Three.BufferGeometries.
  *
  * @example
  * ```ts
  * const geometry = new Three.BoxBufferGeometry(1, 1, 1);
  * const material = new Three.MeshBasicMaterial({color: 0xff0000});
- * const actor = new MeshActor(geometry, material);
+ * const actor = new Mesh(geometry, material);
  * scene.add(actor);
  * ```
  */
 
 import { Actor } from "../Core/Actor.ts";
+import { isArray } from "../Shared/Asserts.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
-import { isArray } from "../Shared/Asserts.ts";
 // @ts-types="npm:@types/three@^0.169/src/objects/BatchedMesh.js"
 import { BatchedMesh } from "../WebGL/BatchedLodMesh.js"
 
-export class MeshActor extends Actor
+export class Mesh extends Actor
 {
 	static CreateLods = createLodGroup;
 
@@ -38,12 +38,10 @@ export class MeshActor extends Actor
 		}
 	}
 
-	get maxDrawDistance() { return this.#maxDrawDistance }
-
-	constructor(lodGroup: LodGroup)
 	constructor(mesh: Mesh )
-	constructor(meshGroup: MeshGroup)
 	constructor(meshes: Array<Mesh>)
+	constructor(meshGroup: MeshGroup)
+	constructor(lodGroup: LodGroup)
 	constructor(geometry: Three.BufferGeometry, material?: Three.Material)
 	constructor(arg1: Three.BufferGeometry | Mesh | MeshGroup | Array<Mesh> | LodGroup, arg2?: Three.Material)
 	{
@@ -186,6 +184,7 @@ export class MeshActor extends Actor
 					mesh.maxIndices = mesh.maxIndices +
 						(meshInstance.geometry.index?.count ?? meshInstance.geometry.getAttribute("position").count)
 
+					// @ts-ignore - types are not updated
 					mesh.batchedMesh.setGeometrySize(mesh.maxVertices, mesh.maxIndices);
 
 					geometryId = mesh.batchedMesh.addGeometry(meshInstance.geometry);
@@ -196,17 +195,20 @@ export class MeshActor extends Actor
 				// update instance count
 				if(mesh.batchedMesh.maxInstanceCount < mesh.refs + 1)
 				{
+					// @ts-ignore - types are not updated
 					mesh.batchedMesh.setInstanceCount(mesh.batchedMesh.maxInstanceCount*2);
 				}
 
 				// create our instance
 				meshInstance.instanceId = mesh.batchedMesh.addInstance(geometryId);
 
+				// @ts-ignore - extended
 				mesh.batchedMesh._instanceInfo[meshInstance.instanceId].lodRange = [
 					this.#lods[l]?.distance,
 					this.#lods[l+1]?.distance ?? this.#maxDrawDistance
 				]
 
+				// @ts-ignore - extended
 				mesh.batchedMesh._instanceInfo[meshInstance.instanceId].getWorldMatrix = () => this.worldMatrix;
 
 				mesh.batchedMesh.castShadow = true;
@@ -273,7 +275,7 @@ const validateMaterial = (material: Three.Material | Array<Three.Material>): Thr
 {
 	if(Array.isArray(material))
 	{
-		if(material.length > 1) throw Error("MeshActor: Array of materials is not supported.")
+		if(material.length > 1) throw Error("Mesh: Array of materials is not supported.")
 		return material[0];
 	}
 	return material;
@@ -282,14 +284,14 @@ const validateMaterial = (material: Three.Material | Array<Three.Material>): Thr
 type BatchedMeshPool = Map<string, {
 	batchedMesh: Three.BatchedMesh,
 	geoInstances: Map<Three.BufferGeometry, number>,
-	actors: Set<MeshActor>,
+	actors: Set<Mesh>,
 	refs: number
 	maxVertices: number
 	maxIndices: number
 }>
 
-type Mesh = { geometry: Three.BufferGeometry, material: Three.Material | Array<Three.Material> }
-const isMeshObject = (obj: any): obj is Mesh => obj.geometry !== undefined && obj.material !== undefined;
+type MeshObject = { geometry: Three.BufferGeometry, material: Three.Material | Array<Three.Material> }
+const isMeshObject = (obj: any): obj is MeshObject => obj.geometry !== undefined && obj.material !== undefined;
 
 type MeshGroup = { children: Array<any> }
 const isMeshGroup = (obj: any): obj is MeshGroup => Array.isArray(obj.children);
@@ -308,6 +310,3 @@ export type LodGroup = {
 }
 export function createLodGroup(mesh: LodGroup) { return mesh }
 const isLodGroup = (obj: any): obj is LodGroup => Array.isArray(obj.levels);
-
-const _v1 = new Three.Vector3();
-const _v2 = new Three.Vector3();

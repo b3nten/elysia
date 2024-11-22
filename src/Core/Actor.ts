@@ -1,6 +1,6 @@
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
-import type { ActorLifecycle, Destroyable } from "./Lifecycle.ts";
+import { ActorLifecycle, type IDestroyable } from "./Lifecycle.ts";
 import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { ComponentAddedEvent, ComponentRemovedEvent, TagAddedEvent } from "./ElysiaEvents.ts";
@@ -10,45 +10,28 @@ import type { Application } from "./Application.ts";
 import type { Constructor } from "../Shared/Utilities.ts";
 import { ComponentSet } from "../Containers/ComponentSet.ts";
 import {
-	s_App,
-	s_ComponentsByTag,
-	s_ComponentsByType,
-	s_Created,
-	s_Destroyed,
-	s_Enabled,
-	s_InScene,
-	s_Internal,
-	s_IsActor,
-	s_LocalMatrix, s_MatrixDirty,
-	s_OnBeforePhysicsUpdate,
-	s_OnCreate,
-	s_OnDestroy,
-	s_OnDisable,
-	s_OnEnable,
-	s_OnEnterScene,
-	s_OnLeaveScene,
-	s_OnResize,
-	s_OnStart,
-	s_OnUpdate,
-	s_Parent,
-	s_Scene,
-	s_Started, s_Static,
-	s_TransformDirty,
-	s_WorldMatrix
+	s_App, s_ComponentsByTag, s_ComponentsByType, s_Created,
+	s_Destroyed, s_Enabled, s_InScene, s_Internal, s_IsActor,
+	s_LocalMatrix, s_MatrixDirty, s_OnBeforePhysicsUpdate,
+	s_OnCreate, s_OnDestroy, s_OnDisable, s_OnEnable,
+	s_OnEnterScene, s_OnLeaveScene, s_OnResize, s_OnStart,
+	s_OnUpdate, s_Parent, s_Scene, s_Started, s_Static,
+	s_TransformDirty, s_UserEnabled, s_WorldMatrix
 } from "../Internal/mod.ts";
 import { reportLifecycleError } from "./Errors.ts";
 
 const tempVec2 = new Three.Vector2();
 
-export class Actor implements ActorLifecycle, Destroyable
+export class Actor extends ActorLifecycle implements IDestroyable
 {
 	[s_IsActor]: boolean = true;
 
 	/**
-	 * Set the actor as static. Static actors and their children do not participate in update loop, although other lifecycle methods are still called.
+	 * Set the actor as static. Static actors and their children do not participate in the update loop, although other lifecycle methods are still called.
 	 * onUpdate, onBeforePhysicsUpdate, and onTransformUpdate are not called for static actors or their children.
 	 * Other actors can "wake" static actors by setting this to false.
-	 * Setting this to true when applicable can improve performance.
+	 * Static actors can improve performance.
+	 * @default false
 	 */
 	get static () { return this[s_Static]; }
 	set static (value: boolean) {
@@ -127,34 +110,9 @@ export class Actor implements ActorLifecycle, Destroyable
 	/** The tags of this actor. */
 	readonly tags: Set<any> = new Set;
 
-	/* **********************************************************
-	    Lifecycle methods
-	************************************************************/
-
-	onCreate() {}
-
-	onEnable() {}
-
-	onStart() {}
-
-	onEnterScene() {}
-
-	onBeforePhysicsUpdate(delta: number, elapsed: number) {}
-
-	onUpdate(delta: number, elapsed: number) {}
-
-	onLeaveScene() {}
-
-	onDisable() {}
-
-	onDestroy() {}
-
-	onResize(width: number, height: number) {}
-
-	onTransformUpdate() {}
-
 	constructor()
 	{
+		super();
 		this.position.actor = this;
 		this.rotation.actor = this;
 		this.scale.actor = this;
@@ -167,18 +125,28 @@ export class Actor implements ActorLifecycle, Destroyable
 	/**
 	 * Enables this actor. This means it receives updates and is visible.
 	 */
-	enable() { this[s_OnEnable](true); }
+	public enable()
+	{
+		if(this[s_UserEnabled]) return;
+		this[s_UserEnabled] = true;
+		this[s_OnEnable]();
+	}
 
 	/**
 	 * Disables this actor. This means it does not receive updates and is not visible.
 	 */
-	disable() { this[s_OnDisable](); }
+	public disable()
+	{
+		if(!this[s_UserEnabled]) return;
+		this[s_UserEnabled] = false;
+		this[s_OnDisable]();
+	}
 
 	/**
 	 * Adds a tag to this actor.
 	 * @param tag
 	 */
-	addTag(tag: any)
+	public addTag(tag: any)
 	{
 		EventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
 		this.tags.add(tag);
@@ -188,7 +156,7 @@ export class Actor implements ActorLifecycle, Destroyable
 	 * Removes a tag from this actor.
 	 * @param tag
 	 */
-	removeTag(tag: any)
+	public removeTag(tag: any)
 	{
 		EventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
 		this.tags.delete(tag);
@@ -199,7 +167,7 @@ export class Actor implements ActorLifecycle, Destroyable
 	 * @param component
 	 * @returns `true` if the component was successfully added, `false` otherwise.
 	 */
-	addComponent(component: Component): boolean
+	public addComponent(component: Component): boolean
 	{
 		if(this[s_Destroyed])
 		{
@@ -263,7 +231,7 @@ export class Actor implements ActorLifecycle, Destroyable
 	 * @param component
 	 * @returns `true` if the component was successfully removed, `false` otherwise.
 	 */
-	removeComponent(component: Component): boolean
+	public removeComponent(component: Component): boolean
 	{
 		if(this[s_Destroyed])
 		{
@@ -300,7 +268,7 @@ export class Actor implements ActorLifecycle, Destroyable
 	/**
 	 * Gets all components of a certain type directly attached to this actor.
 	 */
-	getComponentsByType<T extends Component>(type: Constructor<T>): ComponentSet<T>
+	public getComponentsByType<T extends Component>(type: Constructor<T>): ComponentSet<T>
 	{
 		const set = (this[s_ComponentsByType].get(type) as ComponentSet<T> | undefined);
 		if(!set)
@@ -315,7 +283,7 @@ export class Actor implements ActorLifecycle, Destroyable
 	/**
 	 * Gets all components with a certain tag directly attached to this actor.
 	 */
-	getComponentsByTag(tag: any): ComponentSet<Component>
+	public getComponentsByTag(tag: any): ComponentSet<Component>
 	{
 		const set = (this[s_ComponentsByTag].get(tag) as ComponentSet<Component> | undefined);
 		if(!set)
@@ -409,7 +377,7 @@ export class Actor implements ActorLifecycle, Destroyable
 
 	[s_Enabled]: boolean = true;
 
-	[s_Internal] = { _enabled: false };
+	[s_UserEnabled]: boolean = true;
 
 	[s_InScene]: boolean = false;
 
@@ -432,21 +400,19 @@ export class Actor implements ActorLifecycle, Destroyable
 
 	[s_OnEnable](force = false)
 	{
-		if(!force && !this[s_Enabled]) return;
-		if(this[s_Internal]._enabled || this[s_Destroyed])  return;
+		if(!force && this[s_Enabled]) return;
 		this[s_Enabled] = true;
-		this[s_Internal]._enabled = true;
+		this[s_UserEnabled] = true;
 		reportLifecycleError(this, this.onEnable);
 		for(const component of this.components) component[s_OnEnable]();
 		for(const component of this.staticComponents) component[s_OnEnable]();
-
 	}
 
 	[s_OnDisable]()
 	{
 		if(!this[s_Enabled] || this[s_Destroyed]) return;
 		this[s_Enabled] = false;
-		this[s_Internal]._enabled = false;
+		this[s_UserEnabled] = false;
 		reportLifecycleError(this, this.onDisable);
 		for(const component of this.components) component[s_OnDisable]();
 		for(const component of this.staticComponents) component[s_OnDisable]();
@@ -630,5 +596,3 @@ class ActorQuaternion extends Three.Quaternion
 		this.actor?.markTransformDirty();
 	}
 }
-
-let dirtyTransforms = 0;

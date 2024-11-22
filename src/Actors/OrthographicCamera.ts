@@ -1,23 +1,23 @@
 /**
  * @module
  *
- * This module contains the OrthographicCameraActor class, which can be used to render Three.OrthographicCameras.
+ * This module contains the OrthographicCamera class, which can be used to render Three.OrthographicCameras.
  * It automatically handles canvas resize and aspect ratio.
  *
  * It can be set as the active camera in a scene via the scene.activeCamera property.
  *
  * @example
  * ```ts
- * const camera = new OrthographicCameraActor;
+ * const camera = new OrthographicCamera;
  * scene.activeCamera = camera;
  * ```
  */
 
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
-import { ThreeActor } from "./ThreeActor.ts";
+import { ThreeObject } from "./ThreeObject.ts";
 
-export class OrthographicCameraActor extends ThreeActor<Three.OrthographicCamera>
+export class OrthographicCamera extends ThreeObject<Three.OrthographicCamera>
 {
 	override object3d = new Three.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
 	/**
@@ -82,9 +82,9 @@ export class OrthographicCameraActor extends ThreeActor<Three.OrthographicCamera
 		}
 	}
 
-	constructor() {
-		super();
-		this.object3d = new Three.OrthographicCamera();
+	constructor()
+	{
+		super(new Three.OrthographicCamera);
 	}
 
 	override onResize(x: number, y: number)

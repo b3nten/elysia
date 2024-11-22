@@ -1,4 +1,4 @@
-const internal = Symbol('internal')
+const internal = Symbol('TRACKED')
 
 /**
  * Track changes to the object's properties.

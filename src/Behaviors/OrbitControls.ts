@@ -9,11 +9,11 @@
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 // @ts-types="npm:@types/three@^0.169.0/examples/jsm/controls/OrbitControls"
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { OrbitControls as OrbitControlsImpl } from "three/examples/jsm/controls/OrbitControls.js";
 import { Behavior } from "../Core/Behavior.ts";
 import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
 import { isThreeActor } from "../Core/Component.ts";
-import { ThreeActor } from "../Actors/ThreeActor.ts";
+import { ThreeObject } from "../Actors/ThreeObject.ts";
 
 const _q1 = new Three.Quaternion();
 const _m1 = new Three.Matrix4();
@@ -32,7 +32,7 @@ class ActorAdaptor
 
 	euler = new Three.Euler();
 
-	constructor(public actor: ThreeActor) {}
+	constructor(public actor: ThreeObject) {}
 
 	lookAt(x: number | Three.Vector3, y: number, z: number) {
 		if (x instanceof Three.Vector3)
@@ -101,9 +101,9 @@ class CameraActorAdaptor extends ActorAdaptor
 /**
  * Implements the standard orbit controls for a camera.
  */
-export class CameraOrbitBehavior extends Behavior
+export class OrbitControls extends Behavior
 {
-	controls?: OrbitControls;
+	controls?: OrbitControlsImpl;
 
 	/**
 	 * Whether the camera should be damped smooth or not.
@@ -121,9 +121,9 @@ export class CameraOrbitBehavior extends Behavior
 	{
 		super.onCreate();
 		const parent = this.parent;
-		if(!isThreeActor(parent)) throw Error("CameraOrbitBehavior must be attached to a ThreeActor");
+		if(!isThreeActor(parent)) throw Error("OrbitControls must be attached to a ThreeObject");
 
-		const camera = this.parent as ThreeActor<Three.Camera>;
+		const camera = this.parent as ThreeObject<Three.Camera>;
 
 		if(!camera)
 		{
@@ -133,7 +133,7 @@ export class CameraOrbitBehavior extends Behavior
 
 		const adaptor = new CameraActorAdaptor(camera) as unknown as Three.Camera
 
-		this.controls = new OrbitControls(adaptor, this.app.renderPipeline.getRenderer().domElement);
+		this.controls = new OrbitControlsImpl(adaptor, this.app.renderPipeline.getRenderer().domElement);
 
 		this.controls.enableDamping = this.#smooth > 0;
 		this.controls.dampingFactor = this.#smooth;

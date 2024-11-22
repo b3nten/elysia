@@ -147,16 +147,13 @@ export class AudioPlayer
 
 		setInterval(() =>
 		{
-			requestIdleCallback(() =>
+			for (const ref of this.instances)
 			{
-				for (const ref of this.instances)
+				if (!ref.deref())
 				{
-					if (!ref.deref())
-					{
-						this.instances.delete(ref);
-					}
+					this.instances.delete(ref);
 				}
-			})
+			}
 		}, 10000);
 	}
 

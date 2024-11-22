@@ -3,8 +3,9 @@
   "version": "2024.1.1",
   "license": "MIT",
   "tasks": {
-    "build": "deno run -A cli.ts playground:build",
-    "dev": "cd playground && deno serve -A server.ts",
+    "build": "cd playground && deno serve -A server.ts --build",
+    "dev": "cd playground && deno serve -A server.ts --dev",
+    "dryrun": "deno publish --dry-run",
     "watcher": "deno run -A cli.ts playground:dev",
     "deploy": "deno cli.ts playground:deploy"
   },
@@ -27,9 +28,16 @@
     "./logging": "./src/Logging/mod.ts",
     "./math": "./src/Math/mod.ts",
     "./rendering": "./src/Rendering/mod.ts",
-    "./shared": "./src/Shared/mod.ts",
     "./ui": "./src/UI/mod.ts",
-    "./webgl": "./src/WebGL/mod.ts"
+    "./webgl": "./src/WebGL/mod.ts",
+    "./asserts": "./src/Shared/Asserts.ts",
+    "./guard": "./src/Shared/Guard.ts",
+    "./hashkey": "./src/Shared/HashKey.ts",
+    "./injection": "./src/Shared/InjectionContainer.ts",
+    "./platform": "./src/Shared/Platform.ts",
+    "./resize": "./src/Shared/Resize.ts",
+    "./track": "./src/Shared/Track.ts",
+    "./utilities": "./src/Shared/Utilities.ts"
   },
   "compilerOptions": {
     "lib": [

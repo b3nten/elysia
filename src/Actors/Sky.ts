@@ -1,7 +1,7 @@
 /**
  * @module
  *
- * This module contains the SkyActor class, which can be used to render a physical sky.
+ * This module contains the Sky class, which can be used to render a physical sky.
  *
  * See https://threejs.org/docs/#examples/en/objects/Skyfor more information.
  */
@@ -9,11 +9,10 @@
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 // @ts-types="npm:@types/three@^0.169.0/examples/jsm/Sky"
-import { Sky } from "three/examples/jsm/objects/Sky.js";
-import { ThreeActor } from "./ThreeActor.ts";
-import { installMaterialAddon } from "../WebGL/InstallMaterialAddons.ts";
+import { Sky as SkyImpl } from "three/examples/jsm/objects/Sky.js";
+import { ThreeObject } from "./ThreeObject.ts";
 
-export class SkyActor extends ThreeActor<Sky>
+export class Sky extends ThreeObject<SkyImpl>
 {
 	/**
 	 * The turbidity of the sky.
@@ -56,7 +55,7 @@ export class SkyActor extends ThreeActor<Sky>
 
 	constructor()
 	{
-		super(new Sky());
+		super(new SkyImpl);
 		this.scale.setScalar( 450000 );
 		this.directionalLight.castShadow = true;
 		this.directionalLight.shadow.bias = -0.0001;
@@ -66,18 +65,6 @@ export class SkyActor extends ThreeActor<Sky>
 		this.directionalLight.shadow.camera.right = 100;
 		this.directionalLight.shadow.camera.top = 100;
 		this.directionalLight.shadow.camera.bottom = - 100;
-		// this.updatePositionRotationScale = true;
-		this.material.onBeforeCompile = (shader: any, renderer: any) =>
-		{
-			shader.vertexShader = `${Three.ShaderChunk.fog_pars_vertex}\n` + shader.vertexShader.replace(
-				"void main() {",
-				`void main() { \n${Three.ShaderChunk.fog_vertex}\n`
-			);
-			shader.fragmentShader = `${Three.ShaderChunk.fog_pars_fragment}\n` + shader.fragmentShader.replace(
-				"#include <colorspace_fragment>\n",
-				`#include <colorspace_fragment>\n${Three.ShaderChunk.fog_fragment}\n`
-			)
-		}
 	}
 
 	private updateSunPosition()
@@ -105,7 +92,7 @@ export class SkyActor extends ThreeActor<Sky>
 		this.scene.object3d.remove(this.skyLight);
 	 }
 
-	private get sky() { return this.object3d as Sky; }
+	private get sky() { return this.object3d as SkyImpl; }
 	private get material() { return this.sky.material as Three.ShaderMaterial; }
 
 	#sunPosition = new Three.Vector3();

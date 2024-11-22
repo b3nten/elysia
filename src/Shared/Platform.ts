@@ -25,6 +25,7 @@ export function isColorSupported(): boolean
 
 export function isWorker()
 {
+	// @ts-ignore - worker only
 	return typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
 }
 

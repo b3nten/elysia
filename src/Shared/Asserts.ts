@@ -165,6 +165,11 @@ export function isNode(): boolean
 	return typeof process !== "undefined" && process.versions != null && process.versions.node != null;
 }
 
+export function SET_ELYSIA_DEV(value: boolean): void
+{
+	// @ts-ignore - global
+	globalThis.ELYSIA_DEV = value;
+}
 // @ts-ignore - global
 globalThis.ELYSIA_DEV = undefined;
 

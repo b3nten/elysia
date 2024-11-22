@@ -1,50 +1,30 @@
-import { ActorLifecycle, Destroyable } from "./Lifecycle.ts";
-import { Actor } from "./Actor.ts";
-import { Scene } from "./Scene.ts";
-import { Application } from "./Application.ts";
+import { ActorLifecycle, type IDestroyable } from "./Lifecycle.ts";
+import type { Actor } from "./Actor.ts";
+import type { Scene } from "./Scene.ts";
+import type { Application } from "./Application.ts";
 import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { TagAddedEvent } from "./ElysiaEvents.ts";
 import {
-	s_App,
-	s_Created,
-	s_Destroyed,
-	s_Enabled,
-	s_InScene,
-	s_Internal,
-	s_IsBehavior,
-	s_OnBeforePhysicsUpdate,
-	s_OnCreate,
-	s_OnDestroy,
-	s_OnDisable,
-	s_OnEnable,
-	s_OnEnterScene,
-	s_OnLeaveScene,
-	s_OnResize,
-	s_OnStart,
-	s_OnUpdate,
-	s_Parent,
-	s_Scene,
-	s_Started,
-	s_Static,
-	s_Tags
+	s_App, s_Created, s_Destroyed, s_Enabled, s_InScene,
+	s_Internal, s_IsBehavior, s_OnBeforePhysicsUpdate, s_OnCreate,
+	s_OnDestroy, s_OnDisable, s_OnEnable, s_OnEnterScene,
+	s_OnLeaveScene, s_OnResize, s_OnStart, s_OnUpdate, s_Parent,
+	s_Scene, s_Started, s_Static, s_Tags
 } from "../Internal/mod.ts";
 import { reportLifecycleError } from "./Errors.ts";
-// @ts-types="npm:@types/three@^0.169"
-import * as Three from 'three';
 
 /**
  * A behavior is a component that can be attached to an actor to add functionality.
  * It has no children but participates in the actor lifecycle.
  */
-export class Behavior implements ActorLifecycle, Destroyable
+export class Behavior extends ActorLifecycle implements IDestroyable
 {
 	[s_IsBehavior]: boolean = true;
 
 	/**
 	 * Static behaviors are not updated during onUpdate, onBeforePhysicsUpdate, or onTransformUpdate.
 	 * This can be toggled at any time.
-	 *
 	 * @default false
 	 */
 	get static() { return this[s_Static]; }
@@ -114,32 +94,6 @@ export class Behavior implements ActorLifecycle, Destroyable
 		EventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
 		this.tags.delete(tag);
 	}
-
-	/* **********************************************************
-	    Lifecycle methods
-	************************************************************/
-
-	onCreate() {}
-
-	onEnterScene() {}
-
-	onEnable() {}
-
-	onStart() {}
-
-	onBeforePhysicsUpdate(delta: number, elapsed: number) {}
-
-	onTransformUpdate() {}
-
-	onUpdate(delta: number, elapsed: number) {}
-
-	onDisable() {}
-
-	onLeaveScene() {}
-
-	onDestroy() {}
-
-	onResize(width: number, height: number) {}
 
 	destructor()
 	{
@@ -276,5 +230,3 @@ export class Behavior implements ActorLifecycle, Destroyable
 		reportLifecycleError(this, this.onResize, width, height);
 	}
 }
-
-const tempVec2 = new Three.Vector2();

@@ -1,7 +1,7 @@
 import { Actor } from "./Actor.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
-import { Destroyable } from "./Lifecycle.ts";
+import { IDestroyable } from "./Lifecycle.ts";
 import { Future } from "../Containers/Future.ts";
 import { bound, Constructor, noop } from "../Shared/Utilities.ts";
 import { Behavior } from "./Behavior.ts";
@@ -24,18 +24,25 @@ import {
 import { Application } from "./Application.ts";
 import { LifeCycleError, reportLifecycleError } from "./Errors.ts";
 import { AutoInitializedMap } from "../Containers/AutoInitializedMap.ts";
-import { ThreeActor } from "../Actors/ThreeActor.ts";
+import { ThreeObject } from "../Actors/ThreeObject.ts";
 
 export const Root = Symbol.for("Elysia::Scene::Root");
 
 export const IsScene = Symbol.for("Elysia::IsScene");
 
-export interface Physics extends Behavior
+export interface Physics
 {
-	onLoad(scene: Scene): void | Promise<void>;
+	onLoad?(scene: Scene): void | Promise<void>;
+	onCreate?(): void;
+	onStart?(): void;
+	onEnable?(): void;
+	onDisable?(): void;
+	onBeforePhysicsUpdate?(delta: number, elapsed: number): void;
+	onUpdate?(delta: number, elapsed: number): void;
+	destructor(): void;
 }
 
-export class Scene implements Destroyable
+export class Scene implements IDestroyable
 {
 	[IsScene]: boolean = true;
 
@@ -56,7 +63,7 @@ export class Scene implements Destroyable
 	/** The s_Scene's active camera */
 	get activeCamera(): Three.Camera { return this.getActiveCamera(); }
 
-	set activeCamera(camera: Three.Camera | ThreeActor<Three.Camera>)
+	set activeCamera(camera: Three.Camera | ThreeObject<Three.Camera>)
 	{
 		this[s_ActiveCamera] = isThreeActor(camera) ? camera.object3d : camera;
 		this.app?.renderPipeline.onCameraChange(this[s_ActiveCamera]);
@@ -174,7 +181,7 @@ export class Scene implements Destroyable
 
 		try
 		{
-			await Promise.all([this.onLoad(), this.physics?.onLoad(this) ?? Promise.resolve()]);
+			await Promise.all([this.onLoad(), this.physics?.onLoad?.(this) ?? Promise.resolve()]);
 		}
 		catch(error)
 		{
@@ -194,7 +201,9 @@ export class Scene implements Destroyable
 		this[Root][s_Parent] = null;
 
 		// create physics behavior before other behaviors
-		this.physics?.[s_OnCreate]();
+		this.physics[s_App] = this[s_App];
+		this.physics[s_Scene] = this;
+		this.physics?.onCreate?.()
 
 		reportLifecycleError(this, this.onCreate);
 
@@ -207,7 +216,7 @@ export class Scene implements Destroyable
 	{
 		if(this[s_Started] || !this[s_Created] || this[s_Destroyed]) return;
 		// start physics behavior before other behaviors
-		this.physics?.[s_OnStart]()
+		this.physics?.onStart?.();
 		reportLifecycleError(this, this.onStart);
 		this[s_Started] = true;
 		this[Root][s_OnStart]();
@@ -219,9 +228,9 @@ export class Scene implements Destroyable
 		if(this[s_Destroyed]) return;
 		if(!this[s_Started]) this[s_OnStart]();
 		reportLifecycleError(this, this.onBeforePhysicsUpdate, delta, elapsed);
-		this.physics[s_OnBeforePhysicsUpdate](delta, elapsed);
+		this.physics.onBeforePhysicsUpdate?.(delta, elapsed);
 		this[Root][s_OnBeforePhysicsUpdate](delta, elapsed);
-		this.physics[s_OnUpdate](delta, elapsed);
+		this.physics.onUpdate?.(delta, elapsed);
 	}
 
 	[s_OnUpdate](delta: number, elapsed: number)

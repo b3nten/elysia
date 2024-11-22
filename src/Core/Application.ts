@@ -33,17 +33,57 @@ installMaterialAddonsToPrototypes([
 	Three.ShaderMaterial,
 ]);
 
-interface ApplicationConstructorArguments
+export interface ApplicationConstructorArguments
 {
+	/**
+	 * The canvas element to render to. If not provided, a new full screen canvas will be created and appended to the document body.
+	 */
 	output?: HTMLCanvasElement,
+
+	/**
+	 * The log level for the application.
+	 * @default LogLevel.Production
+	 */
 	logLevel?: LogLevel,
+
+	/**
+	 * The event queue for the application. A default instance will be created if not provided.
+	 */
 	eventQueue?: EventQueue,
+
+	/**
+	 * An optional profiler instance for the application.
+	 */
 	profiler?: Profiler,
+
+	/**
+	 * The asset loader instance for the application. A default instance will be created if not provided.
+	 */
 	assets?: AssetLoader<any>,
+
+	/**
+	 * The audio player instance for the application. A default instance will be created if not provided.
+	 */
 	audio?: AudioPlayer
+
+	/**
+	 * The render pipeline for the application. A default Basic Render Pipeline instance will be created if not provided.
+	 */
 	renderPipeline?: RenderPipeline
+
+	/**
+	 * If the application should display stats.
+	 */
 	stats?: boolean
+
+	/**
+	 * If the application should manage the default UI scheduler in it's event loop.
+	 */
 	updateDefaultUiScheduler?: boolean
+
+	/**
+	 * If the application should defer calling `Application.update()` to the user.
+	 */
 	manualUpdate?: boolean
 }
 
@@ -207,7 +247,7 @@ export class Application {
 			this.#scene[Root][s_OnEnterScene]();
 			this.#scene[Root][s_OnEnable]();
 
-			ELYSIA_LOGGER.debug("Scene started", scene)
+			ELYSIA_LOGGER.info("Scene started", scene)
 
 			this.#sizeHasChanged = false;
 
@@ -225,7 +265,7 @@ export class Application {
 	/** The main update loop for the application. */
 	public update()
 	{
-		try {
+		// try {
 			if(!this.#scene || !this.#rendering) throw Error("No s_Scene loaded")
 
 			if(this.#errorCount <= this.maxErrorCount)
@@ -266,10 +306,10 @@ export class Application {
 
 			this.#scene[s_OnBeforePhysicsUpdate](this.#clock.delta, this.#clock.elapsed);
 
-			// s_Scene update
+			// Scene update
 			this.#scene[s_OnUpdate](this.#clock.delta, this.#clock.elapsed);
 
-			// s_Scene render
+			// Scene render
 			this.#renderPipeline?.onRender(this.#scene, this.#scene.getActiveCamera());
 
 			// update default UI scheduler
@@ -280,12 +320,13 @@ export class Application {
 			this.events.clear();
 
 			this.#errorCount = 0;
-		}
-		catch(e)
-		{
-			ELYSIA_LOGGER.error(e)
-			this.#errorCount++;
-		}
+		// }
+		// catch(e)
+		// {
+		// 	ELYSIA_LOGGER.error(e)
+		// 	throw e;
+		// 	this.#errorCount++;
+		// }
 	}
 
 	/** Destroy the application and all of its resources. */

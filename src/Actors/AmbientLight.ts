@@ -6,7 +6,7 @@
  *
  * @example
  * ```ts
- * const light = new AmbientLightActor(0.5, new Three.Color(0x404040));
+ * const light = new AmbientLight(0.5, new Three.Color(0x404040));
  * scene.add(light);
  * ```
  */
@@ -16,7 +16,7 @@ import * as Three from 'three';
 import { Actor } from "../Core/Actor.ts";
 
 /** An actor wrapping Three.AmbientLight. Setting transform properties will have no effect on this actor.n*/
-export class AmbientLightActor extends Actor
+export class AmbientLight extends Actor
 {
 	/** The intensity of the ambient light. */
 	get intensity(): number { return this.object3d.intensity; }
@@ -27,7 +27,7 @@ export class AmbientLightActor extends Actor
 	set color(value: Three.Color) { this.object3d.color = value; }
 
 	/**
-	 	* Create a new AmbientLightActor.
+	 	* Create a new AmbientLight.
 		* @param intensity The intensity of the ambient light.
 		* @param color The color of the ambient light.
 	*/
@@ -39,11 +39,13 @@ export class AmbientLightActor extends Actor
 		this.object3d.color = color ?? new Three.Color(0xFFFFFF);
 	}
 
-	override onEnterScene() {
+	override onEnterScene()
+	{
 		this.scene?.object3d.add(this.object3d);
 	}
 
-	override onLeaveScene() {
+	override onLeaveScene()
+	{
 		this.scene?.object3d.remove(this.object3d);
 	}
 

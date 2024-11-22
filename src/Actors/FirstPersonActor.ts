@@ -4,7 +4,7 @@ import Rapier from "@dimforge/rapier3d-compat";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 import { RigidBody, RigidbodyType } from "../Physics/RigidBody.ts";
-import { PerspectiveCameraActor } from "./PerspectiveCameraActor.ts";
+import { PerspectiveCamera } from "./PerspectiveCamera.ts";
 import { Behavior } from "../Core/Behavior.ts";
 import { clamp } from "../Math/Other.ts";
 import { CapsuleCollider } from "../Physics/Collider.ts";
@@ -118,7 +118,7 @@ export class FirstPersonActor extends Actor
 
 	rotationRoot: Actor = new Actor;
 
-	camera: PerspectiveCameraActor = new PerspectiveCameraActor;
+	camera: PerspectiveCamera = new PerspectiveCamera;
 
 	get isDown(): any { return this.app!.input.isDown.bind(this.app?.input) }
 

@@ -3,12 +3,12 @@ import type { Constructor } from "../Shared/Utilities.ts"
 import * as Internal from "./Internal.ts";
 import type { Entity } from "./Entity.ts";
 import type { Component } from "./Component.ts";
-import type { Destroyable } from "../Core/Lifecycle.ts";
+import type { IDestroyable } from "../Core/Lifecycle.ts";
 import { SparseSet } from "../Containers/SparseSet.ts";
 import { AutoInitializedMap } from "../Containers/AutoInitializedMap.ts";
 import { getComponentType } from "./Component.ts";
 
-export class World implements Destroyable
+export class World implements IDestroyable
 {
 	public get active(): boolean { return this[Internal.isActive] && !this[Internal.isDestroyed]; }
 

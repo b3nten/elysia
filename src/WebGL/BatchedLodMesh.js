@@ -362,7 +362,6 @@ class BatchedLodMesh extends Mesh {
 
 	}
 
-
 	setCustomSort( func ) {
 
 		this.customSort = func;
@@ -1211,8 +1210,6 @@ class BatchedLodMesh extends Mesh {
 		return this;
 
 	}
-
-	firstRender = true;
 
 	onBeforeRender( renderer, scene, camera, geometry, material/*, _group*/ ) {
 		// if visibility has not changed and frustum culling and object sorting is not required

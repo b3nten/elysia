@@ -12,7 +12,7 @@
 
 import { Behavior } from "../Core/Behavior.ts";
 import { isThreeActor } from "../Core/Component.ts";
-import { ThreeActor } from "../Actors/ThreeActor.ts";
+import { ThreeObject } from "../Actors/ThreeObject.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 
@@ -44,7 +44,7 @@ export class BillboardBehavior extends Behavior
 
 	override onCreate() {
 		if(!isThreeActor(this.parent)) {
-			console.warn("BillboardBehavior requires a ThreeActor parent.")
+			console.warn("BillboardBehavior requires a ThreeObject parent.")
 			this.#valid = false
 		}
 	}
@@ -52,14 +52,14 @@ export class BillboardBehavior extends Behavior
 	override onStart()
 	{
 		if(!this.#valid) return
-		this.euler.setFromQuaternion((this.parent as ThreeActor).rotation)
+		this.euler.setFromQuaternion((this.parent as ThreeObject).rotation)
 	}
 
 	override onUpdate(delta: number, elapsed: number)
 	{
 		if (!this.parent || !this.#valid) return
 
-		const parent = this.parent as ThreeActor;
+		const parent = this.parent as ThreeObject;
 
 		// save previous rotation in case we're locking an axis
 		const prevRotation = this.euler.clone()

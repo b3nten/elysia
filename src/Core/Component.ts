@@ -1,6 +1,6 @@
 import { Actor } from "./Actor.ts";
 import { Behavior } from "./Behavior.ts";
-import { ThreeActor } from "../Actors/ThreeActor.ts";
+import { ThreeObject } from "../Actors/ThreeObject.ts";
 import { s_IsBehavior, s_IsActor } from "../Internal/mod.ts";
 
 /**
@@ -27,10 +27,10 @@ export function isBehavior(component: any): component is Behavior
 }
 
 /**
- * Returns true if the component is a ThreeActor.
+ * Returns true if the component is a ThreeObject.
  * @param component
  */
-export function isThreeActor(component: any): component is ThreeActor
+export function isThreeActor(component: any): component is ThreeObject
 {
 	return s_IsActor in component && "object3d" in component;
 }

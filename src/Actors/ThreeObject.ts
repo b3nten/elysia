@@ -8,7 +8,7 @@ import {
 	s_OnUpdate, s_TransformDirty,
 } from "../Internal/mod.ts";
 
-export class ThreeActor<T extends Three.Object3D = Three.Object3D> extends Actor {
+export class ThreeObject<T extends Three.Object3D = Three.Object3D> extends Actor {
 
 	/**
 	 * By default, the backing Three.Object3D shares a matrixWorld with the Actor.
@@ -30,6 +30,7 @@ export class ThreeActor<T extends Three.Object3D = Three.Object3D> extends Actor
 	constructor(public object3d: T = new Three.Object3D() as T)
 	{
 		super();
+		this.static = false;
 		this.object3d.matrixAutoUpdate = false;
 		this.object3d.matrixWorldAutoUpdate = false;
 		this.object3d.matrixWorld = this.worldMatrix;

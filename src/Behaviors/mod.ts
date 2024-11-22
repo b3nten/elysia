@@ -3,5 +3,5 @@
  * A collection of behaviors that can be added to actors.
  */
 
-export { CameraOrbitBehavior } from "./CameraOrbitBehavior.ts";
+export { OrbitControls } from "./OrbitControls.ts";
 export { BillboardBehavior } from "./Billboard.ts";

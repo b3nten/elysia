@@ -1,6 +1,9 @@
 import { serveDir } from "jsr:@std/http@1.0.9";
+import { parseArgs } from "jsr:@std/cli@1.0.6/parse-args";
 import type esbuild from "npm:esbuild@0.24.0"
 import { AutoRouter } from 'npm:itty-router@5.0.18';
+
+const args = parseArgs(Deno.args)
 
 const shell = (entry: string) => `
 <!DOCTYPE html>
@@ -47,7 +50,7 @@ const router = AutoRouter()
 
 let rebuild = async () => {};
 
-if(/* todo: check if dev */ true)
+if(args.dev || args.build)
 {
 	const esbuild = await import("npm:esbuild").then(m => m.default)
 	const denoPlugins = await import("jsr:@luca/esbuild-deno-loader@^0.11.0").then(m => m.denoPlugins)
@@ -73,31 +76,40 @@ if(/* todo: check if dev */ true)
 		],
 	})
 
-	const ctx = await esbuild.context(createEsbuildConfig("dev"))
+	if(args.dev)
+	{
+		const ctx = await esbuild.context(createEsbuildConfig("dev"))
 
-	rebuild = async () => {
-		await Deno.remove("./dist", { recursive: true })
-		await ctx.rebuild()
-	}
-
-	router.get("/metafile.json", async () => {
-		const build = await esbuild.build(createEsbuildConfig("dev"))
-		return new Response(JSON.stringify(build.metafile), {
-			headers: {
-				...headers.toObject(),
-				"Content-Type": "application/json",
-				"Content-Disposition": "attachment; filename=metafile.json"
-			}
-		})
-	})
-
-	Deno.addSignalListener("SIGTERM",
-		async () => {
-			await ctx.dispose()
-			Deno.exit()
+		rebuild = async () => {
+			await Deno.remove("./dist", { recursive: true })
+			await ctx.rebuild()
 		}
-	)
+
+		router.get("/metafile.json", async () => {
+			const build = await esbuild.build(createEsbuildConfig("dev"))
+			return new Response(JSON.stringify(build.metafile), {
+				headers: {
+					...headers.toObject(),
+					"Content-Type": "application/json",
+					"Content-Disposition": "attachment; filename=metafile.json"
+				}
+			})
+		})
+
+		Deno.addSignalListener("SIGTERM",
+			async () => {
+				await ctx.dispose()
+				Deno.exit()
+			}
+		)
+	}
+	else if (args.build)
+	{
+		await esbuild.build(createEsbuildConfig("build"))
+		Deno.exit(0);
+	}
 }
+
 
 router.get("/",
 	() => new Response(
@@ -126,8 +138,8 @@ router.get("/entry.js", async () => {
 // serve assets
 router.get("*", async (request) =>
 {
-	let res = await serveDir(request, { fsRoot: "./assets", headers: headers.toArray(), quiet: true });
-	if(!res.ok) res = await serveDir(request, { fsRoot: "./dist", headers: headers.toArray(), quiet: true })
+	let res = await serveDir(request, { fsRoot: "assets", headers: headers.toArray(), quiet: false });
+	if(res.status >= 400) res = await serveDir(request, { fsRoot: "dist", headers: headers.toArray(), quiet: false })
 	return res
 })
 

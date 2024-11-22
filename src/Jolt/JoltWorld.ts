@@ -1,11 +1,18 @@
-import { Destroyable } from "../Core/Lifecycle.ts";
+import { IDestroyable } from "../Core/Lifecycle.ts";
 import type Jolt from "jolt-physics/wasm-multithread";
-import JoltInit from "jolt-physics/wasm-multithread";
+import JoltInitMultithreaded from "jolt-physics/wasm-multithread";
+import JoltInit from "jolt-physics/wasm"
 import { PHYSICS_LAYER_COUNT, PhysicsLayer } from "./PhysicsLayer.ts";
+import { isSecureContext } from "../Shared/Platform.ts";
 
-export class JoltWorld implements Destroyable
+export class JoltWorld implements IDestroyable
 {
 	static JoltInstance: typeof Jolt | null = null;
+
+	static IsMultiThreaded()
+	{
+		return isSecureContext();
+	}
 
 	static GetJoltInstance()
 	{
@@ -15,7 +22,7 @@ export class JoltWorld implements Destroyable
 
 	static async LoadJoltInstance()
 	{
-		JoltWorld.JoltInstance = await JoltInit();
+		JoltWorld.JoltInstance = isSecureContext() ? await JoltInitMultithreaded() : await JoltInit();
 	}
 
 	get initialized()
@@ -84,8 +91,9 @@ export class JoltWorld implements Destroyable
 
 	tick(delta: number, elapsed: number)
 	{
-		// run two steps if the delta is too large
+		// submit stringified contact listner functions
 		this.joltInterface.Step(delta, delta > 1.0 / 55.0 ? 2 : 1);
+		// parse and run contact listener events
 	}
 
 	destructor()

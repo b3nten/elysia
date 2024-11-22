@@ -1,7 +1,7 @@
 import { KeyCode } from "./KeyCode.ts";
 import { ObjectPool } from "../Containers/ObjectPool.ts";
 import { QueuedEvent } from "./QueuedEvent.ts";
-import type { Destroyable } from "../Core/Lifecycle.ts";
+import type { IDestroyable } from "../Core/Lifecycle.ts";
 import { MouseObserver } from "./Mouse.ts";
 import type { MouseCode } from "./MouseCode.ts";
 
@@ -55,9 +55,9 @@ interface InputQueueConstructorArguments
  * }
  * ```
  *
- * @implements {Destroyable}
+ * @implements {IDestroyable}
  */
-export class InputQueue implements Destroyable
+export class InputQueue implements IDestroyable
 {
 
 	public readonly mouse: MouseObserver;

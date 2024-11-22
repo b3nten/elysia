@@ -1,26 +1,16 @@
 // @ts-types="npm:@types/three@^0.169"
-import * as Three from 'three';
+import * as Three from "three";
 import type Jolt from "jolt-physics/wasm-multithread";
 import { Behavior } from "../Core/Behavior.ts";
 import { JoltWorld } from "./JoltWorld.ts";
 import { PhysicsLayer } from "./PhysicsLayer.ts";
-import { PhysicsBodyType } from "./PhysicsBodyType.ts";
+import type { ComponentSet } from "../Containers/ComponentSet.ts";
 
-const s_JoltBodyId = Symbol.for("JoltBodyId");
-const s_JoltBodyType = Symbol.for("JoltBodyType");
-const s_JoltBodyLayer = Symbol.for("JoltBodyLayer");
-
-type JoltWorker = never; // todo: implement worker maybe sometime :)
-
-export class JoltPhysicsBehavior extends Behavior
+export class JoltPhysicsWorldComponent extends Behavior
 {
-	world: JoltWorld | JoltWorker | null = null;
+	world?: JoltWorld;
 
-	constructor(args: { worker?: boolean } = {})
-	{
-		super();
-		if(args.worker) throw new Error("Worker support not implemented yet.");
-	}
+	bodyBehaviors?: ComponentSet<PhysicsBodyBehavior>;
 
 	async onLoad()
 	{
@@ -29,123 +19,153 @@ export class JoltPhysicsBehavior extends Behavior
 		this.world.init();
 	}
 
+	override onCreate()
+	{
+		// get a ref to this container once instead of each frame
+		this.bodyBehaviors = this.scene.getComponentsByType(PhysicsBodyBehavior);
+	}
+
 	override onUpdate(delta: number, elapsed: number)
 	{
-		if(!(this.world instanceof JoltWorld)) throw Error("Worker support not implemented yet.");
-		this.world.tick(delta, elapsed);
+		const Jolt = JoltWorld.GetJoltInstance();
+
+		const pos = new Three.Vector3();
+		const rot = new Three.Quaternion();
+		const scale = new Three.Vector3();
+
+		const jPos = new Jolt.RVec3();
+		const jRot = new Jolt.Quat();
+
+		for (const body of this.bodyBehaviors ?? [])
+		{
+			if(!body.joltBodyID) continue;
+
+			body.parent.worldMatrix.decompose(pos, rot, scale);
+			jPos.Set(pos.x, pos.y, pos.z);
+			jRot.Set(rot.x, rot.y, rot.z, rot.w);
+			this.world!.bodyInterface.SetPositionAndRotation(body.joltBodyID, jPos, jRot, Jolt.EActivation_DontActivate);
+		}
+
+		Jolt.destroy(jPos);
+		Jolt.destroy(jRot);
+
+		this.world!.tick(delta, elapsed);
+
+		for (const body of this.bodyBehaviors ?? [])
+		{
+			if(!body.joltBodyID) continue;
+
+			const worldTransform = this.world!.bodyInterface.GetWorldTransform(body.joltBodyID);
+			const position = worldTransform.GetTranslation();
+			const rotation = worldTransform.GetQuaternion();
+			body.parent.position.set(position.GetX(), position.GetY(), position.GetZ());
+			body.parent.rotation.set(rotation.GetX(), rotation.GetY(), rotation.GetZ(), rotation.GetW());
+			Jolt.destroy(position);
+			Jolt.destroy(rotation);
+			Jolt.destroy(worldTransform);
+		}
 	}
 
 	override onDestroy()
 	{
-		if(!(this.world instanceof JoltWorld)) throw Error("Worker support not implemented yet.");
-		this.world.destructor();
+		this.world?.destructor();
 	}
 
-	createBody(body: PhysicsBodyBehavior)
+	public createBody(body: Jolt.BodyCreationSettings): Jolt.BodyID
 	{
 		const Jolt = JoltWorld.GetJoltInstance();
-
-		if(!(this.world instanceof JoltWorld)) throw Error("Worker support not implemented yet.");
-
-		const threePos = new Three.Vector3;
-		const threeRot = new Three.Quaternion;
-		const threeScale = new Three.Vector3;
-		body.parent.worldMatrix.decompose(threePos, threeRot, threeScale);
-
-		const type = body.type === PhysicsBodyType.Dynamic ? Jolt.EMotionType_Dynamic : PhysicsBodyType.Kinematic ? Jolt.EMotionType_Kinematic : Jolt.EMotionType_Static;
-
-	    const position = new Jolt.RVec3(threePos.x, threePos.y, threePos.z);
-		const rotation = new Jolt.Quat(threeRot.x, threeRot.y, threeRot.z, threeRot.w);
-
-		/*
-		  todo:
-		*/
-
-		const creationSettings = new Jolt.BodyCreationSettings(new Jolt.EmptyShape, position, rotation, type, body.layer);
-		creationSettings.mAllowDynamicOrKinematic = true;
-
-		Jolt.destroy(position);
-		Jolt.destroy(rotation);
-
-		creationSettings.mRestitution = 0.5;
-		const joltBody = this.world.bodyInterface.CreateBody(creationSettings);
-
-		Jolt.destroy(creationSettings);
-
+		const joltBody = this.world!.bodyInterface.CreateBody(body);
 		const id = joltBody.GetID();
-		this.world.bodyInterface.AddBody(id, Jolt.EActivation_Activate);
-		body[s_JoltBodyId] = id;
+		this.world!.bodyInterface.AddBody(id, Jolt.EActivation_Activate);
+		return id;
 	}
 
-	removeBody(body: PhysicsBodyBehavior)
+	// todo: implement batch addition
+	public addBodyToWorld(bodyID: Jolt.BodyID)
 	{
-		if(!(this.world instanceof JoltWorld)) throw Error("Worker support not implemented yet.");
-
-		if(!body[s_JoltBodyId]) return;
-
-		// does not destroy, just removes from world
-		this.world.bodyInterface.RemoveBody(body[s_JoltBodyId]);
+		if(!(this.world instanceof JoltWorld)) return;
+		const Jolt = JoltWorld.GetJoltInstance();
+		this.world.bodyInterface.AddBody(bodyID, Jolt.EActivation_Activate);
 	}
 
-	destroyBody(body: PhysicsBodyBehavior)
+	// todo: implement batch removal
+	public removeBodyFromWorld(bodyID: Jolt.BodyID)
 	{
-		if(!(this.world instanceof JoltWorld)) throw Error("Worker support not implemented yet.");
+		if(!(this.world instanceof JoltWorld)) return;
+		this.world.bodyInterface.RemoveBody(bodyID);
+	}
 
-		if(!body[s_JoltBodyId]) return;
-
+	public destroyBody(bodyID: Jolt.BodyID)
+	{
+		if (!(this.world instanceof JoltWorld)) return;
 		// must remove before destroy
-		this.world.bodyInterface.RemoveBody(body[s_JoltBodyId]);
-		this.world.bodyInterface.DestroyBody(body[s_JoltBodyId]);
+		this.world.bodyInterface.RemoveBody(bodyID);
+		this.world.bodyInterface.DestroyBody(bodyID);
 	}
 
-	bodyNeedsUpdate(body: PhysicsBodyBehavior)
+	public getJoltInstance(): typeof Jolt | undefined
 	{
-		// todo: implement body setting updates
+		return JoltWorld.GetJoltInstance();
 	}
 }
 
-function IS_JOLT(obj: any): obj is JoltPhysicsBehavior { return obj instanceof JoltPhysicsBehavior; }
-
-export class PhysicsBodyBehavior extends Behavior
+interface PhysicsBodyBehaviorConstructorArguments
 {
-	get layer() { return this[s_JoltBodyLayer]; }
-	get type() { return this[s_JoltBodyType]; }
+	bodyCreationSettings: Jolt.BodyCreationSettings;
+	layer?: PhysicsLayer;
+}
 
-	constructor(args: { layer?: PhysicsLayer, type?: PhysicsBodyType, collider?: any } = {})
+export class PhysicsBodyBehavior extends Behavior {
+
+	get joltBodyID(): Jolt.BodyID | undefined { return this.#joltBodyID; }
+
+	constructor(args: PhysicsBodyBehaviorConstructorArguments)
 	{
 		super();
-		if(args.layer) this[s_JoltBodyLayer] = args.layer;
-		if(args.type) this[s_JoltBodyType] = args.type;
+		this.#joltBodyCreationSettings = args.bodyCreationSettings;
+		if (args.layer) this.#joltBodyCreationSettings.set_mObjectLayer(args.layer);
+		else this.#joltBodyCreationSettings.set_mObjectLayer(PhysicsLayer.Static);
+	}
+
+	override onCreate()
+	{
+		const joltBehavior = this.scene.physics;
+		if (!IS_JOLT(joltBehavior)) return;
+
+		this.#joltBodyID = joltBehavior.createBody(this.#joltBodyCreationSettings);
 	}
 
 	override onEnable()
 	{
-		const joltBehavior = this.scene.physics
-		if(!IS_JOLT(joltBehavior)) return;
+		const joltBehavior = this.scene.physics;
+		if (!IS_JOLT(joltBehavior)) return;
 
-		// create if not exists, and add to world
-		joltBehavior.createBody(this);
+		joltBehavior.addBodyToWorld(this.#joltBodyID!);
 	}
 
 	override onDisable()
 	{
-		const joltBehavior = this.scene.physics
-		if(!IS_JOLT(joltBehavior)) return;
+		const joltBehavior = this.scene.physics;
+		if (!IS_JOLT(joltBehavior)) return;
 
 		// remove from world
-		joltBehavior.removeBody(this);
+		joltBehavior.removeBodyFromWorld(this.#joltBodyID!);
 	}
 
-	override onDestroy()
+	override destructor()
 	{
-		const joltBehavior = this.scene.physics
-		if(!IS_JOLT(joltBehavior)) return;
+		const joltBehavior = this.scene.physics;
+		if (!IS_JOLT(joltBehavior)) return;
 
 		// destroy body
-		joltBehavior.destroyBody(this);
+		joltBehavior.destroyBody(this.#joltBodyID!);
 	}
 
-	[s_JoltBodyId]?: Jolt.BodyID;
-	[s_JoltBodyType]: PhysicsBodyType = PhysicsBodyType.Dynamic;
-	[s_JoltBodyLayer]: PhysicsLayer = PhysicsLayer.Dynamic;
+	#joltBodyID?: Jolt.BodyID;
+	#joltBodyCreationSettings: Jolt.BodyCreationSettings;
+}
+
+function IS_JOLT(obj: any): obj is JoltPhysicsWorldComponent
+{
+	return obj instanceof JoltPhysicsWorldComponent;
 }
