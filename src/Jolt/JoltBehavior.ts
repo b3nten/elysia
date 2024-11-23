@@ -5,12 +5,18 @@ import { Behavior } from "../Core/Behavior.ts";
 import { JoltWorld } from "./JoltWorld.ts";
 import { PhysicsLayer } from "./PhysicsLayer.ts";
 import type { ComponentSet } from "../Containers/ComponentSet.ts";
+import { ThreeObject } from "../Actors/ThreeObject.ts";
+
+const DEBUG_MATERIAL = new Three.LineBasicMaterial({ color: 0x00ff00, linewidth: 10, });
 
 export class JoltPhysicsWorldComponent extends Behavior
 {
 	world?: JoltWorld;
 
 	bodyBehaviors?: ComponentSet<PhysicsBodyBehavior>;
+
+	get debug(): boolean { return this.#debug; }
+	set debug(value: boolean) { this.#debug = value; }
 
 	async onLoad()
 	{
@@ -105,6 +111,8 @@ export class JoltPhysicsWorldComponent extends Behavior
 	{
 		return JoltWorld.GetJoltInstance();
 	}
+
+	#debug = false;
 }
 
 interface PhysicsBodyBehaviorConstructorArguments
@@ -139,6 +147,11 @@ export class PhysicsBodyBehavior extends Behavior {
 		if (!IS_JOLT(joltBehavior)) return;
 
 		joltBehavior.addBodyToWorld(this.#joltBodyID!);
+
+		if(joltBehavior.debug)
+		{
+			this.updateDebugMesh();
+		}
 	}
 
 	override onDisable()
@@ -148,6 +161,8 @@ export class PhysicsBodyBehavior extends Behavior {
 
 		// remove from world
 		joltBehavior.removeBodyFromWorld(this.#joltBodyID!);
+
+		this.removeDebugMesh();
 	}
 
 	override destructor()
@@ -159,7 +174,41 @@ export class PhysicsBodyBehavior extends Behavior {
 		joltBehavior.destroyBody(this.#joltBodyID!);
 	}
 
+	updateDebugMesh()
+	{
+		const joltBehavior = this.scene.physics;
+		if (!IS_JOLT(joltBehavior)) return;
+
+		const Jolt = joltBehavior.getJoltInstance()!;
+
+		const shape = joltBehavior.world!.bodyInterface.GetShape(this.#joltBodyID!);
+		let triContext = new Jolt.ShapeGetTriangles(shape, Jolt.AABox.prototype.sBiggest(), shape.GetCenterOfMass(), Jolt.Quat.prototype.sIdentity(), new Jolt.Vec3(1, 1, 1));
+		let vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
+		let buffer = new Three.BufferAttribute(vertices, 3).clone();
+		Jolt.destroy(triContext);
+		let geometry = new Three.BufferGeometry();
+		geometry.setAttribute('position', buffer);
+		geometry.computeVertexNormals();
+
+		this.removeDebugMesh();
+		this.#debugActor = new ThreeObject(
+			new Three.LineSegments(new Three.WireframeGeometry(geometry), DEBUG_MATERIAL)
+		);
+		this.#debugActor.scale.setScalar(1.0001);
+		this.parent.addComponent(this.#debugActor);
+	}
+
+	removeDebugMesh()
+	{
+		if(this.#debugActor)
+		{
+			this.#debugActor.destructor();
+			this.#debugActor = undefined;
+		}
+	}
+
 	#joltBodyID?: Jolt.BodyID;
+	#debugActor?: ThreeObject
 	#joltBodyCreationSettings: Jolt.BodyCreationSettings;
 }
 

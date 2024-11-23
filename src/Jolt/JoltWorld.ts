@@ -59,7 +59,7 @@ export class JoltWorld implements IDestroyable
 		}
 
 		const settings = new Jolt.JoltSettings();
-		settings.mMaxWorkerThreads = 6;
+		settings.mMaxWorkerThreads = 3;
 
 		{
 			const objectFilter = new Jolt.ObjectLayerPairFilterTable(PHYSICS_LAYER_COUNT);

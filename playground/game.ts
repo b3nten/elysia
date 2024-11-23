@@ -32,6 +32,7 @@ class MyScene extends Elysia.Core.Scene
 	{
 		const joltWorld = this.physics.world;
 		const Jolt = this.physics.getJoltInstance();
+		this.physics.debug = true;
 
 		if(!Jolt || !joltWorld) throw new Error("Jolt physics engine not initialized. Call `await JoltBehavior.Init()` before using Jolt!");
 
@@ -49,41 +50,34 @@ class MyScene extends Elysia.Core.Scene
 		}
 
 		{
-			const cube = new Elysia.Actors.Mesh(
-				new Three.BoxGeometry(1, 1, 1),
-				new Three.MeshStandardMaterial({ color: 0x00ff00 })
-			)
+			const cube = new Elysia.Actors.Mesh(new Three.BoxGeometry(1, 1, 1), new Three.MeshStandardMaterial({ color: 0x00ff00 }))
 
 			cube.position.y = 5;
 
-			const cubeBodySettings = new Jolt.BodyCreationSettings(
-				new Jolt.BoxShape(new Jolt.Vec3(.5, .5, .5)),
-				new Jolt.RVec3(0, 5, 0),
-				new Jolt.Quat(0, 0, 0, 1),
-				Jolt.EMotionType_Dynamic,
-				PhysicsLayer.Dynamic,
-			);
+			const cubeBodySettings = new Jolt.BodyCreationSettings;
+			cubeBodySettings.SetShape(new Jolt.BoxShape(new Jolt.Vec3(.5, .5, .5), 0.05, undefined))
+			cubeBodySettings.mObjectLayer = PhysicsLayer.Dynamic;
+			cubeBodySettings.mMotionType = Jolt.EMotionType_Dynamic;
 			cubeBodySettings.mRestitution = 0.5;
+			cubeBodySettings.set_mAllowDynamicOrKinematic(true)
 			cube.addComponent(new PhysicsBodyBehavior({ bodyCreationSettings: cubeBodySettings }))
+
 			this.addComponent(cube);
 		}
 
 		{
-			const floor = new Elysia.Actors.Mesh(
-				new Three.BoxGeometry(100, .5, 100),
-				new Three.MeshStandardMaterial({ color: 0xff0000 })
-			)
+			const floor = new Elysia.Actors.Mesh(new Three.BoxGeometry(100, .5, 100), new Three.MeshStandardMaterial({ color: 0xff0000 }))
+
 			floor.position.set(0, -.75, 0);
 
-			const floorBodySettings = new Jolt.BodyCreationSettings(
-				new Jolt.BoxShape(new Jolt.Vec3(50, 1, 50)),
-				new Jolt.RVec3(0, -.75, 0),
-				new Jolt.Quat(0, 0, 0, 1),
-				Jolt.EMotionType_Static,
-				PhysicsLayer.Static,
-			);
+			const floorBodySettings = new Jolt.BodyCreationSettings;
+			floorBodySettings.SetShape(new Jolt.BoxShape(new Jolt.Vec3(50, .25, 50), 0.05, undefined))
+			floorBodySettings.mObjectLayer = PhysicsLayer.Static;
+			floorBodySettings.mMotionType = Jolt.EMotionType_Static;
+			floorBodySettings.set_mAllowDynamicOrKinematic(true)
 			floorBodySettings.mRestitution = 0.5;
 			floor.addComponent(new PhysicsBodyBehavior({ bodyCreationSettings: floorBodySettings }))
+
 			this.addComponent(floor);
 		}
 	}
@@ -96,9 +90,9 @@ class MyScene extends Elysia.Core.Scene
 			const bodyInterface = this.physics.world!.bodyInterface;
 			if(!id || !bodyInterface) continue;
 
-			const worldTransform = bodyInterface.GetWorldTransform(id);
-			const position = worldTransform.GetTranslation();
-			const rotation = worldTransform.GetQuaternion();}
+
+			const verts = bodyInterface.GetShape(id)
+		}
 	}
 }
 
