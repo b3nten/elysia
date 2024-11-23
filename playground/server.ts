@@ -2,6 +2,7 @@ import { serveDir } from "jsr:@std/http@1.0.9";
 import { parseArgs } from "jsr:@std/cli@1.0.6/parse-args";
 import type esbuild from "npm:esbuild@0.24.0"
 import { AutoRouter } from 'npm:itty-router@5.0.18';
+import guard from "../src/Shared/Guard.ts";
 
 const args = parseArgs(Deno.args)
 
@@ -82,7 +83,8 @@ if(args.dev || args.build)
 		const ctx = await esbuild.context(createEsbuildConfig("dev"))
 
 		rebuild = async () => {
-			await Deno.remove("./dist", { recursive: true })
+
+			await guard(async () => await Deno.remove("./dist", { recursive: true }))
 			console.log("Rebuilding...")
 			await ctx.rebuild()
 			console.log("Rebuilt.")
@@ -111,6 +113,8 @@ if(args.dev || args.build)
 		await esbuild.build(createEsbuildConfig("build"))
 		Deno.exit(0);
 	}
+
+	rebuild();
 }
 
 

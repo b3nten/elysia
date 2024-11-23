@@ -23,7 +23,7 @@ export class JoltPhysicsWorldComponent extends Behavior
 		await JoltWorld.LoadJoltInstance();
 		this.world = new JoltWorld;
 		this.world.init();
-		console.log("Jolt physics engine initialized.");
+		console.log("Jolt physics behavior initialized.");
 	}
 
 	override onCreate()
@@ -182,11 +182,11 @@ export class PhysicsBodyBehavior extends Behavior {
 		const Jolt = joltBehavior.getJoltInstance()!;
 
 		const shape = joltBehavior.world!.bodyInterface.GetShape(this.#joltBodyID!);
-		let triContext = new Jolt.ShapeGetTriangles(shape, Jolt.AABox.prototype.sBiggest(), shape.GetCenterOfMass(), Jolt.Quat.prototype.sIdentity(), new Jolt.Vec3(1, 1, 1));
-		let vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
-		let buffer = new Three.BufferAttribute(vertices, 3).clone();
+		const triContext = new Jolt.ShapeGetTriangles(shape, Jolt.AABox.prototype.sBiggest(), shape.GetCenterOfMass(), Jolt.Quat.prototype.sIdentity(), new Jolt.Vec3(1, 1, 1));
+		const vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
+		const buffer = new Three.BufferAttribute(vertices, 3).clone();
 		Jolt.destroy(triContext);
-		let geometry = new Three.BufferGeometry();
+		const geometry = new Three.BufferGeometry();
 		geometry.setAttribute('position', buffer);
 		geometry.computeVertexNormals();
 

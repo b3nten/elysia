@@ -22,7 +22,8 @@ export class JoltWorld implements IDestroyable
 
 	static async LoadJoltInstance()
 	{
-		JoltWorld.JoltInstance = isSecureContext() ? await JoltInitMultithreaded() : await JoltInit();
+		console.log("Loading Jolt engine in", isSecureContext() ? "multi-threaded" : "single-threaded", "mode.");
+		JoltWorld.JoltInstance = await JoltInit();
 	}
 
 	get initialized()
@@ -87,6 +88,16 @@ export class JoltWorld implements IDestroyable
 		this.#physicsSystem = this.#joltInterface.GetPhysicsSystem();
 		this.#bodyInterface = this.#physicsSystem.GetBodyInterface();
 		this.#joltInitialized = true;
+
+		const contactListner = new Jolt.ContactListenerJS;
+
+		contactListner.OnContactAdded = (bodyA, bodyB) => {
+			console.log("Contact added between", bodyA, bodyB);
+		}
+
+		this.#physicsSystem.SetContactListener(contactListner);
+
+		console.log("Jolt physics engine initialized.");
 	}
 
 	tick(delta: number, elapsed: number)
