@@ -23,7 +23,7 @@ export class JoltWorld implements IDestroyable
 	static async LoadJoltInstance()
 	{
 		console.log("Loading Jolt engine in", isSecureContext() ? "multi-threaded" : "single-threaded", "mode.");
-		JoltWorld.JoltInstance = await JoltInit();
+		JoltWorld.JoltInstance = isSecureContext() ? await JoltInitMultithreaded() : await JoltInit();
 	}
 
 	get initialized()
