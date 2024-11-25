@@ -8,7 +8,7 @@ const args = parseArgs(Deno.args)
 
 const shell = (entry: string) => `
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
@@ -101,12 +101,10 @@ if(args.dev || args.build)
 			})
 		})
 
-		Deno.addSignalListener("SIGTERM",
-			async () => {
-				await ctx.dispose()
-				Deno.exit()
-			}
-		)
+		for(const sig of ["SIGINT", "SIGBREAK"] as Array<Deno.Signal>)
+		{
+			Deno.addSignalListener(sig, async () => { await ctx.dispose(); Deno.exit() })
+		}
 	}
 	else if (args.build)
 	{
@@ -114,7 +112,7 @@ if(args.dev || args.build)
 		Deno.exit(0);
 	}
 
-	rebuild();
+	await rebuild();
 }
 
 
@@ -129,7 +127,8 @@ router.get("/",
 		}
 	))
 
-router.get("/entry.js", async () => {
+router.get("/entry.js", async () =>
+{
 	await rebuild()
 	return new Response(
 		await Deno.readTextFile("./dist/entry.js"),
