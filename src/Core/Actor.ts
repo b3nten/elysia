@@ -20,8 +20,6 @@ import {
 } from "../Internal/mod.ts";
 import { reportLifecycleError } from "./Errors.ts";
 
-const tempVec2 = new Three.Vector2();
-
 export class Actor extends ActorLifecycle implements IDestroyable
 {
 	[s_IsActor]: boolean = true;
@@ -593,3 +591,5 @@ class ActorQuaternion extends Three.Quaternion
 		this.actor?.markTransformDirty();
 	}
 }
+
+const tempVec2 = new Three.Vector2();
