@@ -4,6 +4,7 @@ import JoltInitMultithreaded from "jolt-physics/wasm-multithread";
 import JoltInit from "jolt-physics/wasm"
 import { PHYSICS_LAYER_COUNT, PhysicsLayer } from "./PhysicsLayer.ts";
 import { isSecureContext } from "../Shared/Platform.ts";
+import {noop} from "../Shared/Utilities.ts";
 
 export class JoltWorld implements IDestroyable
 {
@@ -95,7 +96,11 @@ export class JoltWorld implements IDestroyable
 			console.log("Contact added between", bodyA, bodyB);
 		}
 
-		this.#physicsSystem.SetContactListener(contactListner);
+		contactListner.OnContactPersisted = noop;
+		contactListner.OnContactRemoved = noop;
+		contactListner.OnContactValidate = () => 1;
+
+		// this.#physicsSystem.SetContactListener(contactListner);
 
 		console.log("Jolt physics engine initialized.");
 	}

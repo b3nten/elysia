@@ -70,6 +70,11 @@ export class Actor extends ActorLifecycle implements IDestroyable
 	/** The parent actor of this actor. */
 	get parent(): Actor { return this[s_Parent]!; }
 
+	/**
+	 * If the transform of the object has changed since the last frame.
+	 */
+	get transformDirty () { return this[s_TransformDirty]; }
+
 	/** The position of this actor. */
 	readonly position = new ActorVector;
 

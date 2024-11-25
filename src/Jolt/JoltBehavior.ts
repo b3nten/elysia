@@ -35,7 +35,7 @@ export class JoltPhysicsWorldComponent extends Behavior
 	override onUpdate(delta: number, elapsed: number)
 	{
 		const Jolt = JoltWorld.GetJoltInstance();
-
+		const before_tick_start = performance.now();
 		const pos = new Three.Vector3();
 		const rot = new Three.Quaternion();
 		const scale = new Three.Vector3();
@@ -45,7 +45,7 @@ export class JoltPhysicsWorldComponent extends Behavior
 
 		for (const body of this.bodyBehaviors ?? [])
 		{
-			if(!body.joltBodyID) continue;
+			if(!body.joltBodyID || !body.parent.transformDirty) continue;
 
 			body.parent.worldMatrix.decompose(pos, rot, scale);
 			jPos.Set(pos.x, pos.y, pos.z);
@@ -55,22 +55,26 @@ export class JoltPhysicsWorldComponent extends Behavior
 
 		Jolt.destroy(jPos);
 		Jolt.destroy(jRot);
-
+		const before_tick_end = performance.now();
 		this.world!.tick(delta, elapsed);
-
+		const after_tick_start = performance.now();
 		for (const body of this.bodyBehaviors ?? [])
 		{
-			if(!body.joltBodyID) continue;
+			if(!body.joltBodyID || !this.world!.bodyInterface.IsActive(body.joltBodyID)) continue;
 
 			const worldTransform = this.world!.bodyInterface.GetWorldTransform(body.joltBodyID);
 			const position = worldTransform.GetTranslation();
 			const rotation = worldTransform.GetQuaternion();
 			body.parent.position.set(position.GetX(), position.GetY(), position.GetZ());
 			body.parent.rotation.set(rotation.GetX(), rotation.GetY(), rotation.GetZ(), rotation.GetW());
-			Jolt.destroy(position);
-			Jolt.destroy(rotation);
-			Jolt.destroy(worldTransform);
 		}
+		const after_tick_end = performance.now();
+
+		console.log(
+			"Before tick: ", before_tick_end - before_tick_start,
+			"Tick: ", after_tick_start - before_tick_end,
+			"After tick: ", after_tick_end - after_tick_start
+		)
 	}
 
 	override onDestroy()
@@ -128,9 +132,10 @@ export class PhysicsBodyBehavior extends Behavior {
 	constructor(args: PhysicsBodyBehaviorConstructorArguments)
 	{
 		super();
+		this.static = true;
 		this.#joltBodyCreationSettings = args.bodyCreationSettings;
-		if (args.layer) this.#joltBodyCreationSettings.set_mObjectLayer(args.layer);
-		else this.#joltBodyCreationSettings.set_mObjectLayer(PhysicsLayer.Static);
+		// if (args.layer) this.#joltBodyCreationSettings.set_mObjectLayer(args.layer);
+		// else this.#joltBodyCreationSettings.set_mObjectLayer(PhysicsLayer.Static);
 	}
 
 	override onCreate()
