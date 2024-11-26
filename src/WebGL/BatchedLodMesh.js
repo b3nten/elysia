@@ -188,6 +188,7 @@ class BatchedLodMesh extends Mesh {
 		this.boundingBox = null;
 		this.boundingSphere = null;
 		this.customSort = null;
+		this.frustumCulled = false;
 
 		// stores visible, active, and geometry id per instance and reserved buffer ranges for geometries
 		this._instanceInfo = [];
@@ -1227,7 +1228,7 @@ class BatchedLodMesh extends Mesh {
 		const multiDrawStarts = this._multiDrawStarts;
 		const multiDrawCounts = this._multiDrawCounts;
 		const geometryInfoList = this._geometryInfo;
-		const perObjectFrustumCulled = this.perObjectFrustumCulled;
+		const perObjectFrustumCulled =  this.perObjectFrustumCulled;
 		const indirectTexture = this._indirectTexture;
 		const indirectArray = indirectTexture.image.data;
 
@@ -1251,9 +1252,7 @@ class BatchedLodMesh extends Mesh {
 			_vector.setFromMatrixPosition( camera.matrixWorld ).applyMatrix4( _matrix );
 			_forward.set( 0, 0, - 1 ).transformDirection( camera.matrixWorld ).transformDirection( _matrix );
 			for ( let i = 0, l = instanceInfo.length; i < l; i ++ ) {
-
 				if ( instanceInfo[ i ].visible && instanceInfo[ i ].active ) {
-
 					const geometryId = instanceInfo[ i ].geometryIndex;
 					const instance = instanceInfo[ i ];
 
@@ -1276,7 +1275,6 @@ class BatchedLodMesh extends Mesh {
 						const geometryInfo = geometryInfoList[ geometryId ];
 
 						const z = _temp.subVectors( _sphere.center, _vector ).dot( _forward );
-
 						if(z >= instance.lodRange[0] && z < instance.lodRange[1])
 						{
 							_renderList.push( geometryInfo.start, geometryInfo.count, z, i );
@@ -1288,18 +1286,16 @@ class BatchedLodMesh extends Mesh {
 			// Sort the draw ranges and prep for rendering
 			const list = _renderList.list;
 			const customSort = this.customSort;
+
 			if ( customSort === null ) {
 
 				list.sort( material.transparent ? sortTransparent : sortOpaque );
 
 			} else {
-
 				customSort.call( this, list, camera );
-
 			}
 
 			for ( let i = 0, l = list.length; i < l; i ++ ) {
-
 				const item = list[ i ];
 				multiDrawStarts[ multiDrawCount ] = item.start * bytesPerElement;
 				multiDrawCounts[ multiDrawCount ] = item.count;
@@ -1356,7 +1352,7 @@ class BatchedLodMesh extends Mesh {
 	}
 
 	onBeforeShadow( renderer, object, camera, shadowCamera, geometry, depthMaterial/* , group */ ) {
-		this.onBeforeRender( renderer, null, shadowCamera, geometry, depthMaterial );
+		// this.onBeforeRender( renderer, null, shadowCamera, geometry, depthMaterial );
 	}
 }
 

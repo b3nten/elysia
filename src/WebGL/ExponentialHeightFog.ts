@@ -2,11 +2,18 @@
 import * as Three from "three"
 import { setGlobalUniform } from "./InstallMaterialAddons.ts";
 
+const defaultFogParsFragment = Three.ShaderChunk.fog_pars_fragment;
+const defaultFogFragment = Three.ShaderChunk.fog_fragment;
+const defaultFogParsVertex = Three.ShaderChunk.fog_pars_vertex;
+const defaultFogVertex = Three.ShaderChunk.fog_vertex;
+
 export class ExponentialHeightFog extends Three.FogExp2
 {
 	static hasShaderModifications = false;
+
 	static InstallShaderModifications()
 	{
+
 		if(ExponentialHeightFog.hasShaderModifications) return;
 
 		Three.ShaderChunk.fog_pars_fragment = _NOISE_GLSL + `
@@ -61,6 +68,18 @@ vWorldPosition = fogWorldPosition.xyz;
 `;
 
 		ExponentialHeightFog.hasShaderModifications = true;
+	}
+
+	static UninstallShaderModifications()
+	{
+		if(!ExponentialHeightFog.hasShaderModifications) return;
+
+		Three.ShaderChunk.fog_pars_fragment = defaultFogParsFragment;
+		Three.ShaderChunk.fog_fragment = defaultFogFragment;
+		Three.ShaderChunk.fog_pars_vertex = defaultFogParsVertex;
+		Three.ShaderChunk.fog_vertex = defaultFogVertex;
+
+		ExponentialHeightFog.hasShaderModifications = false;
 	}
 
 	public renderer: Three.WebGLRenderer | null = null;

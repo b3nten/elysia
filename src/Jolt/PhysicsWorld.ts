@@ -6,7 +6,7 @@ import { PHYSICS_LAYER_COUNT, PhysicsLayer } from "./PhysicsLayer.ts";
 import { isSecureContext } from "../Shared/Platform.ts";
 import {noop} from "../Shared/Utilities.ts";
 
-export class JoltWorld implements IDestroyable
+export class PhysicsWorld implements IDestroyable
 {
 	static JoltInstance: typeof Jolt | null = null;
 
@@ -17,14 +17,14 @@ export class JoltWorld implements IDestroyable
 
 	static GetJoltInstance()
 	{
-		if(!JoltWorld.JoltInstance) throw new Error("Jolt physics engine not initialized. Call `await JoltBehavior.Init()` before using Jolt!");
-		return JoltWorld.JoltInstance;
+		if(!PhysicsWorld.JoltInstance) throw new Error("Jolt physics engine not initialized. Call `await JoltBehavior.Init()` before using Jolt!");
+		return PhysicsWorld.JoltInstance;
 	}
 
 	static async LoadJoltInstance()
 	{
 		console.log("Loading Jolt engine in", isSecureContext() ? "multi-threaded" : "single-threaded", "mode.");
-		JoltWorld.JoltInstance = isSecureContext() ? await JoltInitMultithreaded() : await JoltInit();
+		PhysicsWorld.JoltInstance = isSecureContext() ? await JoltInitMultithreaded() : await JoltInit();
 	}
 
 	get initialized()
@@ -52,7 +52,7 @@ export class JoltWorld implements IDestroyable
 
 	init()
 	{
-		const Jolt = JoltWorld.GetJoltInstance();
+		const Jolt = PhysicsWorld.GetJoltInstance();
 
 		if(this.#joltInitialized)
 		{
@@ -61,7 +61,7 @@ export class JoltWorld implements IDestroyable
 		}
 
 		const settings = new Jolt.JoltSettings();
-		settings.mMaxWorkerThreads = 3;
+		settings.mMaxWorkerThreads = 6;
 
 		{
 			const objectFilter = new Jolt.ObjectLayerPairFilterTable(PHYSICS_LAYER_COUNT);
@@ -114,7 +114,7 @@ export class JoltWorld implements IDestroyable
 
 	destructor()
 	{
-		const Jolt = JoltWorld.JoltInstance;
+		const Jolt = PhysicsWorld.JoltInstance;
 		if(!Jolt) return;
 		Jolt.destroy(this.#joltInterface);
 		Jolt.destroy(this.#bodyInterface);

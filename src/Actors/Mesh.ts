@@ -62,7 +62,7 @@ export class Mesh extends Actor
 			if (isMeshObject(lod)) {
 				this.#lods[i] = {
 					// @ts-ignore shortcut for lodgroup as well
-					distance: lod.distance ?? 0,
+					distance: lod.distance ?? -Infinity,
 					meshes: [{
 						geometry: lod.geometry,
 						material: validateMaterial(lod.material),
@@ -72,7 +72,7 @@ export class Mesh extends Actor
 				}
 			} else if (isMeshGroup(lod)) {
 				this.#lods[i] = {
-					distance: 0,
+					distance: -Infinity,
 					meshes: []
 				}
 				for (let j = 0; j < lod.children.length; j++) {
@@ -88,7 +88,7 @@ export class Mesh extends Actor
 				}
 			} else if (isArray(lod)) {
 				this.#lods[i] = {
-					distance: 0,
+					distance:-Infinity,
 					meshes: []
 				}
 				for (let j = 0; j < lod.length; j++) {

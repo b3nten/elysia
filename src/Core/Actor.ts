@@ -209,6 +209,7 @@ export class Actor extends ActorLifecycle implements IDestroyable
 				}
 				this[s_ComponentsByTag].get(tag)!.add(component);
 			}
+			component.markTransformDirty();
 		}
 
 		EventDispatcher.dispatchEvent(new ComponentAddedEvent({ parent: this, child: component }));
