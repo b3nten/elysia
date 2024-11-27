@@ -14,7 +14,7 @@
 			return;
 		}
 		this.#now = performance.now();
-		this.#delta = (this.#now - this.#last) / 1000;
+		this.#delta = Math.min((this.#now - this.#last) / 1000, 0.06);
 		this.#elapsed += this.#delta;
 		this.#last = this.#now;
 	}

@@ -76,6 +76,6 @@ export const s_ComponentsByTag = Symbol("Elysia::ComponentsByTag");
 
 export const s_Attributes = Symbol.for("Elysia::Attributes");
 
-export const SceneRoot = Symbol.for("Elysia::SceneRoot");
+export const s_SceneRoot = Symbol.for("Elysia::SceneRoot");
 
-export const IsScene = Symbol.for("Elysia::IsScene");
+export const s_IsScene = Symbol.for("Elysia::IsScene");

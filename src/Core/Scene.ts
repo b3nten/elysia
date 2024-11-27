@@ -9,7 +9,7 @@ import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { ComponentAddedEvent, ComponentRemovedEvent, TagAddedEvent, TagRemovedEvent } from "./ElysiaEvents.ts";
 import { type Component, isThreeActor } from "./Component.ts";
 import { ComponentSet } from "../Containers/ComponentSet.ts";
-import { IsScene, s_ActiveCamera, s_App, s_Created, s_Destroyed, s_Loaded, s_Object3D, s_OnBeforePhysicsUpdate, s_OnCreate, s_OnDestroy, s_OnLoad, s_OnStart, s_OnUpdate, s_Parent, s_Scene, s_SceneLoadPromise, s_Started, SceneRoot } from "../Internal/mod.ts";
+import { s_IsScene, s_ActiveCamera, s_App, s_Created, s_Destroyed, s_Loaded, s_Object3D, s_OnBeforePhysicsUpdate, s_OnCreate, s_OnDestroy, s_OnLoad, s_OnStart, s_OnUpdate, s_Parent, s_Scene, s_SceneLoadPromise, s_Started, s_SceneRoot } from "../Internal/mod.ts";
 import type { Application } from "./Application.ts";
 import { LifeCycleError, reportLifecycleError } from "./Errors.ts";
 import { AutoInitializedMap } from "../Containers/AutoInitializedMap.ts";
@@ -80,7 +80,7 @@ export class Scene implements IDestroyable
 	{
 		for(const c of components)
 		{
-			this[SceneRoot].addComponent(c);
+			this[s_SceneRoot].addComponent(c);
 		}
 		return this;
 	}
@@ -94,7 +94,7 @@ export class Scene implements IDestroyable
 	{
 		for(const c of components)
 		{
-			this[SceneRoot].removeComponent(c);
+			this[s_SceneRoot].removeComponent(c);
 		}
 		return this;
 	}
@@ -151,7 +151,7 @@ export class Scene implements IDestroyable
 		this.#componentsByType.clear();
 		this[s_App] = null;
 		this[s_Destroyed] = true;
-		this[SceneRoot][s_OnDestroy]();
+		this[s_SceneRoot][s_OnDestroy]();
 	}
 
 	/* **************************************************
@@ -159,7 +159,7 @@ export class Scene implements IDestroyable
 	 ****************************************************/
 
 	/** @internal */
-	[IsScene]: boolean = true;
+	[s_IsScene]: boolean = true;
 
 	/** @internal */
 	[s_SceneLoadPromise]: Future<void> = new Future<void>(noop);
@@ -171,7 +171,7 @@ export class Scene implements IDestroyable
 	[s_Object3D]: Three.Scene = new Three.Scene;
 
 	/** @internal */
-	[SceneRoot]: SceneActor = new SceneActor;
+	[s_SceneRoot]: SceneActor = new SceneActor;
 
 	/** @internal */
 	[s_App]: Application | null = null;
@@ -207,15 +207,15 @@ export class Scene implements IDestroyable
 	{
 		if(this[s_Created] || !this[s_Loaded] || this[s_Destroyed]) return;
 
-		this[SceneRoot][s_App] = this[s_App];
-		this[SceneRoot][s_Scene] = this;
-		this[SceneRoot][s_Parent] = null;
+		this[s_SceneRoot][s_App] = this[s_App];
+		this[s_SceneRoot][s_Scene] = this;
+		this[s_SceneRoot][s_Parent] = null;
 
 		reportLifecycleError(this, this.onCreate);
 
 		this[s_Created] = true;
 
-		this[SceneRoot][s_OnCreate]();
+		this[s_SceneRoot][s_OnCreate]();
 	}
 
 	/** @internal */
@@ -224,7 +224,7 @@ export class Scene implements IDestroyable
 		if(this[s_Started] || !this[s_Created] || this[s_Destroyed]) return;
 		reportLifecycleError(this, this.onStart);
 		this[s_Started] = true;
-		this[SceneRoot][s_OnStart]();
+		this[s_SceneRoot][s_OnStart]();
 	}
 
 	/** @internal */
@@ -235,7 +235,7 @@ export class Scene implements IDestroyable
 		if(!this[s_Started]) this[s_OnStart]();
 		reportLifecycleError(this, this.onBeforePhysicsUpdate, delta, elapsed);
 		if(this.physics.onBeforePhysicsUpdate) reportLifecycleError(this.physics, this.physics.onBeforePhysicsUpdate, delta, elapsed);
-		this[SceneRoot][s_OnBeforePhysicsUpdate](delta, elapsed);
+		this[s_SceneRoot][s_OnBeforePhysicsUpdate](delta, elapsed);
 	}
 
 	/** @internal */
@@ -245,14 +245,14 @@ export class Scene implements IDestroyable
 		if(!this[s_Started]) this[s_OnStart]();
 		reportLifecycleError(this, this.onUpdate, delta, elapsed);
 		if(this.physics?.onUpdate) reportLifecycleError(this.physics, this.physics.onUpdate, delta, elapsed);
-		this[SceneRoot][s_OnUpdate](delta, elapsed);
+		this[s_SceneRoot][s_OnUpdate](delta, elapsed);
 	}
 
 	/** @internal */
 	[s_OnDestroy]()
 	{
 		if(this[s_Destroyed]) return;
-		reportLifecycleError(this, this[SceneRoot].destructor);
+		reportLifecycleError(this, this[s_SceneRoot].destructor);
 		reportLifecycleError(this, this.onDestroy);
 	}
 

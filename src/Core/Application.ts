@@ -8,17 +8,14 @@ import { AssetLoader } from "../Assets/AssetLoader.ts";
 import { Profiler } from "./Profiler.ts";
 import { AudioPlayer } from "../Audio/AudioPlayer.ts";
 import { MouseObserver } from "../Input/Mouse.ts";
-import { type Scene } from "./Scene.ts";
+import type { Scene } from "./Scene.ts";
 import type { RenderPipeline } from "../Rendering/RenderPipeline.ts";
 import { BasicRenderPipeline } from "../Rendering/BasicRenderPipeline.ts";
 import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
 import { ResizeController, ResizeEvent } from "../Shared/Resize.ts";
 import { defaultScheduler } from "../UI/Scheduler.ts";
 import { ElysiaStats } from "../UI/ElysiaStats.ts";
-import {
-	s_App, s_OnBeforePhysicsUpdate, s_OnCreate, s_OnEnable, s_OnEnterScene,
-	s_OnLoad, s_OnResize, s_OnUpdate, s_SceneLoadPromise, SceneRoot
-} from "../Internal/mod.ts";
+import { s_App, s_OnBeforePhysicsUpdate, s_OnCreate, s_OnEnable, s_OnEnterScene, s_OnLoad, s_OnResize, s_OnUpdate, s_SceneLoadPromise, s_SceneRoot } from "../Internal/mod.ts";
 import { GameClock } from "./GameClock.ts";
 import { installMaterialAddonsToPrototypes } from "../WebGL/InstallMaterialAddons.ts";
 
@@ -108,6 +105,17 @@ export class Application {
 	public manualUpdate: boolean;
 
 	/**
+	 * If the application is paused.
+	 * If true, the application will not update or render, but will still process input and events.
+	 */
+	public paused = false;
+
+	/**
+	 * If the application should pause when the window loses focus.
+	 */
+	public pauseOnBlur = false;
+
+	/**
 	 * The render pipeline.
 	 */
 	public get renderPipeline(): RenderPipeline { return this.#renderPipeline!; }
@@ -190,6 +198,9 @@ export class Application {
 			this.#stats = document.createElement("elysia-stats") as ElysiaStats;
 			this.#output.parentElement?.appendChild(this.#stats);
 		}
+
+		globalThis.addEventListener("blur", () => this.pauseOnBlur && (this.paused = true));
+		globalThis.addEventListener("focus", () => this.pauseOnBlur && (this.paused = false));
 	}
 
 	/**
@@ -244,8 +255,8 @@ export class Application {
 			this.#renderPipeline!.onResize(this.#resizeController.width, this.#resizeController.height);
 
 			this.#scene[s_OnCreate]();
-			this.#scene[SceneRoot][s_OnEnterScene]();
-			this.#scene[SceneRoot][s_OnEnable]();
+			this.#scene[s_SceneRoot][s_OnEnterScene]();
+			this.#scene[s_SceneRoot][s_OnEnable]();
 
 			ELYSIA_LOGGER.info("Scene started", scene)
 
@@ -303,18 +314,20 @@ export class Application {
 
 			if(this.#sizeHasChanged)
 			{
-				this.#scene[SceneRoot][s_OnResize](this.#resizeController.width, this.#resizeController.height);
+				this.#scene[s_SceneRoot][s_OnResize](this.#resizeController.width, this.#resizeController.height);
 				this.#renderPipeline!.onResize(this.#resizeController.width, this.#resizeController.height);
 				this.#sizeHasChanged = false;
 			}
 
-			this.#scene[s_OnBeforePhysicsUpdate](this.#clock.delta, this.#clock.elapsed);
-
-			// Scene update
-			this.#scene[s_OnUpdate](this.#clock.delta, this.#clock.elapsed);
-
-			// Scene render
-			this.#renderPipeline?.onRender(this.#scene, this.#scene.getActiveCamera());
+			if(!this.paused)
+			{
+				// Scene physics update
+				this.#scene[s_OnBeforePhysicsUpdate](this.#clock.delta, this.#clock.elapsed);
+				// Scene update
+				this.#scene[s_OnUpdate](this.#clock.delta, this.#clock.elapsed);
+				// Scene render
+				this.#renderPipeline?.onRender(this.#scene, this.#scene.getActiveCamera());
+			}
 
 			// update default UI scheduler
 			this.updateDefaultUiScheduler && defaultScheduler.update();
