@@ -1,6 +1,6 @@
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
-import { ActorLifecycle, type IDestroyable } from "./Lifecycle.ts";
+import { ComponentLifecycle, type IDestroyable } from "./Lifecycle.ts";
 import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { ComponentAddedEvent, ComponentRemovedEvent, TagAddedEvent } from "./ElysiaEvents.ts";
@@ -9,21 +9,11 @@ import type { Scene } from "./Scene.ts";
 import type { Application } from "./Application.ts";
 import type { Constructor } from "../Shared/Utilities.ts";
 import { ComponentSet } from "../Containers/ComponentSet.ts";
-import {
-	s_App, s_ComponentsByTag, s_ComponentsByType, s_Created,
-	s_Destroyed, s_Enabled, s_InScene, s_IsActor,
-	s_LocalMatrix, s_MatrixDirty, s_OnBeforePhysicsUpdate,
-	s_OnCreate, s_OnDestroy, s_OnDisable, s_OnEnable,
-	s_OnEnterScene, s_OnLeaveScene, s_OnResize, s_OnStart,
-	s_OnUpdate, s_Parent, s_Scene, s_Started, s_Static,
-	s_TransformDirty, s_UserEnabled, s_WorldMatrix
-} from "../Internal/mod.ts";
+import {s_App, s_ComponentsByTag, s_ComponentsByType, s_Created, s_Destroyed, s_Enabled, s_InScene, s_IsActor, s_LocalMatrix, s_MatrixDirty, s_OnBeforePhysicsUpdate, s_OnCreate, s_OnDestroy, s_OnDisable, s_OnEnable, s_OnEnterScene, s_OnLeaveScene, s_OnResize, s_OnStart, s_OnUpdate, s_Parent, s_Scene, s_Started, s_Static, s_TransformDirty, s_UserEnabled, s_WorldMatrix } from "../Internal/mod.ts";
 import { reportLifecycleError } from "./Errors.ts";
 
-export class Actor extends ActorLifecycle implements IDestroyable
+export class Actor extends ComponentLifecycle implements IDestroyable
 {
-	[s_IsActor]: boolean = true;
-
 	/**
 	 * Set the actor as static. Static actors and their children do not participate in the update loop, although other lifecycle methods are still called.
 	 * onUpdate, onBeforePhysicsUpdate, and onTransformUpdate are not called for static actors or their children.
@@ -32,7 +22,8 @@ export class Actor extends ActorLifecycle implements IDestroyable
 	 * @default false
 	 */
 	get static () { return this[s_Static]; }
-	set static (value: boolean) {
+	set static (value: boolean)
+	{
 		this[s_Static] = value;
 		if(this.parent)
 		{
@@ -70,9 +61,7 @@ export class Actor extends ActorLifecycle implements IDestroyable
 	/** The parent actor of this actor. */
 	get parent(): Actor { return this[s_Parent]!; }
 
-	/**
-	 * If the transform of the object has changed since the last frame.
-	 */
+	/** If the transform of the object has changed since the last frame. */
 	get transformDirty () { return this[s_TransformDirty]; }
 
 	/** The position of this actor. */
@@ -367,41 +356,61 @@ export class Actor extends ActorLifecycle implements IDestroyable
 	    Internal
 	************************************************************/
 
+	/** @internal */
+	[s_IsActor]: boolean = true;
+
+	/** @internal */
 	[s_Parent]: Actor | null = null;
 
+	/** @internal */
 	[s_Scene]: Scene | null = null;
 
+	/** @internal */
 	[s_App]: Application | null = null;
 
+	/** @internal */
 	[s_Static]: boolean = false;
 
+	/** @internal */
 	[s_Created]: boolean = false;
 
+	/** @internal */
 	[s_Started]: boolean = false;
 
+	/** @internal */
 	[s_Enabled]: boolean = false;
 
+	/** @internal */
 	[s_UserEnabled]: boolean = true;
 
+	/** @internal */
 	[s_InScene]: boolean = false;
 
+	/** @internal */
 	[s_Destroyed]: boolean = false;
 
+	/** @internal */
 	[s_WorldMatrix] = new Three.Matrix4();
 
+	/** @internal */
 	[s_LocalMatrix] = new Three.Matrix4();
 
 	// true after the transform has changed, before onTransformChange is called
+	/** @internal */
 	[s_TransformDirty] = true;
 
 	// true after the transform has changed,
 	// before updateWorldMatrix is called or worldMatrix/localMatrix are accessed
+	/** @internal */
 	[s_MatrixDirty] = true;
 
+	/** @internal */
 	[s_ComponentsByType]: Map<Constructor<Component>, ComponentSet<Component>> = new Map;
 
+	/** @internal */
 	[s_ComponentsByTag]: Map<any, ComponentSet<Component>> = new Map;
 
+	/** @internal */
 	[s_OnEnable]()
 	{
 		if(this[s_Enabled] || !this[s_UserEnabled]) return;
@@ -411,6 +420,7 @@ export class Actor extends ActorLifecycle implements IDestroyable
 		for(const component of this.staticComponents) component[s_OnEnable]();
 	}
 
+	/** @internal */
 	[s_OnDisable]()
 	{
 		if(!this[s_Enabled] || this[s_Destroyed]) return;
@@ -420,6 +430,7 @@ export class Actor extends ActorLifecycle implements IDestroyable
 		for(const component of this.staticComponents) component[s_OnDisable]();
 	}
 
+	/** @internal */
 	[s_OnCreate]()
 	{
 		if(this[s_Created]) return;
@@ -448,6 +459,7 @@ export class Actor extends ActorLifecycle implements IDestroyable
 		}
 	}
 
+	/** @internal */
 	[s_OnEnterScene]()
 	{
 		if(this[s_InScene] || !this[s_Created]) return;
@@ -462,6 +474,7 @@ export class Actor extends ActorLifecycle implements IDestroyable
 		for(const component of this.staticComponents) component[s_OnEnterScene]();
 	}
 
+	/** @internal */
 	[s_OnStart]()
 	{
 		if(this[s_Started]) return;
@@ -477,6 +490,7 @@ export class Actor extends ActorLifecycle implements IDestroyable
 
 	}
 
+	/** @internal */
 	[s_OnBeforePhysicsUpdate](delta: number, elapsed: number)
 	{
 		if(!this[s_Enabled]  || !this[s_InScene]) return;
@@ -493,6 +507,7 @@ export class Actor extends ActorLifecycle implements IDestroyable
 		}
 	}
 
+	/** @internal */
 	[s_OnUpdate](delta: number, elapsed: number)
 	{
 		if(!this[s_Enabled] || !this[s_InScene]) return;
@@ -513,6 +528,7 @@ export class Actor extends ActorLifecycle implements IDestroyable
 		}
 	}
 
+	/** @internal */
 	[s_OnLeaveScene]()
 	{
 		if(this[s_Destroyed]) return;
@@ -523,6 +539,7 @@ export class Actor extends ActorLifecycle implements IDestroyable
 		for(const component of this.staticComponents) component[s_OnLeaveScene]();
 	}
 
+	/** @internal */
 	[s_OnDestroy]()
 	{
 		if(this[s_Destroyed]) return;
@@ -532,6 +549,7 @@ export class Actor extends ActorLifecycle implements IDestroyable
 		for(const component of this.staticComponents) component[s_OnDestroy]();
 	}
 
+	/** @internal */
 	[s_OnResize](width: number, height: number)
 	{
 		reportLifecycleError(this, this.onResize, width, height);

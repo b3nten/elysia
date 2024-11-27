@@ -1,58 +1,36 @@
 import { Actor } from "./Actor.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
-import { IDestroyable } from "./Lifecycle.ts";
+import type { IDestroyable } from "./Lifecycle.ts";
 import { Future } from "../Containers/Future.ts";
-import { bound, Constructor, noop } from "../Shared/Utilities.ts";
-import { Behavior } from "./Behavior.ts";
+import { type Constructor, noop } from "../Shared/Utilities.ts";
+import type { Behavior } from "./Behavior.ts";
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { ComponentAddedEvent, ComponentRemovedEvent, TagAddedEvent, TagRemovedEvent } from "./ElysiaEvents.ts";
-import { Component, isThreeActor } from "./Component.ts";
+import { type Component, isThreeActor } from "./Component.ts";
 import { ComponentSet } from "../Containers/ComponentSet.ts";
-import {
-	s_ActiveCamera,
-	s_App, s_Created, s_Destroyed,
-	s_Loaded, s_Object3D,
-	s_OnBeforePhysicsUpdate,
-	s_OnCreate,
-	s_OnDestroy,
-	s_OnLoad,
-	s_OnStart,
-	s_OnUpdate, s_Parent, s_Scene,
-	s_SceneLoadPromise, s_Started,
-} from "../Internal/mod.ts";
-import { Application } from "./Application.ts";
+import { IsScene, s_ActiveCamera, s_App, s_Created, s_Destroyed, s_Loaded, s_Object3D, s_OnBeforePhysicsUpdate, s_OnCreate, s_OnDestroy, s_OnLoad, s_OnStart, s_OnUpdate, s_Parent, s_Scene, s_SceneLoadPromise, s_Started, SceneRoot } from "../Internal/mod.ts";
+import type { Application } from "./Application.ts";
 import { LifeCycleError, reportLifecycleError } from "./Errors.ts";
 import { AutoInitializedMap } from "../Containers/AutoInitializedMap.ts";
-import { ThreeObject } from "../Actors/ThreeObject.ts";
+import type { ThreeObject } from "../Actors/ThreeObject.ts";
 
-export const Root = Symbol.for("Elysia::Scene::Root");
-
-export const IsScene = Symbol.for("Elysia::IsScene");
-
-export interface Physics
+export interface IScenePhysics extends IDestroyable
 {
 	onLoad?(scene: Scene): void | Promise<void>;
-	onCreate?(): void;
-	onStart?(): void;
-	onEnable?(): void;
-	onDisable?(): void;
 	onBeforePhysicsUpdate?(delta: number, elapsed: number): void;
 	onUpdate?(delta: number, elapsed: number): void;
-	destructor(): void;
 }
 
 export class Scene implements IDestroyable
 {
-	[IsScene]: boolean = true;
-
 	public readonly userData: Map<any, any> = new Map;
 
 	/**
 	 * The physics world for this Scene.
 	 * This runs before other behaviors & actors.
 	 */
-	public physics?: Physics;
+	public physics?: IScenePhysics;
 
 	/** Get the root Three.Scene */
 	get object3d(): Three.Scene { return this[s_Object3D]; }
@@ -102,7 +80,7 @@ export class Scene implements IDestroyable
 	{
 		for(const c of components)
 		{
-			this[Root].addComponent(c);
+			this[SceneRoot].addComponent(c);
 		}
 		return this;
 	}
@@ -116,7 +94,7 @@ export class Scene implements IDestroyable
 	{
 		for(const c of components)
 		{
-			this[Root].removeComponent(c);
+			this[SceneRoot].removeComponent(c);
 		}
 		return this;
 	}
@@ -159,124 +137,130 @@ export class Scene implements IDestroyable
 	public getActiveCamera(): Three.Camera { return this[s_ActiveCamera]; }
 
 	onLoad(): void | Promise<void> {}
-
 	onCreate(){}
-
 	onStart(){}
-
 	onBeforePhysicsUpdate(delta: number, elapsed: number) {}
-
 	onUpdate(delta: number, elapsed: number) {}
-
 	onDestroy(){}
 
 	destructor()
 	{
 		this[s_OnDestroy]();
+		this.physics?.destructor();
+		this.#componentsByTag.clear();
+		this.#componentsByType.clear();
+		this[s_App] = null;
+		this[s_Destroyed] = true;
+		this[SceneRoot][s_OnDestroy]();
 	}
 
+	/* **************************************************
+	 Internal
+	 ****************************************************/
+
+	/** @internal */
+	[IsScene]: boolean = true;
+
+	/** @internal */
+	[s_SceneLoadPromise]: Future<void> = new Future<void>(noop);
+
+	/** @internal */
+	[s_ActiveCamera]: Three.Camera = new Three.PerspectiveCamera();
+
+	/** @internal */
+	[s_Object3D]: Three.Scene = new Three.Scene;
+
+	/** @internal */
+	[SceneRoot]: SceneActor = new SceneActor;
+
+	/** @internal */
+	[s_App]: Application | null = null;
+
+	/** @internal */
+	[s_Loaded] = false;
+
+	/** @internal */
+	[s_Created] = false;
+
+	/** @internal */
+	[s_Started] = false;
+
+	/** @internal */
+	[s_Destroyed] = false;
+
+	/** @internal */
 	async [s_OnLoad]()
 	{
 		if(this[s_Loaded] || this[s_Destroyed]) return;
-
-		try
-		{
-			await Promise.all([this.onLoad(), this.physics?.onLoad?.(this) ?? Promise.resolve()]);
-		}
-		catch(error)
-		{
-			throw new LifeCycleError("onLoad", this, error);
-		}
-
+		await Promise.all([
+			this.onLoad(),
+			this.physics?.onLoad ? this.physics.onLoad(this) : Promise.resolve()
+		]).catch((e) => {
+			throw new LifeCycleError("Scene", "onLoad", e);
+		})
 		this[s_Loaded] = true;
 		this[s_SceneLoadPromise].resolve()
 	}
 
+	/** @internal */
 	[s_OnCreate]()
 	{
 		if(this[s_Created] || !this[s_Loaded] || this[s_Destroyed]) return;
 
-		this[Root][s_App] = this[s_App];
-		this[Root][s_Scene] = this;
-		this[Root][s_Parent] = null;
-
-		// create physics behavior before other behaviors
-		this.physics[s_App] = this[s_App];
-		this.physics[s_Scene] = this;
-		this.physics?.onCreate?.()
+		this[SceneRoot][s_App] = this[s_App];
+		this[SceneRoot][s_Scene] = this;
+		this[SceneRoot][s_Parent] = null;
 
 		reportLifecycleError(this, this.onCreate);
 
 		this[s_Created] = true;
 
-		this[Root][s_OnCreate]();
+		this[SceneRoot][s_OnCreate]();
 	}
 
+	/** @internal */
 	[s_OnStart]()
 	{
 		if(this[s_Started] || !this[s_Created] || this[s_Destroyed]) return;
-		// start physics behavior before other behaviors
-		this.physics?.onStart?.();
 		reportLifecycleError(this, this.onStart);
 		this[s_Started] = true;
-		this[Root][s_OnStart]();
+		this[SceneRoot][s_OnStart]();
 	}
 
+	/** @internal */
 	[s_OnBeforePhysicsUpdate](delta: number, elapsed: number)
 	{
 		if(!this.physics) return;
 		if(this[s_Destroyed]) return;
 		if(!this[s_Started]) this[s_OnStart]();
 		reportLifecycleError(this, this.onBeforePhysicsUpdate, delta, elapsed);
-		this.physics.onBeforePhysicsUpdate?.(delta, elapsed);
-		this[Root][s_OnBeforePhysicsUpdate](delta, elapsed);
-		this.physics.onUpdate?.(delta, elapsed);
+		if(this.physics.onBeforePhysicsUpdate) reportLifecycleError(this.physics, this.physics.onBeforePhysicsUpdate, delta, elapsed);
+		this[SceneRoot][s_OnBeforePhysicsUpdate](delta, elapsed);
 	}
 
+	/** @internal */
 	[s_OnUpdate](delta: number, elapsed: number)
 	{
 		if(this[s_Destroyed]) return;
 		if(!this[s_Started]) this[s_OnStart]();
 		reportLifecycleError(this, this.onUpdate, delta, elapsed);
-		this[Root][s_OnUpdate](delta, elapsed);
+		if(this.physics?.onUpdate) reportLifecycleError(this.physics, this.physics.onUpdate, delta, elapsed);
+		this[SceneRoot][s_OnUpdate](delta, elapsed);
 	}
 
+	/** @internal */
 	[s_OnDestroy]()
 	{
 		if(this[s_Destroyed]) return;
-		reportLifecycleError(this, this[Root].destructor);
+		reportLifecycleError(this, this[SceneRoot].destructor);
 		reportLifecycleError(this, this.onDestroy);
-		this.physics?.destructor();
-		this.#componentsByTag.clear();
-		this.#componentsByType.clear();
-		this[s_App] = null;
-		this[s_Destroyed] = true;
-		this[Root][s_OnDestroy]();
 	}
-
-	[s_SceneLoadPromise]: Future<void> = new Future<void>(noop);
-
-	[s_ActiveCamera]: Three.Camera = new Three.PerspectiveCamera();
-
-	[s_Object3D]: Three.Scene = new Three.Scene;
-
-	[Root]: SceneActor = new SceneActor;
-
-	[s_App]: Application | null = null;
-
-	[s_Loaded] = false;
-
-	[s_Created] = false;
-
-	[s_Started] = false;
-
-	[s_Destroyed] = false;
 
 	#componentsByTag = new AutoInitializedMap<any, ComponentSet<Component>>(ComponentSet)
 	#componentsByType = new AutoInitializedMap<Constructor<Component>, ComponentSet<Component>>(ComponentSet)
 }
 
-export class SceneActor extends Actor
+class SceneActor extends Actor
 {
 	constructor() { super(); }
 }

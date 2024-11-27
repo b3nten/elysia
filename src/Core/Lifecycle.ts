@@ -1,18 +1,18 @@
-import { Actor } from "./Actor.ts";
-import { Scene } from "./Scene.ts";
-// @ts-types="npm:@types/three@^0.169"
-import * as Three from 'three';
+import { uuid } from "../Shared/Utilities.ts";
+import type { Scene } from "./Scene.ts";
+import type * as Three from "three";
 
 /**
- * An interface for objects that can be destroyed.
+ * An interface for objects with a destructor method.
  */
 export interface IDestroyable
 {
 	destructor(): void;
 }
 
-export class ActorLifecycle
+export class ComponentLifecycle
 {
+	public uuid: string = uuid()
 	/**
 	 * Called once when the actor is created.
 	 * This is the first method called in the actor's lifecycle and will only be called once.

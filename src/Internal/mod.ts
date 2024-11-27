@@ -30,8 +30,6 @@ export const s_OnEnterScene = Symbol.for("Elysia::OnEnterScene");
 
 export const s_OnLeaveScene = Symbol.for("Elysia::OnLeaveScene");
 
-export const s_OnReparent = Symbol.for("Elysia::OnReparent");
-
 export const s_OnLoad = Symbol.for("Elysia::OnLoad");
 
 export const s_SceneLoadPromise = Symbol.for("Elysia::SceneLoadPromise");
@@ -77,3 +75,7 @@ export const s_ComponentsByType = Symbol("Elysia::ComponentsByType");
 export const s_ComponentsByTag = Symbol("Elysia::ComponentsByTag");
 
 export const s_Attributes = Symbol.for("Elysia::Attributes");
+
+export const SceneRoot = Symbol.for("Elysia::SceneRoot");
+
+export const IsScene = Symbol.for("Elysia::IsScene");

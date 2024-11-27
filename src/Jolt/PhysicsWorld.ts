@@ -1,10 +1,10 @@
-import { IDestroyable } from "../Core/Lifecycle.ts";
+import type { IDestroyable } from "../Core/Lifecycle.ts";
 import type Jolt from "jolt-physics/wasm-multithread";
-import JoltInitMultithreaded from "jolt-physics/wasm-multithread";
+import JoltInitMultithreaded from "jolt-physics/wasm-compat-multithread";
 import JoltInit from "jolt-physics/wasm"
 import { PHYSICS_LAYER_COUNT, PhysicsLayer } from "./PhysicsLayer.ts";
 import { isSecureContext } from "../Shared/Platform.ts";
-import {noop} from "../Shared/Utilities.ts";
+import {ELYSIA_LOGGER} from "../Shared/Logger.ts";
 
 export class PhysicsWorld implements IDestroyable
 {
@@ -23,7 +23,7 @@ export class PhysicsWorld implements IDestroyable
 
 	static async LoadJoltInstance()
 	{
-		console.log("Loading Jolt engine in", isSecureContext() ? "multi-threaded" : "single-threaded", "mode.");
+		ELYSIA_LOGGER.debug("Loading Jolt engine in", isSecureContext() ? "multi-threaded" : "single-threaded", "mode.");
 		PhysicsWorld.JoltInstance = isSecureContext() ? await JoltInitMultithreaded() : await JoltInit();
 	}
 
@@ -50,18 +50,33 @@ export class PhysicsWorld implements IDestroyable
 		return this.#physicsSystem;
 	}
 
-	init()
+	async init()
 	{
 		const Jolt = PhysicsWorld.GetJoltInstance();
 
 		if(this.#joltInitialized)
 		{
-			console.warn("Jolt physics engine already initialized. Skipping initialization.");
+			ELYSIA_LOGGER.warn("Jolt physics engine already initialized. Skipping initialization.");
 			return;
 		}
 
+		const scriptUrl = "/jolt-physics.worker.js";
+		const contactListener = new Jolt.ContactListenerJS;
+		const workerParams = {
+			contactListenerPtr: Jolt.getPointer(contactListener),
+		}
+
+		// set up worker on other threads
+		if(isSecureContext())
+		{
+			const scriptSrc = await fetch(scriptUrl).then((res) => res.text());
+			const workerUrl = URL.createObjectURL(new Blob([scriptSrc], { type: 'text/javascript' }));
+			// @ts-ignore - no types yet
+			await Jolt.configureWorkerScripts(workerUrl, workerParams);
+		}
+
 		const settings = new Jolt.JoltSettings();
-		settings.mMaxWorkerThreads = 6;
+		settings.mMaxWorkerThreads = 12;
 
 		{
 			const objectFilter = new Jolt.ObjectLayerPairFilterTable(PHYSICS_LAYER_COUNT);
@@ -88,21 +103,17 @@ export class PhysicsWorld implements IDestroyable
 		Jolt.destroy(settings);
 		this.#physicsSystem = this.#joltInterface.GetPhysicsSystem();
 		this.#bodyInterface = this.#physicsSystem.GetBodyInterface();
-		this.#joltInitialized = true;
 
-		const contactListner = new Jolt.ContactListenerJS;
-
-		contactListner.OnContactAdded = (bodyA, bodyB) => {
-			console.log("Contact added between", bodyA, bodyB);
+		// set up worker on main thread
+		if(isSecureContext())
+		{
+			const workerMod = await import(scriptUrl).then((mod) => mod.default);
+			await workerMod(Jolt, workerParams);
+			this.#physicsSystem!.SetContactListener(contactListener);
 		}
 
-		contactListner.OnContactPersisted = noop;
-		contactListner.OnContactRemoved = noop;
-		contactListner.OnContactValidate = () => 1;
-
-		// this.#physicsSystem.SetContactListener(contactListner);
-
-		console.log("Jolt physics engine initialized.");
+		this.#joltInitialized = true;
+		ELYSIA_LOGGER.success("Jolt physics engine initialized.");
 	}
 
 	tick(delta: number, elapsed: number)

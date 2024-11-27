@@ -1,26 +1,18 @@
-import { ActorLifecycle, type IDestroyable } from "./Lifecycle.ts";
+import { ComponentLifecycle, type IDestroyable } from "./Lifecycle.ts";
 import type { Actor } from "./Actor.ts";
 import type { Scene } from "./Scene.ts";
 import type { Application } from "./Application.ts";
 import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { TagAddedEvent } from "./ElysiaEvents.ts";
-import {
-	s_App, s_Created, s_Destroyed, s_Enabled, s_InScene,
-	s_Internal, s_IsBehavior, s_OnBeforePhysicsUpdate, s_OnCreate,
-	s_OnDestroy, s_OnDisable, s_OnEnable, s_OnEnterScene,
-	s_OnLeaveScene, s_OnResize, s_OnStart, s_OnUpdate, s_Parent,
-	s_Scene, s_Started, s_Static, s_Tags, s_UserEnabled
-} from "../Internal/mod.ts";
+import {s_App, s_Created, s_Destroyed, s_Enabled, s_InScene, s_IsBehavior, s_OnBeforePhysicsUpdate, s_OnCreate, s_OnDestroy, s_OnDisable, s_OnEnable, s_OnEnterScene, s_OnLeaveScene, s_OnResize, s_OnStart, s_OnUpdate, s_Parent, s_Scene, s_Started, s_Static, s_Tags, s_UserEnabled } from "../Internal/mod.ts";
 import { reportLifecycleError } from "./Errors.ts";
 
 /**
  * A behavior is a component that can be attached to an actor to add functionality.
- * It has no children but participates in the actor lifecycle.
  */
-export class Behavior extends ActorLifecycle implements IDestroyable
+export class Behavior extends ComponentLifecycle implements IDestroyable
 {
-	[s_IsBehavior]: boolean = true;
 
 	/**
 	 * Static behaviors are not updated during onUpdate, onBeforePhysicsUpdate, or onTransformUpdate.
@@ -69,9 +61,7 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 	/** The tags associated with this behavior. */
 	get tags(): Set<any> { return this[s_Tags]; }
 
-	/**
-	 * Enables this behavior. This means it receives updates and is visible.
-	 */
+	/** Enables this behavior. This means it receives updates and is visible. */
 	public enable()
 	{
 		if(this[s_UserEnabled]) return;
@@ -79,9 +69,7 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 		this[s_OnEnable]();
 	}
 
-	/**
-	 * Disables this behavior. This means it does not receive updates and is not visible.
-	 */
+	/** Disables this behavior. This means it does not receive updates and is not visible. */
 	public disable()
 	{
 		if(!this[s_UserEnabled]) return;
@@ -122,31 +110,46 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 	}
 
 	/* **********************************************************
-	    s_Internal
+	    Internal
 	************************************************************/
 
+	/** @internal */
+	[s_IsBehavior]: boolean = true;
+
+	/** @internal */
 	[s_App]: Application | null = null;
 
+	/** @internal */
 	[s_Scene]: Scene | null = null;
 
+	/** @internal */
 	[s_Parent] : Actor | null = null;
 
+	/** @internal */
 	[s_Tags]:Set<any> = new Set;
 
+	/** @internal */
 	[s_Static] = false;
 
+	/** @internal */
 	[s_Enabled] = false;
 
+	/** @internal */
 	[s_UserEnabled] = true;
 
+	/** @internal */
 	[s_Created] = false;
 
+	/** @internal */
 	[s_Started] = false;
 
+	/** @internal */
 	[s_InScene] = false;
 
+	/** @internal */
 	[s_Destroyed] = false;
 
+	/** @internal */
 	[s_OnEnable]()
 	{
 		if(this[s_Enabled] || !this[s_UserEnabled]) return;
@@ -154,6 +157,7 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 		reportLifecycleError(this, this.onEnable);
 	}
 
+	/** @internal */
 	[s_OnDisable]()
 	{
 		if(!this[s_Enabled] || this[s_Destroyed]) return;
@@ -161,6 +165,7 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 		reportLifecycleError(this, this.onDisable);
 	}
 
+	/** @internal */
 	[s_OnCreate]()
 	{
 		if(this[s_Created]) return;
@@ -173,6 +178,7 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 		this[s_Created] = true;
 	}
 
+	/** @internal */
 	[s_OnEnterScene]()
 	{
 		if(this[s_InScene] || !this[s_Created]) return;
@@ -185,6 +191,7 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 		this[s_InScene] = true;
 	}
 
+	/** @internal */
 	[s_OnStart]()
 	{
 		if(this[s_Started]) return;
@@ -198,6 +205,7 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 		this[s_Started] = true;
 	}
 
+	/** @internal */
 	[s_OnBeforePhysicsUpdate](delta: number, elapsed: number)
 	{
 		if(!this[s_Enabled]  || !this[s_InScene]) return;
@@ -210,6 +218,7 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 		reportLifecycleError(this, this.onBeforePhysicsUpdate, delta, elapsed);
 	}
 
+	/** @internal */
 	[s_OnUpdate](delta: number, elapsed: number)
 	{
 		if(!this[s_Enabled] || !this[s_InScene]) return;
@@ -222,6 +231,7 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 		reportLifecycleError(this, this.onUpdate, delta, elapsed);
 	}
 
+	/** @internal */
 	[s_OnLeaveScene]()
 	{
 		if(this[s_Destroyed]) return;
@@ -230,6 +240,7 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 		this[s_InScene] = false;
 	}
 
+	/** @internal */
 	[s_OnDestroy]()
 	{
 		if(this[s_Destroyed]) return;
@@ -237,6 +248,7 @@ export class Behavior extends ActorLifecycle implements IDestroyable
 		this[s_Destroyed] = true;
 	}
 
+	/** @internal */
 	[s_OnResize](width: number, height: number)
 	{
 		reportLifecycleError(this, this.onResize, width, height);

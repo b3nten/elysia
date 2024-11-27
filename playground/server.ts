@@ -69,6 +69,7 @@ if(args.dev || args.build)
 		splitting: true,
 		sourcemap: "linked",
 		metafile: true,
+		external: ["/jolt-physics.worker.js"],
 		define: {
 			"DEFINE_IS_DEV": mode === "dev" ? "true" : "false",
 		},
@@ -148,5 +149,6 @@ router.get("*", async (request) =>
 	if(res.status >= 400) res = await serveDir(request, { fsRoot: "dist", headers: headers.toArray(), quiet: false })
 	return res
 })
+
 
 export default { fetch: router.fetch }

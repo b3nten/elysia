@@ -8,7 +8,7 @@ import { AssetLoader } from "../Assets/AssetLoader.ts";
 import { Profiler } from "./Profiler.ts";
 import { AudioPlayer } from "../Audio/AudioPlayer.ts";
 import { MouseObserver } from "../Input/Mouse.ts";
-import { Root, type Scene } from "./Scene.ts";
+import { type Scene } from "./Scene.ts";
 import type { RenderPipeline } from "../Rendering/RenderPipeline.ts";
 import { BasicRenderPipeline } from "../Rendering/BasicRenderPipeline.ts";
 import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
@@ -17,7 +17,7 @@ import { defaultScheduler } from "../UI/Scheduler.ts";
 import { ElysiaStats } from "../UI/ElysiaStats.ts";
 import {
 	s_App, s_OnBeforePhysicsUpdate, s_OnCreate, s_OnEnable, s_OnEnterScene,
-	s_OnLoad, s_OnResize, s_OnUpdate, s_SceneLoadPromise
+	s_OnLoad, s_OnResize, s_OnUpdate, s_SceneLoadPromise, SceneRoot
 } from "../Internal/mod.ts";
 import { GameClock } from "./GameClock.ts";
 import { installMaterialAddonsToPrototypes } from "../WebGL/InstallMaterialAddons.ts";
@@ -90,32 +90,6 @@ export interface ApplicationConstructorArguments
 export class Application {
 
 	/**
-	 * The application instance's event queue.
-	 */
-	public readonly events: EventQueue;
-
-	/**
-	 * The application instance's mouse observer.
-	 * The position of the mouse and is updated at the start of each frame.
-	 */
-	public readonly mouse: MouseObserver;
-
-	/**
-	 * The input queue for this application.
-	 */
-	public readonly input: InputQueue = new InputQueue;
-
-	/**
-	 * Application profiler instance.
-	 */
-	public readonly profiler: Profiler;
-
-	/**
-	 * Applications audio player instance.
-	 */
-	public readonly audio: AudioPlayer;
-
-	/**
 	 * If this App should call Elysia UIs `defaultScheduler.update()` in it's update loop.
 	 * @default true
 	 */
@@ -144,28 +118,33 @@ export class Application {
 	public get scene(): Scene | undefined { return this.#scene; }
 
 	/** The Application's AssetLoader instance */
-	get assets(): AssetLoader<any> { return this.#assets; }
+	public get assets(): AssetLoader<any> { return this.#assets; }
 
 	/**
-	 * Checks if the current browser supports WebGL2.
+	 * The application instance's event queue.
 	 */
-	get isWebGl2Supported(): boolean
-	{
-		let canvas: HTMLCanvasElement | undefined;
-		try
-		{
-			canvas = document.createElement( 'canvas' );
-			return !!(globalThis.WebGL2RenderingContext && canvas.getContext( 'webgl2' ));
-		}
-		catch
-		{
-			return false;
-		}
-		finally
-		{
-			canvas?.remove();
-		}
-	}
+	public readonly events: EventQueue;
+
+	/**
+	 * The application instance's mouse observer.
+	 * The position of the mouse and is updated at the start of each frame.
+	 */
+	public readonly mouse: MouseObserver;
+
+	/**
+	 * The input queue for this application.
+	 */
+	public readonly input: InputQueue = new InputQueue;
+
+	/**
+	 * Application profiler instance.
+	 */
+	public readonly profiler: Profiler;
+
+	/**
+	 * Applications audio player instance.
+	 */
+	public readonly audio: AudioPlayer;
 
 	constructor(config: ApplicationConstructorArguments = {})
 	{
@@ -214,6 +193,27 @@ export class Application {
 	}
 
 	/**
+	 * Checks if the current browser supports WebGL2.
+	 */
+	public isWebGl2Supported(): boolean
+	{
+		let canvas: HTMLCanvasElement | undefined;
+		try
+		{
+			canvas = document.createElement( 'canvas' );
+			return !!(globalThis.WebGL2RenderingContext && canvas.getContext( 'webgl2' ));
+		}
+		catch
+		{
+			return false;
+		}
+		finally
+		{
+			canvas?.remove();
+		}
+	}
+
+	/**
 	 * Load a Scene into the application. This will unload the previous Scene.
 	 * @param scene
 	 */
@@ -244,8 +244,8 @@ export class Application {
 			this.#renderPipeline!.onResize(this.#resizeController.width, this.#resizeController.height);
 
 			this.#scene[s_OnCreate]();
-			this.#scene[Root][s_OnEnterScene]();
-			this.#scene[Root][s_OnEnable]();
+			this.#scene[SceneRoot][s_OnEnterScene]();
+			this.#scene[SceneRoot][s_OnEnable]();
 
 			ELYSIA_LOGGER.info("Scene started", scene)
 
@@ -265,8 +265,12 @@ export class Application {
 	/** The main update loop for the application. */
 	public update()
 	{
-		// try {
-			if(!this.#scene || !this.#rendering) throw Error("No s_Scene loaded")
+		try {
+			if(!this.#scene || !this.#rendering)
+			{
+				ELYSIA_LOGGER.debug("Scene or rendering is not ready, skipping update loop.")
+				return;
+			}
 
 			if(this.#errorCount <= this.maxErrorCount)
 			{
@@ -299,7 +303,7 @@ export class Application {
 
 			if(this.#sizeHasChanged)
 			{
-				this.#scene[Root][s_OnResize](this.#resizeController.width, this.#resizeController.height);
+				this.#scene[SceneRoot][s_OnResize](this.#resizeController.width, this.#resizeController.height);
 				this.#renderPipeline!.onResize(this.#resizeController.width, this.#resizeController.height);
 				this.#sizeHasChanged = false;
 			}
@@ -320,13 +324,12 @@ export class Application {
 			this.events.clear();
 
 			this.#errorCount = 0;
-		// }
-		// catch(e)
-		// {
-		// 	ELYSIA_LOGGER.error(e)
-		// 	throw e;
-		// 	this.#errorCount++;
-		// }
+		}
+		catch(e)
+		{
+			ELYSIA_LOGGER.error(e)
+			this.#errorCount++;
+		}
 	}
 
 	/** Destroy the application and all of its resources. */
@@ -344,12 +347,12 @@ export class Application {
 
 	#resizeController: ResizeController;
 	#sizeHasChanged = false;
-	#assets: AssetLoader<any>;
 	#errorCount = 0;
-	#stats: boolean | ElysiaStats = false;
 	#clock = new GameClock;
-	#renderPipeline?: RenderPipeline;
-	#output: HTMLCanvasElement;
 	#scene?: Scene;
 	#rendering = false;
+	readonly #assets: AssetLoader<any>;
+	readonly #stats: boolean | ElysiaStats = false;
+	readonly #renderPipeline?: RenderPipeline;
+	readonly #output: HTMLCanvasElement;
 }

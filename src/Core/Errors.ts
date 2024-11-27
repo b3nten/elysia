@@ -2,32 +2,35 @@ import { isDev } from "../Shared/Asserts.ts";
 
 export class LifeCycleError extends Error
 {
-	constructor(method: string, target: any, cause: any)
+	constructor(method: string, target: string, err: Error)
 	{
-		super(`Lifecycle error in component: ${String(target?.name)} during ${stripSymbolAndElysia(String(method))}: \n${cause.message}`, {cause});
+		super(`In component ${String(target)} during ${String(method)}: ${err.message}\n`);
+		this.stack = err.stack;
+		this.name = "LifeCycleError";
+		this.cause = err.cause;
 	}
 }
 
-export const reportLifecycleError = <T extends any[]>(context: any, method: (...args: T) => any, ...args: T): any => {
-	if(!isDev()) return method.call(context, ...args);
+// deno-lint-ignore no-explicit-any
+export function reportLifecycleError<T extends any[]>(context: any, method: (...args: T) => any, ...args: T): any
+{
+	// call as normal if not in dev mode
+	if(!isDev())
+	{
+		return method.apply(context, args);
+	}
+
 	try
 	{
-		method.call(context, ...args);
+		method.apply(context, args);
 	}
 	catch(err)
 	{
 		if(err instanceof LifeCycleError)
 		{
-			// @ts-ignore
-			err.message = err.message.replace(":", `: ${String(this.constructor.name)} ->`);
 			throw err;
 		}
-		// @ts-ignore
-		throw new LifeCycleError(name, this, err);
+		throw new LifeCycleError(method.name, context.constructor.name, err instanceof Error ? err : new Error(String(err)));
 	}
 }
 
-function stripSymbolAndElysia(str: string) {
-	if(str.startsWith("Symbol(Elysia::")) { return str.slice(15, -1); }
-	else return str;
-}

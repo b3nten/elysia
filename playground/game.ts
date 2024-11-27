@@ -36,7 +36,7 @@ class ShootBallBehavior extends Elysia.Core.Behavior
 			this.scene.activeCamera.getWorldPosition(ball.position);
 			ball.position.add(this.scene.activeCamera.getWorldDirection(new Three.Vector3).multiplyScalar(2));
 			const massSettings = new Jolt.MassProperties;
-			massSettings.set_mMass(50);
+			massSettings.set_mMass(5);
 			const body = (new PhysicsBody({
 				objectLayer: PhysicsLayer.Dynamic,
 				motionType: Jolt.EMotionType_Dynamic,
@@ -50,9 +50,9 @@ class ShootBallBehavior extends Elysia.Core.Behavior
 			ball.addComponent(body);
 			this.scene.addComponent(ball);
 			(this.scene.physics as unknown as PhysicsWorldComponent).world!.bodyInterface.AddImpulse(body.joltBodyID!, new Jolt.Vec3(
-				this.scene.activeCamera.getWorldDirection(new Three.Vector3).x * 2000,
-				this.scene.activeCamera.getWorldDirection(new Three.Vector3).y * 2000,
-				this.scene.activeCamera.getWorldDirection(new Three.Vector3).z * 2000,
+				this.scene.activeCamera.getWorldDirection(new Three.Vector3).x * 400,
+				this.scene.activeCamera.getWorldDirection(new Three.Vector3).y * 400,
+				this.scene.activeCamera.getWorldDirection(new Three.Vector3).z * 400,
 			));
 		})
 	}
@@ -110,19 +110,23 @@ class MyScene extends Elysia.Core.Scene
 
 		const boxGeo = new Three.BoxGeometry(1, 1, 1);
 		const boxMat = new Three.MeshStandardMaterial({ color: 0x00ff00 });
-		for(let w = 0; w <10; w++)
+		for(let w = 0; w <1; w++)
 		{
-			for(let l = 0; l < 10; l++)
+			for(let l = 0; l < 1; l++)
 			{
-				for(let h = 0; h < 10; h++)
+				for(let h = 0; h < 1; h++)
 				{
 					const cube = new Elysia.Actors.Mesh(boxGeo, boxMat);
 					cube.position.set(w + 1, h + 1 + 10, l + 1);
+					const mass = new Jolt.MassProperties;
+					mass.set_mMass(1)
 					cube.addComponent(new PhysicsBody({
 						objectLayer: PhysicsLayer.Dynamic,
 						motionType: Jolt.EMotionType_Dynamic,
 						shape: new Jolt.BoxShape(new Jolt.Vec3(.5, .5, .5), 0.05, undefined),
-						resitution: 1.0,
+						restitution: 0.5,
+						massPropertiesOverride: mass,
+						overrideMassProperties: Jolt.EOverrideMassProperties_CalculateInertia,
 					}))
 					this.addComponent(cube);
 				}
