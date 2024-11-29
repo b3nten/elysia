@@ -1,7 +1,7 @@
 /**
  * @module
  *
- * This module contains the Mesh class, which can be used to render Three.BufferGeometries.
+ * This module contains the Mesh Actor, which can be used to render Three.BufferGeometries.
  *
  * @example
  * ```ts
@@ -19,8 +19,15 @@ import * as Three from 'three';
 // @ts-types="npm:@types/three@^0.169/src/objects/BatchedMesh.js"
 import { BatchedMesh } from "../WebGL/BatchedLodMesh.js"
 
+/**
+ * The Mesh class is used to render Three.BufferGeometries and materials. Meshes are batched according to material, so multiple geometries can be rendered
+ * in a single drawcall if they share the same material. Meshes can also be batched according to distance from the camera, allowing for level of detail (LOD) rendering.
+ */
 export class Mesh extends Actor
 {
+	/**
+	 * Create an LOD group for the Mesh. LOD groups allow you to specify multiple levels of detail for a mesh, which will be rendered based on the distance from the camera.
+	 */
 	static CreateLods = createLodGroup;
 
 	public get visible() { return this.#userVisibility }
@@ -114,19 +121,13 @@ export class Mesh extends Actor
 		}
 	}
 
-	override onEnterScene()
-	{
-		this.addActorToBatchedMesh()
-	}
+	override onEnterScene() { this.addActorToBatchedMesh() }
 
 	override onEnable(): void { this.visible = true; }
 
 	override onDisable(): void { this.visible = false; }
 
-	override onLeaveScene()
-	{
-		this.removeActorFromBatchedMesh();
-	}
+	override onLeaveScene()  { this.removeActorFromBatchedMesh(); }
 
 	private addActorToBatchedMesh()
 	{
@@ -290,17 +291,20 @@ const isMeshObject = (obj: any): obj is MeshObject => obj.geometry !== undefined
 type MeshGroup = { children: Array<any> }
 const isMeshGroup = (obj: any): obj is MeshGroup => Array.isArray(obj.children);
 
+/**
+ * A LOD group for Meshes. LOD groups allow you to specify multiple levels of detail for a mesh, which will be rendered based on the distance from the camera.
+ * @param mesh The LOD group to create.
+ */
 export type LodGroup = {
 	levels: Array<{
+		/** The max distance at which this LOD will be rendered. */
 		distance: number,
 		geometry: Three.BufferGeometry,
 		material: Three.Material
 	}>,
-	/** @experimental not functional */
-	billboard?: Three.Mesh
-	/** @experimental not functional */
-	occlusionMesh?: Three.Mesh
+	/** The maximum distance at which the highest LOD will be rendered. */
 	maxDrawDistance?: number
 }
+/** Create an LOD group for the Mesh. LOD groups allow you to specify multiple levels of detail for a mesh, which will be rendered based on the distance from the camera. */
 export function createLodGroup(mesh: LodGroup) { return mesh }
 const isLodGroup = (obj: any): obj is LodGroup => Array.isArray(obj.levels);

@@ -1,3 +1,29 @@
+/**
+ * @module Core
+ * @description The Actor is the fundamental unit of gameplay in Elysia. Actors have a world transform and can have components attached to them, forming a tree-like hierarchy.
+ * Actors participate in the Component lifecycle and will "tick" each frame if they are not specified as `static`.
+ * Actors can be queried by a `tag`, an arbitrary piece of data that can be attached to any Actor, or by their type.
+ * This allows for Actors to independently implement game logic and manage interactions with other Actors.
+ * Like Behaviors, Actors can access their parent actor, scene, and application inside lifecycle callbacks.
+ *
+ * @example
+ * ```ts
+ * import { Actor } from "elysia";
+ *
+ * class Enemy extends Actor
+ * {
+ * 		onCreate()
+ * 		{
+ * 			this.addTag("enemy");
+ * 			this.addComponent(new HealthComponent);
+ * 		}
+ * }
+ *
+ * // potential gameplay logic
+ * enemy.getComponentsByType(HealthComponent).first.health = 50;
+ * ```
+ */
+
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
 import { ComponentLifecycle, type IDestroyable } from "./Lifecycle.ts";
@@ -12,6 +38,9 @@ import { ComponentSet } from "../Containers/ComponentSet.ts";
 import {s_App, s_ComponentsByTag, s_ComponentsByType, s_Created, s_Destroyed, s_Enabled, s_InScene, s_IsActor, s_LocalMatrix, s_MatrixDirty, s_OnBeforePhysicsUpdate, s_OnCreate, s_OnDestroy, s_OnDisable, s_OnEnable, s_OnEnterScene, s_OnLeaveScene, s_OnResize, s_OnStart, s_OnUpdate, s_Parent, s_Scene, s_Started, s_Static, s_TransformDirty, s_UserEnabled, s_WorldMatrix } from "../Internal/mod.ts";
 import { reportLifecycleError } from "./Errors.ts";
 
+/**
+ * Base Actor class. Actors are the fundamental unit of gameplay in Elysia.
+ */
 export class Actor extends ComponentLifecycle implements IDestroyable
 {
 	/**

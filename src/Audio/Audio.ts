@@ -1,3 +1,34 @@
+/**
+ * @module Audio
+ * @description This module provides an Audio class for managing and controlling audio playback.
+ * It offers various methods for playing, pausing, stopping, and manipulating audio, as well as
+ * properties for controlling volume, loop, and other audio characteristics.
+ *
+ * @example
+ * ```ts
+ * // Create an AudioPlayer instance
+ * const player = new AudioPlayer();
+ *
+ * // Load and create an Audio instance
+ * const audioBytes = await fetch("path/to/audio.mp3").then(res => res.arrayBuffer());
+ * const audio = player.createAudio({ bytes: audioBytes });
+ *
+ * // Play the audio
+ * audio.play();
+ *
+ * // Pause the audio after 5 seconds
+ * setTimeout(() => {
+ *   audio.pause();
+ * }, 5000);
+ *
+ * // Change volume
+ * audio.volume = 0.5;
+ *
+ * // Seek to a specific position
+ * audio.seek(10); // Seek to 10 seconds
+ * ```
+ */
+
 import { AudioPlayer } from "./AudioPlayer.ts";
 import { Queue } from "../Containers/Queue.ts";
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
@@ -6,14 +37,23 @@ import { ASSERT } from "../Shared/Asserts.ts";
 import { isBrowser } from "../Shared/Asserts.ts";
 import { clamp } from "../Math/Other.ts";
 
-export interface AudioConstructorArguments {
+export interface AudioConstructorArguments
+{
+	/** An array buffer containing the audio file. */
 	bytes: ArrayBuffer;
+	/** The audio player instance to use. */
 	player: AudioPlayer;
+	/** Whether the audio should loop. */
 	loop?: boolean;
+	/** The volume of the audio. */
 	volume?: number;
+	/** An array of custom audio nodes to connect to the audio source. */
 	nodes?: AudioNode[];
 }
 
+/**
+ * Represents an audio instance with playback controls and properties.
+ */
 export class Audio
 {
 	/** Whether the audio is currently loading */

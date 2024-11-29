@@ -1,3 +1,30 @@
+/**
+ * @module Core
+ * @description Scenes are the top-level container for Actors and Behaviors in Elysia. They have a seperate Scene lifecycle that includes an asnychronous onLoad method.
+ * Scenes can be added to the Application to be rendered and updated.
+ *
+ * @example
+ * ```ts
+ * import { Actor } from "elysia";
+ *
+ * class MyScene extends Scene
+ * {
+		someAsyncResource: Promise<any>;
+ * 		onLoad()
+ * 		{
+ * 			this.someAsyncResource = fetch("https://example.com/resource.json").then(r => r.json());
+ * 		}
+ *
+ * 		onCreate()
+ * 		{
+ * 			// Add actors to the scene
+ * 			const actor = new Actor();
+ * 			this.addComponent(actor);
+ * 		}
+ * }
+ * ```
+ */
+
 import { Actor } from "./Actor.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';

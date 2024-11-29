@@ -1,3 +1,29 @@
+/**
+ * @module Core
+ * @description Behaviors are the other type of component in Elysia. Unlike {@link Actor}s, behaviors are do not have a transform or child components.
+ * Their purpose is to augment the functionality of an actor. Behaviors can be added to actors to add functionality.
+ * Like Actors, Behaviors participate in the Component lifecycle and can access the parent actor, scene, and application inside lifecycle callbacks.
+ *
+ * @example
+ * ```ts
+ * import { Actor } from "elysia";
+ *
+ * class HealthComponent extends Behavior
+ * {
+ * 		health = 100;
+ * 		maxHealth = 100;
+ *
+ * 		onCreate()
+ * 		{
+ * 			this.health = this.maxHealth;
+ * 			this.parent; // access the parent actor
+ * 			this.scene; // access the scene
+ * 			this.app; // access the application
+ * 		}
+ * }
+ * ```
+ */
+
 import { ComponentLifecycle, type IDestroyable } from "./Lifecycle.ts";
 import type { Actor } from "./Actor.ts";
 import type { Scene } from "./Scene.ts";

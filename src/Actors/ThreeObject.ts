@@ -8,6 +8,11 @@ import {
 	s_OnUpdate, s_TransformDirty,
 } from "../Internal/mod.ts";
 
+/**
+ * An actor that wraps a Three.js Object3D.
+ * By default, the object3d is an empty Object3D. If you want to create a specific type of object, you can pass it in the constructor.
+ * The Actor's transform is propagated to the object3d transform. No manual update is required.
+ */
 export class ThreeObject<T extends Three.Object3D = Three.Object3D> extends Actor {
 
 	constructor(public object3d: T = new Three.Object3D() as T)
