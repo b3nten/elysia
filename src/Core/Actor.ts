@@ -366,7 +366,6 @@ export class Actor extends ComponentLifecycle implements IDestroyable
 	destructor()
 	{
 		if(this[s_Destroyed]) return;
-		console.log(this, this.components)
 		for(const component of this.components)
 		{
 			component.destructor();

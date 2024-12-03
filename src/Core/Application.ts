@@ -386,6 +386,7 @@ export class Application {
 
 		for(const prop of Object.values(this)) if(isDestroyable(prop)) prop.destructor();
 
+		if(this.#stats instanceof ElysiaStats) this.#stats.remove();
 		this.#scene?.destructor();
 		this.#renderPipeline?.destructor();
 		this.#output.remove();
