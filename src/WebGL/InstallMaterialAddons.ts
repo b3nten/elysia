@@ -40,12 +40,15 @@ export function installMaterialAddonsToPrototypes(materials: typeof Three.Materi
 	}
 }
 
+const installedMaterialAddons = new Set<Three.Material>
 /**
  * Installs the material addons to the given material.
  * @param material
  */
 export function installMaterialAddon(material: any)
 {
+	if(installedMaterialAddons.has(material)) return;
+	installedMaterialAddons.add(material);
 	Object.defineProperty(material, "onBeforeRender", {
 		get() {
 			ASSERT_INTERNAL(this);

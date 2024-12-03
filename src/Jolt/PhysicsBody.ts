@@ -4,7 +4,7 @@ import type Jolt from "jolt-physics/wasm-multithread";
 import { Behavior } from "../Core/Behavior.ts";
 import { ThreeObject } from "../Actors/ThreeObject.ts";
 import { PhysicsWorldComponent } from "./PhysicsWorldComponent.ts";
-import {PhysicsLayer} from "./PhysicsLayer.ts";
+import type {PhysicsLayer} from "./PhysicsLayer.ts";
 import {isUndefined} from "../Shared/Asserts.ts";
 
 const DEBUG_MATERIAL = new Three.LineBasicMaterial({ color: 0x00ff00, linewidth: 10, });

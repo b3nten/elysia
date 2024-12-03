@@ -27,7 +27,7 @@
 
 import { Future } from "../Containers/Future.ts";
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
-import { Maybe, MaybePromise } from "../Shared/Utilities.ts";
+import type { Maybe, MaybePromise } from "../Shared/Utilities.ts";
 import { clamp } from "../Math/Other.ts";
 import { BeginLoadEvent, LoadedEvent, ErrorEvent, ProgressEvent } from "../Events/Event.ts";
 

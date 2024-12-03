@@ -22,6 +22,7 @@ import type {
 } from "three";
 import { env } from "./Platform.ts";
 import { toBoolean } from "./Utilities.ts";
+import process from "node:process";
 
 export class AssertionError extends Error
 {
@@ -176,7 +177,7 @@ globalThis.ELYSIA_DEV = undefined;
 export function isDev(): boolean
 {
 	// @ts-ignore - lol
-	return typeof globalThis.ELYSIA_DEV === "boolean" ? globalThis.ELYSIA_DEV : process.env.NODE_ENV === "development" || import.meta.DEV;
+	return globalThis.ELYSIA_DEV;
 }
 
 // @ts-ignore - Node specific

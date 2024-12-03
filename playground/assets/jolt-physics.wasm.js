@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 // This is Web Assembly version of Jolt Physics, see: https://github.com/jrouwe/JoltPhysics.js
 
+import process from "node:process";
 var Jolt = (() => {
 	var _scriptName = import.meta.url;
 

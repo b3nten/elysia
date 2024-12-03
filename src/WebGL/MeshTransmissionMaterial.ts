@@ -330,13 +330,13 @@ export class MeshTransmissionMaterial extends Three.MeshPhysicalMaterial
 		this.uniforms.buffer = { value: this.fboMain.texture }
 	}
 
-	fboBack: Three.WebGLRenderTarget = new Three.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+	fboBack: Three.WebGLRenderTarget = new Three.WebGLRenderTarget(globalThis.innerWidth, globalThis.innerHeight, {
 		minFilter: Three.LinearFilter,
 		magFilter: Three.LinearFilter,
 		type: Three.HalfFloatType,
 	})
 
-	fboMain: Three.WebGLRenderTarget = new Three.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+	fboMain: Three.WebGLRenderTarget = new Three.WebGLRenderTarget(globalThis.innerWidth, globalThis.innerHeight, {
 		minFilter: Three.LinearFilter,
 		magFilter: Three.LinearFilter,
 		type: Three.HalfFloatType,

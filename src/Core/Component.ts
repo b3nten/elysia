@@ -1,6 +1,6 @@
-import { Actor } from "./Actor.ts";
-import { Behavior } from "./Behavior.ts";
-import { ThreeObject } from "../Actors/ThreeObject.ts";
+import type { Actor } from "./Actor.ts";
+import type { Behavior } from "./Behavior.ts";
+import type { ThreeObject } from "../Actors/ThreeObject.ts";
 import { s_IsBehavior, s_IsActor } from "../Internal/mod.ts";
 
 /**

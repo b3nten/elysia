@@ -363,8 +363,10 @@ export class Actor extends ComponentLifecycle implements IDestroyable
 	 * Destroys this actor and all its components.
 	 * Recursively destroys all children actors, starting from the deepest children.
 	 */
-	destructor() {
+	destructor()
+	{
 		if(this[s_Destroyed]) return;
+		console.log(this, this.components)
 		for(const component of this.components)
 		{
 			component.destructor();

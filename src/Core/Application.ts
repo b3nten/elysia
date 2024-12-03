@@ -1,7 +1,7 @@
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
-import { LogLevel } from "../Logging/Levels.ts";
-import { ASSERT, isDestroyable, isDev } from "../Shared/Asserts.ts";
+import type { LogLevel } from "../Logging/Levels.ts";
+import {ASSERT, isBrowser, isDestroyable} from "../Shared/Asserts.ts";
 import { EventQueue } from "../Events/EventQueue.ts";
 import { InputQueue } from "../Input/InputQueue.ts";
 import { AssetLoader } from "../Assets/AssetLoader.ts";
@@ -11,7 +11,7 @@ import { MouseObserver } from "../Input/Mouse.ts";
 import type { Scene } from "./Scene.ts";
 import type { RenderPipeline } from "../Rendering/RenderPipeline.ts";
 import { BasicRenderPipeline } from "../Rendering/BasicRenderPipeline.ts";
-import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
+import { ELYSIA_LOGGER, SET_ELYSIA_LOGLEVEL } from "../Shared/Logger.ts";
 import { ResizeController, ResizeEvent } from "../Shared/Resize.ts";
 import { defaultScheduler } from "../UI/Scheduler.ts";
 import { ElysiaStats } from "../UI/ElysiaStats.ts";
@@ -90,7 +90,7 @@ export class Application {
 	 * If this App should call Elysia UIs `defaultScheduler.update()` in it's update loop.
 	 * @default true
 	 */
-	public updateDefaultUiScheduler: boolean;
+	public updateDefaultUiScheduler?: boolean;
 
 	/**
 	 * The maximum number of consecutive errors that can occur inside update() before stopping.
@@ -102,7 +102,7 @@ export class Application {
 	 * If the application should not schedule updates automatically.
 	 * If true, you must call `Application.update()` manually.
 	*/
-	public manualUpdate: boolean;
+	public manualUpdate?: boolean;
 
 	/**
 	 * If the application is paused.
@@ -131,13 +131,13 @@ export class Application {
 	/**
 	 * The application instance's event queue.
 	 */
-	public readonly events: EventQueue;
+	public readonly events!: EventQueue;
 
 	/**
 	 * The application instance's mouse observer.
 	 * The position of the mouse and is updated at the start of each frame.
 	 */
-	public readonly mouse: MouseObserver;
+	public readonly mouse!: MouseObserver;
 
 	/**
 	 * The input queue for this application.
@@ -147,21 +147,28 @@ export class Application {
 	/**
 	 * Application profiler instance.
 	 */
-	public readonly profiler: Profiler;
+	public readonly profiler!: Profiler;
 
 	/**
 	 * Applications audio player instance.
 	 */
-	public readonly audio: AudioPlayer;
+	public readonly audio!: AudioPlayer;
 
 	constructor(config: ApplicationConstructorArguments = {})
 	{
+		if(!isBrowser()) return;
+
 		this.loadScene = this.loadScene.bind(this)
 		this.destructor = this.destructor.bind(this)
 		this.update = this.update.bind(this)
 
 		// @ts-ignore - global
-		globalThis.SET_ELYSIA_LOGLEVEL(config.logLevel ?? isDev() ? LogLevel.Debug : LogLevel.Production)
+		if(config.logLevel)
+		{
+			SET_ELYSIA_LOGLEVEL(config.logLevel)
+		}
+
+		ELYSIA_LOGGER.debug("Creating application instance", config)
 
 		this.manualUpdate = config.manualUpdate ?? false;
 		this.events = config.eventQueue ?? new EventQueue
@@ -208,6 +215,12 @@ export class Application {
 	 */
 	public isWebGl2Supported(): boolean
 	{
+		if(!isBrowser())
+		{
+			ELYSIA_LOGGER.warn("isWebGl2Supported() is only available in the browser.")
+			return false;
+		}
+
 		let canvas: HTMLCanvasElement | undefined;
 		try
 		{
@@ -230,6 +243,12 @@ export class Application {
 	 */
 	public async loadScene(scene: Scene)
 	{
+		if(!isBrowser())
+		{
+			ELYSIA_LOGGER.warn("loadScene() is only available in the browser.")
+			return
+		}
+
 		ASSERT(this.renderPipeline && this.#output && scene)
 
 		try
@@ -276,6 +295,12 @@ export class Application {
 	/** The main update loop for the application. */
 	public update()
 	{
+		if(!isBrowser())
+		{
+			ELYSIA_LOGGER.warn("update() is only available in the browser.")
+			return false;
+		}
+
 		try {
 			if(!this.#scene || !this.#rendering)
 			{
@@ -348,7 +373,15 @@ export class Application {
 	/** Destroy the application and all of its resources. */
 	public destructor()
 	{
+
+		if(!isBrowser())
+		{
+			ELYSIA_LOGGER.warn("destructor() is only available in the browser.")
+			return false;
+		}
+
 		ELYSIA_LOGGER.debug("Destroying application")
+
 		this.#rendering = false;
 
 		for(const prop of Object.values(this)) if(isDestroyable(prop)) prop.destructor();
@@ -358,14 +391,14 @@ export class Application {
 		this.#output.remove();
 	}
 
-	#resizeController: ResizeController;
+	#resizeController!: ResizeController;
 	#sizeHasChanged = false;
 	#errorCount = 0;
 	#clock = new GameClock;
 	#scene?: Scene;
 	#rendering = false;
-	readonly #assets: AssetLoader<any>;
+	readonly #assets!: AssetLoader<any>;
 	readonly #stats: boolean | ElysiaStats = false;
 	readonly #renderPipeline?: RenderPipeline;
-	readonly #output: HTMLCanvasElement;
+	readonly #output!: HTMLCanvasElement;
 }

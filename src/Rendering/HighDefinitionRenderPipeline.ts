@@ -1,7 +1,7 @@
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
 import { RenderPipeline } from "./RenderPipeline.ts";
-import { Scene } from "../Core/Scene.ts";
+import type { Scene } from "../Core/Scene.ts";
 import * as Postprocessing from "postprocessing"
 import { ExponentialHeightFog } from "../WebGL/ExponentialHeightFog.ts";
 

@@ -279,7 +279,7 @@ export class Scene implements IDestroyable
 	[s_OnDestroy]()
 	{
 		if(this[s_Destroyed]) return;
-		reportLifecycleError(this, this[s_SceneRoot].destructor);
+		reportLifecycleError(this[s_SceneRoot], this[s_SceneRoot].destructor);
 		reportLifecycleError(this, this.onDestroy);
 	}
 

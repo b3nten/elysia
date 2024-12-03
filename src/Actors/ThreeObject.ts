@@ -5,7 +5,6 @@ import {
 	s_Destroyed,
 	s_OnEnterScene,
 	s_OnLeaveScene,
-	s_OnUpdate, s_TransformDirty,
 } from "../Internal/mod.ts";
 
 /**

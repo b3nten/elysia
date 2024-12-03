@@ -4,6 +4,7 @@ import { QueuedEvent } from "./QueuedEvent.ts";
 import type { IDestroyable } from "../Core/Lifecycle.ts";
 import { MouseObserver } from "./Mouse.ts";
 import type { MouseCode } from "./MouseCode.ts";
+import {isBrowser} from "@elysiatech/engine/Shared/Asserts.ts";
 
 interface InputQueueConstructorArguments
 {
@@ -60,11 +61,13 @@ interface InputQueueConstructorArguments
 export class InputQueue implements IDestroyable
 {
 
-	public readonly mouse: MouseObserver;
+	public readonly mouse!: MouseObserver;
 
 	constructor(args: InputQueueConstructorArguments = {})
 	{
-		this.mouse = new MouseObserver(args.mouseTarget ?? window.document.body);
+		if(!isBrowser()) return;
+
+		this.mouse = new MouseObserver(args.mouseTarget ?? globalThis.document.body);
 
 		this.keyDownHandler = this.keyDownHandler.bind(this);
 		this.keyUpHandler = this.keyUpHandler.bind(this);

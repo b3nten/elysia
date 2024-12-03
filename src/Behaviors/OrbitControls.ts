@@ -13,7 +13,7 @@ import { OrbitControls as OrbitControlsImpl } from "three/examples/jsm/controls/
 import { Behavior } from "../Core/Behavior.ts";
 import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
 import { isThreeActor } from "../Core/Component.ts";
-import { ThreeObject } from "../Actors/ThreeObject.ts";
+import type { ThreeObject } from "../Actors/ThreeObject.ts";
 
 const _q1 = new Three.Quaternion();
 const _m1 = new Three.Matrix4();

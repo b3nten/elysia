@@ -12,7 +12,7 @@
 
 import { Behavior } from "../Core/Behavior.ts";
 import { isThreeActor } from "../Core/Component.ts";
-import { ThreeObject } from "../Actors/ThreeObject.ts";
+import type { ThreeObject } from "../Actors/ThreeObject.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
 

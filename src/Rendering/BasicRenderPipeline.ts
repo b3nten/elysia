@@ -1,5 +1,5 @@
 import { RenderPipeline } from "./RenderPipeline.ts";
-import { Scene } from "../Core/Scene.ts";
+import type { Scene } from "../Core/Scene.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
 
@@ -26,16 +26,15 @@ export class BasicRenderPipeline extends RenderPipeline
 		this.renderer.shadowMap.enabled = this.args.shadows ?? true;
 		this.renderer.shadowMap.type = Three.PCFSoftShadowMap;
 		if (this.args.devicePixelRatio) { this.renderer.setPixelRatio(this.args.devicePixelRatio); }
-		else { this.renderer.setPixelRatio(window.devicePixelRatio); }
+		else { this.renderer.setPixelRatio(globalThis.devicePixelRatio); }
 		if (this.args.toneMapping) { this.renderer.toneMapping = this.args.toneMapping ?? Three.ACESFilmicToneMapping; }
 		if (this.args.toneMappingExposure) { this.renderer.toneMappingExposure = this.args.toneMappingExposure; }
 	}
 
 	override onResize(width: number, height: number)
 	{
-		console.log("Resizing " + width + " " + height);
 		this.renderer?.setSize(width, height, false);
-		this.renderer?.setPixelRatio(window.devicePixelRatio);
+		this.renderer?.setPixelRatio(globalThis.devicePixelRatio);
 	}
 
 	onRender(scene: Scene, camera: Three.Camera)

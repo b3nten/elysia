@@ -6,8 +6,7 @@ export const ELYSIA_LOGGER: Logger = createLogger({
 	name: "ELYSIA"
 });
 
-// @ts-ignore - global
-globalThis.SET_ELYSIA_LOGLEVEL = (level: LogLevel) =>
+export function SET_ELYSIA_LOGLEVEL(level: LogLevel)
 {
 	ELYSIA_LOGGER.level = level;
 }

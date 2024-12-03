@@ -1,5 +1,6 @@
+import "./SSRPolyfill.ts";
 import type { Constructor } from "../Shared/Utilities.ts";
-import { ElysiaElement } from "./ElysiaElement.ts";
+import type { ElysiaElement } from "./ElysiaElement.ts";
 
 /**
  * Define a custom element component with a static `Tag` property.

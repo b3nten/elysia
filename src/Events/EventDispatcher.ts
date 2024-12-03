@@ -1,5 +1,5 @@
 import { BaseEvent, type SerializableEvent, } from "./Event.ts";
-import { type Constructor, Serializable } from "../Shared/Utilities.ts";
+import type { Constructor, Serializable } from "../Shared/Utilities.ts";
 import { isWorker } from "../Shared/Platform.ts";
 import { hasKeys } from "../Shared/Asserts.ts";
 

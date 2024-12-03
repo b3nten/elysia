@@ -1,3 +1,4 @@
+import "./SSRPolyfill.ts";
 import * as LitHtml from "lit-html"
 import { type Scheduler, defaultScheduler } from "./Scheduler.ts";
 import { isFunction } from "../Shared/Asserts.ts";

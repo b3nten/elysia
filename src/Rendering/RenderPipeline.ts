@@ -1,7 +1,7 @@
-import { IDestroyable, RenderPipelineLifecycle } from "../Core/Lifecycle.ts";
-import { Scene } from "../Core/Scene.ts";
+import type { IDestroyable, RenderPipelineLifecycle } from "../Core/Lifecycle.ts";
+import type { Scene } from "../Core/Scene.ts";
 // @ts-types="npm:@types/three@^0.169"
-import * as Three from 'three';
+import type * as Three from 'three';
 import { s_OnCreate } from "../Internal/mod.ts";
 import {
 	addMaterialBeforeCompileCallback,

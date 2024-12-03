@@ -1,6 +1,6 @@
-import { gradients, RGB } from "./Gradients.ts";
+import { gradients, type RGB } from "./Gradients.ts";
 import { format, stringGradient } from "./Formatting.ts";
-import { Writer } from "./Writer.ts";
+import type { Writer } from "./Writer.ts";
 
 export class FancyConsoleWriter implements Writer {
 
