@@ -16,6 +16,11 @@ export function noop() {}
 export type Constructor<T, A extends any[] = any[]> = new (...args: A) => T
 
 /**
+ * Specifies the instance type of a class, ignoring access modifiers on the constructor.
+ * */
+export type InstanceOfClass<T> = T extends { prototype: infer R } ? R : never;
+
+/**
  * Union possibly empty type.
  */
 export type Maybe<T> = T | null | undefined;

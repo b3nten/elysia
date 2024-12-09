@@ -25,7 +25,7 @@
  * ```
  */
 
-import { Actor } from "./Actor.ts";
+import {Actor} from "./Actor.ts";
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three';
 import type { IDestroyable } from "./Lifecycle.ts";
