@@ -105,16 +105,17 @@ export class OrbitControls extends Behavior
 {
 	controls?: OrbitControlsImpl;
 
-	/**
-	 * Whether the camera should be damped smooth or not.
-	 * @default false
-	 */
-	get smooth(): number { return this.#smooth; }
-	set smooth(value: number)
+	constructor(target?: HTMLElement)
 	{
-		if(this.controls) this.controls.enableDamping = value > 0;
-		if(this.controls) this.controls.dampingFactor = value;
-		this.#smooth = value;
+		super();
+		this.#target = target;
+	}
+
+	setControlSetting(key: NonFunctionPropertyNames<OrbitControlsImpl>, value: any)
+	{
+		if(!this.controls) this.#settings[key] = value;
+		// @ts-ignore
+		else this.controls[key] = value;
 	}
 
 	override onCreate()
@@ -133,10 +134,11 @@ export class OrbitControls extends Behavior
 
 		const adaptor = new CameraActorAdaptor(camera) as unknown as Three.Camera
 
-		this.controls = new OrbitControlsImpl(adaptor, this.app.renderPipeline.getRenderer().domElement);
-
-		this.controls.enableDamping = this.#smooth > 0;
-		this.controls.dampingFactor = this.#smooth;
+		this.controls = new OrbitControlsImpl(adaptor, this.#target ?? this.app.renderPipeline.getRenderer().domElement);
+		for(const key in this.#settings){
+			// @ts-ignore
+			this.controls[key] = this.#settings[key];
+		}
 	}
 
 	override onUpdate()
@@ -147,5 +149,10 @@ export class OrbitControls extends Behavior
 		}
 	}
 
-	#smooth = 0.2;
+	#target: any;
+	#settings: Record<any,any> = {};
 }
+
+type NonFunctionPropertyNames<T> = {
+	[K in keyof T]: T[K] extends Function ? never : K;
+}[keyof T];
