@@ -52,11 +52,25 @@ export class ComponentLifecycle
 	protected onTransformUpdate(): void {}
 
 	/**
+	 * Called before onUpdate.
+	 * @param delta
+	 * @param elapsed
+	 */
+	protected onPreUpdate(delta: number, elapsed: number): void {}
+
+	/**
 	 * Called every frame when the actor is updated. This is the last step before rendering.
 	 * @param delta The time in seconds since the last frame.
 	 * @param elapsed The time in seconds since the application was instantiated.
 	 */
 	protected onUpdate(delta: number, elapsed: number): void {}
+
+	/**
+	 * Called after onUpdate.
+	 * @param delta
+	 * @param elapsed
+	 */
+	protected onPostUpdate(delta: number, elapsed: number): void {}
 
 	/**
 	 * Called when the actor is disabled. This occurs when the actor leaves the s_Scene, or when

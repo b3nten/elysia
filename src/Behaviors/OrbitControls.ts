@@ -139,13 +139,14 @@ export class OrbitControls extends Behavior
 			// @ts-ignore
 			this.controls[key] = this.#settings[key];
 		}
+
 	}
 
-	override onUpdate()
+	override onPreUpdate(d: number)
 	{
 		if(this.controls)
 		{
-			this.controls.update();
+			this.controls.update(d);
 		}
 	}
 

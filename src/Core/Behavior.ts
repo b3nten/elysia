@@ -31,7 +31,31 @@ import type { Application } from "./Application.ts";
 import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { TagAddedEvent } from "./ElysiaEvents.ts";
-import {s_App, s_Created, s_Destroyed, s_Enabled, s_InScene, s_IsBehavior, s_OnBeforePhysicsUpdate, s_OnCreate, s_OnDestroy, s_OnDisable, s_OnEnable, s_OnEnterScene, s_OnLeaveScene, s_OnResize, s_OnStart, s_OnUpdate, s_Parent, s_Scene, s_Started, s_Static, s_Tags, s_UserEnabled } from "../Internal/mod.ts";
+import {
+	s_App,
+	s_Created,
+	s_Destroyed,
+	s_Enabled,
+	s_InScene,
+	s_IsBehavior,
+	s_OnBeforePhysicsUpdate,
+	s_OnCreate,
+	s_OnDestroy,
+	s_OnDisable,
+	s_OnEnable,
+	s_OnEnterScene,
+	s_OnLeaveScene, s_OnPostUpdate,
+	s_OnPreUpdate,
+	s_OnResize,
+	s_OnStart,
+	s_OnUpdate,
+	s_Parent,
+	s_Scene,
+	s_Started,
+	s_Static,
+	s_Tags,
+	s_UserEnabled
+} from "../Internal/mod.ts";
 import { reportLifecycleError } from "./Errors.ts";
 
 /**
@@ -245,6 +269,12 @@ export class Behavior extends ComponentLifecycle implements IDestroyable
 	}
 
 	/** @internal */
+	[s_OnPreUpdate](delta: number, elapsed: number)
+	{
+		reportLifecycleError(this, this.onPreUpdate, delta, elapsed);
+	}
+
+	/** @internal */
 	[s_OnUpdate](delta: number, elapsed: number)
 	{
 		if(!this[s_Enabled] || !this[s_InScene]) return;
@@ -255,6 +285,12 @@ export class Behavior extends ComponentLifecycle implements IDestroyable
 		}
 		if(!this[s_Started]) this[s_OnStart]();
 		reportLifecycleError(this, this.onUpdate, delta, elapsed);
+	}
+
+	/** @internal */
+	[s_OnPostUpdate](delta: number, elapsed: number)
+	{
+		reportLifecycleError(this, this.onPostUpdate, delta, elapsed);
 	}
 
 	/** @internal */

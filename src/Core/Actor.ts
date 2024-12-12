@@ -35,7 +35,36 @@ import type { Scene } from "./Scene.ts";
 import type { Application } from "./Application.ts";
 import type { Constructor } from "../Shared/Utilities.ts";
 import { ComponentSet } from "../Containers/ComponentSet.ts";
-import {s_App, s_ComponentsByTag, s_ComponentsByType, s_Created, s_Destroyed, s_Enabled, s_InScene, s_IsActor, s_LocalMatrix, s_MatrixDirty, s_OnBeforePhysicsUpdate, s_OnCreate, s_OnDestroy, s_OnDisable, s_OnEnable, s_OnEnterScene, s_OnLeaveScene, s_OnResize, s_OnStart, s_OnUpdate, s_Parent, s_Scene, s_Started, s_Static, s_TransformDirty, s_UserEnabled, s_WorldMatrix } from "../Internal/mod.ts";
+import {
+	s_App,
+	s_ComponentsByTag,
+	s_ComponentsByType,
+	s_Created,
+	s_Destroyed,
+	s_Enabled,
+	s_InScene,
+	s_IsActor,
+	s_LocalMatrix,
+	s_MatrixDirty,
+	s_OnBeforePhysicsUpdate,
+	s_OnCreate,
+	s_OnDestroy,
+	s_OnDisable,
+	s_OnEnable,
+	s_OnEnterScene,
+	s_OnLeaveScene, s_OnPostUpdate,
+	s_OnPreUpdate,
+	s_OnResize,
+	s_OnStart,
+	s_OnUpdate,
+	s_Parent,
+	s_Scene,
+	s_Started,
+	s_Static,
+	s_TransformDirty,
+	s_UserEnabled,
+	s_WorldMatrix
+} from "../Internal/mod.ts";
 import { reportLifecycleError } from "./Errors.ts";
 
 /**
@@ -538,6 +567,19 @@ export class Actor extends ComponentLifecycle implements IDestroyable
 	}
 
 	/** @internal */
+	[s_OnPreUpdate](delta: number, elapsed: number)
+	{
+		if(!this[s_Enabled] || !this[s_InScene]) return;
+		if(this.destroyed)
+		{
+			ELYSIA_LOGGER.warn(`Trying to update a destroyed actor: ${this}`);
+			return;
+		}
+		reportLifecycleError(this, this.onPreUpdate, delta, elapsed);
+		for(const component of this.components) component[s_OnPreUpdate](delta, elapsed);
+	}
+
+	/** @internal */
 	[s_OnUpdate](delta: number, elapsed: number)
 	{
 		if(!this[s_Enabled] || !this[s_InScene]) return;
@@ -552,10 +594,20 @@ export class Actor extends ComponentLifecycle implements IDestroyable
 			this[s_TransformDirty] = false;
 		}
 		reportLifecycleError(this, this.onUpdate, delta, elapsed);
-		for(const component of this.components)
+		for(const component of this.components) component[s_OnUpdate](delta, elapsed);
+	}
+
+	/** @internal */
+	[s_OnPostUpdate](delta: number, elapsed: number)
+	{
+		if(!this[s_Enabled] || !this[s_InScene]) return;
+		if(this.destroyed)
 		{
-			component[s_OnUpdate](delta, elapsed);
+			ELYSIA_LOGGER.warn(`Trying to update a destroyed actor: ${this}`);
+			return;
 		}
+		reportLifecycleError(this, this.onPostUpdate, delta, elapsed);
+		for(const component of this.components) component[s_OnPostUpdate](delta, elapsed);
 	}
 
 	/** @internal */

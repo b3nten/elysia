@@ -22,7 +22,11 @@ export const s_OnEnable = Symbol.for("Elysia::OnEnable");
 
 export const s_OnDisable = Symbol.for("Elysia::OnDisable");
 
+export const s_OnPreUpdate = Symbol.for("Elysia::OnPreUpdate");
+
 export const s_OnUpdate = Symbol.for("Elysia::OnUpdate");
+
+export const s_OnPostUpdate = Symbol.for("Elysia::OnPostUpdate");
 
 export const s_OnBeforePhysicsUpdate = Symbol.for("Elysia::OnBeforePhysicsUpdate");
 

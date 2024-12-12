@@ -36,7 +36,27 @@ import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { ComponentAddedEvent, ComponentRemovedEvent, TagAddedEvent, TagRemovedEvent } from "./ElysiaEvents.ts";
 import { type Component, isThreeActor } from "./Component.ts";
 import { ComponentSet } from "../Containers/ComponentSet.ts";
-import { s_IsScene, s_ActiveCamera, s_App, s_Created, s_Destroyed, s_Loaded, s_Object3D, s_OnBeforePhysicsUpdate, s_OnCreate, s_OnDestroy, s_OnLoad, s_OnStart, s_OnUpdate, s_Parent, s_Scene, s_SceneLoadPromise, s_Started, s_SceneRoot } from "../Internal/mod.ts";
+import {
+	s_IsScene,
+	s_ActiveCamera,
+	s_App,
+	s_Created,
+	s_Destroyed,
+	s_Loaded,
+	s_Object3D,
+	s_OnBeforePhysicsUpdate,
+	s_OnCreate,
+	s_OnDestroy,
+	s_OnLoad,
+	s_OnStart,
+	s_OnUpdate,
+	s_Parent,
+	s_Scene,
+	s_SceneLoadPromise,
+	s_Started,
+	s_SceneRoot,
+	s_OnPreUpdate, s_OnPostUpdate
+} from "../Internal/mod.ts";
 import type { Application } from "./Application.ts";
 import { LifeCycleError, reportLifecycleError } from "./Errors.ts";
 import { AutoInitializedMap } from "../Containers/AutoInitializedMap.ts";
@@ -272,7 +292,9 @@ export class Scene implements IDestroyable
 		if(!this[s_Started]) this[s_OnStart]();
 		reportLifecycleError(this, this.onUpdate, delta, elapsed);
 		if(this.physics?.onUpdate) reportLifecycleError(this.physics, this.physics.onUpdate, delta, elapsed);
+		this[s_SceneRoot][s_OnPreUpdate](delta, elapsed);
 		this[s_SceneRoot][s_OnUpdate](delta, elapsed);
+		this[s_SceneRoot][s_OnPostUpdate](delta, elapsed);
 	}
 
 	/** @internal */
