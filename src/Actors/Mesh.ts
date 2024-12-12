@@ -18,6 +18,7 @@ import { isArray } from "../Shared/Asserts.ts";
 import * as Three from 'three';
 // @ts-types="npm:@types/three@^0.169/src/objects/BatchedMesh.js"
 import { BatchedMesh } from "../WebGL/BatchedLodMesh.js"
+import {s_BoundingBox} from "@elysiatech/engine/Internal/mod.ts";
 
 /**
  * The Mesh class is used to render Three.BufferGeometries and materials. Meshes are batched according to material, so multiple geometries can be rendered
@@ -111,6 +112,25 @@ export class Mesh extends Actor
 				}
 			}
 		}
+	}
+
+	override getBoundingBox()
+	{
+		// todo: improve performance
+		const box = new Three.Box3();
+		for(let i = 0; i < this.#lods.length; i++)
+		{
+			for(let l = 0; l < this.#lods[i].meshes.length; l++)
+			{
+				const mesh = this.#lods[i].meshes[l];
+				const batchedMesh = this.#meshMap?.get(mesh.key)?.batchedMesh;
+				if(batchedMesh === undefined) continue;
+				const temp = new Three.Box3();
+				box.union(batchedMesh.getBoundingBoxAt(mesh.instanceId, temp) ?? temp);
+			}
+		}
+		this[s_BoundingBox].copy(box);
+		return this[s_BoundingBox];
 	}
 
 	override onCreate()

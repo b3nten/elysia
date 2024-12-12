@@ -2,6 +2,7 @@
 import * as Three from 'three';
 import { Actor } from "../Core/Actor.ts";
 import {
+	s_BoundingBox,
 	s_Destroyed,
 	s_OnEnterScene,
 	s_OnLeaveScene,
@@ -36,6 +37,12 @@ export class ThreeObject<T extends Three.Object3D = Three.Object3D> extends Acto
 		this.worldMatrix.decompose(this.object3d.position, this.object3d.quaternion, this.object3d.scale);
 		this.object3d.updateMatrix()
 		this.object3d.updateMatrixWorld();
+	}
+
+	override getBoundingBox()
+	{
+		this[s_BoundingBox].setFromObject(this.object3d);
+		return this[s_BoundingBox];
 	}
 
 	override [s_OnLeaveScene]()

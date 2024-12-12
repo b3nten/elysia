@@ -36,7 +36,7 @@ import type { Application } from "./Application.ts";
 import type { Constructor } from "../Shared/Utilities.ts";
 import { ComponentSet } from "../Containers/ComponentSet.ts";
 import {
-	s_App,
+	s_App, s_BoundingBox,
 	s_ComponentsByTag,
 	s_ComponentsByType,
 	s_Created,
@@ -190,6 +190,11 @@ export class Actor extends ComponentLifecycle implements IDestroyable
 		if(!this[s_UserEnabled]) return;
 		this[s_UserEnabled] = false;
 		this[s_OnDisable]();
+	}
+
+	public getBoundingBox(): Three.Box3
+	{
+		return this[s_BoundingBox];
 	}
 
 	/**
@@ -468,6 +473,9 @@ export class Actor extends ComponentLifecycle implements IDestroyable
 
 	/** @internal */
 	[s_ComponentsByTag]: Map<any, ComponentSet<Component>> = new Map;
+
+	/** @internal */
+	[s_BoundingBox] = new Three.Box3();
 
 	/** @internal */
 	[s_OnEnable]()
