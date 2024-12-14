@@ -1,6 +1,30 @@
-import { ASSERT, isBrowser } from "../Core/Asserts.ts";
+/**
+ * @module AudioPlayer
+ * @description A module for managing audio playback in browser environments.
+ *
+ * This module provides an AudioPlayer class that handles audio context creation,
+ * audio instance management, and various audio control methods.
+ *
+ * @example
+ * ```ts
+ * const player = new AudioPlayer();
+ * const audio = player.createAudio({ src: 'path/to/audio.mp3' });
+ *
+ * audio.play();
+ *
+ * // Mute all audio when window loses focus
+ * player.muteOnBlur = true;
+ *
+ * // Stop all audio
+ * player.stopAll();
+ */
+
+import { ASSERT, isBrowser } from "../Shared/Asserts.ts";
 import { Audio, type AudioConstructorArguments } from "./Audio.ts";
 
+/**
+ * Represents an audio player that manages multiple audio instances.
+ */
 export class AudioPlayer
 {
 	/** Get the shared AudioContext */
@@ -70,6 +94,11 @@ export class AudioPlayer
 		}
 	}
 
+	/**
+	 * Creates a new Audio instance.
+	 * @param {AudioConstructorArguments} args - The arguments for creating the Audio instance.
+	 * @returns {Audio} A new Audio instance.
+	 */
 	createAudio(args: AudioConstructorArguments): Audio
 	{
 		if(!isBrowser())
@@ -80,6 +109,9 @@ export class AudioPlayer
 		return new Audio(Object.assign(args, { player: this }));
 	}
 
+	/**
+	 * Mutes all active audio instances associated with this player.
+	 */
 	muteAll()
 	{
 		if (!isBrowser()) return;
@@ -91,6 +123,9 @@ export class AudioPlayer
 		});
 	}
 
+	/**
+	 * Unmutes all active audio instances associated with this player.
+	 */
 	unmuteAll()
 	{
 		if (!isBrowser()) return;
@@ -102,6 +137,9 @@ export class AudioPlayer
 		});
 	}
 
+	/**
+	 * Pauses all active audio instances associated with this player.
+	 */
 	pauseAll() {
 		if (!isBrowser()) return;
 		this.instances.forEach((ref) => {
@@ -112,6 +150,9 @@ export class AudioPlayer
 		});
 	}
 
+	/**
+	 * Stops all active audio instances associated with this player.
+	 */
 	stopAll() {
 		if (!isBrowser()) return;
 		this.instances.forEach((ref) => {
@@ -122,6 +163,11 @@ export class AudioPlayer
 		});
 	}
 
+	/**
+	 * Creates an AudioBuffer from the given input.
+	 * @param {ArrayBuffer} input - The input buffer to decode.
+	 * @returns {Promise<AudioBuffer | undefined>} A promise that resolves to the created AudioBuffer, or undefined if not in a browser environment.
+	 */
 	createAudioBuffer(
 		input: ArrayBuffer,
 	): Promise<AudioBuffer | undefined> {
@@ -138,26 +184,6 @@ export class AudioPlayer
 		this.cache.set(input, AudioPlayer.GetContext().decodeAudioData(input));
 
 		return this.cache.get(input)!;
-	}
-
-	constructor()
-	{
-		if(!isBrowser())
-			return;
-
-		setInterval(() =>
-		{
-			requestIdleCallback(() =>
-			{
-				for (const ref of this.instances)
-				{
-					if (!ref.deref())
-					{
-						this.instances.delete(ref);
-					}
-				}
-			})
-		}, 10000);
 	}
 
 	#muteOnBlur = false;

@@ -44,10 +44,9 @@
  *
  */
 
-export * from "./Levels.ts";
-export * from "./Writer.ts";
-export * from "./Logger.ts";
-export * from "./Formatting.ts";
-export * from "./Gradients.ts";
-export * from "./FancyConsoleWriter.ts";
-export * from "./BasicConsoleWriter.ts";
+export { LogLevel} from "./Levels.ts";
+export { type Writer } from "./Writer.ts";
+export { Logger, createLogger } from "./Logger.ts";
+export { gradients } from "./Gradients.ts";
+export { FancyConsoleWriter } from "./FancyConsoleWriter.ts";
+export { BasicConsoleWriter } from "./BasicConsoleWriter.ts";

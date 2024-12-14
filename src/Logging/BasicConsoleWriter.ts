@@ -1,4 +1,4 @@
-import { Writer } from "./Writer.ts";
+import type { Writer } from "./Writer.ts";
 
 export class BasicConsoleWriter implements Writer
 {

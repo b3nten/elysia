@@ -11,7 +11,7 @@
  * map.has("foo"); // true
  */
 
-import { Constructor } from "../Core/Utilities.ts";
+import type { Constructor } from "../Shared/Utilities.ts";
 
 /**
  * A map of sets which automatically initializes a set for a key if it doesn't exist.

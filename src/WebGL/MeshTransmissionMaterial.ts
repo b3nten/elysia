@@ -7,8 +7,8 @@
 
 // @ts-types="npm:@types/three@^0.169"
 import * as Three from 'three'
-import type { Application } from "../Core/ApplicationEntry.ts";
-import type { Scene } from "../Scene/Scene.ts";
+import type { Application } from "../Core/Application.ts";
+import type { Scene } from "../Core/Scene.ts";
 interface Uniform<T>
 {
 	value: T
@@ -330,13 +330,13 @@ export class MeshTransmissionMaterial extends Three.MeshPhysicalMaterial
 		this.uniforms.buffer = { value: this.fboMain.texture }
 	}
 
-	fboBack: Three.WebGLRenderTarget = new Three.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+	fboBack: Three.WebGLRenderTarget = new Three.WebGLRenderTarget(globalThis.innerWidth, globalThis.innerHeight, {
 		minFilter: Three.LinearFilter,
 		magFilter: Three.LinearFilter,
 		type: Three.HalfFloatType,
 	})
 
-	fboMain: Three.WebGLRenderTarget = new Three.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+	fboMain: Three.WebGLRenderTarget = new Three.WebGLRenderTarget(globalThis.innerWidth, globalThis.innerHeight, {
 		minFilter: Three.LinearFilter,
 		magFilter: Three.LinearFilter,
 		type: Three.HalfFloatType,

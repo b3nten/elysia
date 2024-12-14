@@ -1,12 +1,12 @@
-import { Destroyable } from "../Core/Lifecycle.ts";
-import { Component } from "./Component.ts";
-import { Entity } from "./Entity.ts";
+import type { IDestroyable } from "../Core/Lifecycle.ts";
+import type { Component } from "./Component.ts";
+import type { Entity } from "./Entity.ts";
 import { CatchAndReport } from "./ErrorHandler.ts";
-import { World } from "./World.ts";
+import type { World } from "./World.ts";
 import * as Internal from "./Internal.ts";
-import { Constructor, uuid } from "../Core/Utilities.ts";
+import { uuid } from "../Shared/Utilities.ts";
 
-export abstract class System implements Destroyable
+export abstract class System implements IDestroyable
 {
 	constructor(protected world: World){}
 

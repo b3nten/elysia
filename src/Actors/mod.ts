@@ -1,19 +1,15 @@
 /**
- * @module
- * This module provides a collection of actors that can be used in a scene.
+ * @module Actors
+ * @description This module provides a collection of actors that can be used in a scene.
  */
 
-export * from "./SkyActor.ts";
-export * from "./PointLightActor.ts";
-export * from "./FirstPersonActor.ts";
-export * from "./EnvironmentActor.ts";
-export * from "./DebugActor.ts";
-export * from "./GridActor.ts";
-export * from "./MeshActor.ts";
-export * from "./PerspectiveCameraActor.ts";
-export * from "./OrthographicCameraActor.ts";
-export * from "./Primitives.ts";
-export * from "./ModelActor.ts";
-export * from "./DirectionalLightActor.ts";
-export * from "./AmbientLightActor.ts";
-export * from "./TextActor.ts";
+export { AmbientLight } from "./AmbientLight.ts";
+export { DirectionalLight } from "./DirectionalLight.ts";
+export { PointLight } from "./PointLight.ts";
+export { Environment } from "./Environment.ts";
+export { Mesh } from "./Mesh.ts";
+export { ThreeObject } from "./ThreeObject.ts";
+export { OrthographicCamera } from "./OrthographicCamera.ts";
+export { PerspectiveCamera } from "./PerspectiveCamera.ts";
+export { PrimitiveMesh } from "./PrimitiveMesh.ts";
+export { Sky } from "./Sky.ts";

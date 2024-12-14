@@ -3,23 +3,41 @@
   "version": "2024.1.1",
   "license": "MIT",
   "tasks": {
-    "build": "deno run -A cli.ts playground:build",
-    "dev": "deno run -A cli.ts dev",
+    "build": "cd playground && deno serve -A server.ts --build",
+    "dev": "cd playground && deno serve -A server.ts --dev",
+    "dryrun": "deno publish --dry-run",
+    "watcher": "deno run -A cli.ts playground:dev",
     "deploy": "deno cli.ts playground:deploy"
   },
   "imports": {
-    "@dimforge/rapier3d-compat": "npm:@dimforge/rapier3d-compat@^0.14.0",
-    "@luca/esbuild-deno-loader": "jsr:@luca/esbuild-deno-loader@^0.11.0",
-    "@std/http": "jsr:@std/http@^1.0.9",
-    "corel-color-picker": "npm:corel-color-picker@^0.2.3",
+    "jolt-physics": "npm:jolt-physics@^0.29.0",
     "lit-html": "npm:lit-html@^3.2.1",
-    "postprocessing": "npm:postprocessing@^6.36.3",
-    "three": "npm:three@^0.169.0",
-    "troika-three-text": "npm:troika-three-text@^0.50.1",
-    "uhtml": "npm:uhtml@^4.5.11"
+    "postprocessing": "npm:postprocessing@^6.36.4",
+    "three": "npm:three@^0.170.0"
   },
   "exports": {
-    ".": "./src/mod.ts"
+    ".": "./src/mod.ts",
+    "./actors": "./src/Actors/mod.ts",
+    "./assets": "./src/Assets/mod.ts",
+    "./audio": "./src/Audio/mod.ts",
+    "./behaviors": "./src/Behaviors/mod.ts",
+    "./containers": "./src/Containers/mod.ts",
+    "./core": "./src/Core/mod.ts",
+    "./events": "./src/Events/mod.ts",
+    "./input": "./src/Input/mod.ts",
+    "./logging": "./src/Logging/mod.ts",
+    "./math": "./src/Math/mod.ts",
+    "./rendering": "./src/Rendering/mod.ts",
+    "./ui": "./src/UI/mod.ts",
+    "./webgl": "./src/WebGL/mod.ts",
+    "./asserts": "./src/Shared/Asserts.ts",
+    "./guard": "./src/Shared/Guard.ts",
+    "./hashkey": "./src/Shared/HashKey.ts",
+    "./injection": "./src/Shared/InjectionContainer.ts",
+    "./platform": "./src/Shared/Platform.ts",
+    "./resize": "./src/Shared/Resize.ts",
+    "./track": "./src/Shared/Track.ts",
+    "./utilities": "./src/Shared/Utilities.ts"
   },
   "compilerOptions": {
     "lib": [
@@ -36,5 +54,10 @@
       "playground/**"
     ],
     "entrypoint": "playground/server.ts"
+  },
+  "publish": {
+    "include": [
+      "./src"
+    ]
   }
 }

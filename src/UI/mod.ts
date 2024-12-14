@@ -43,14 +43,8 @@
  * ```
  */
 
-export * from "./ElysiaSplash.ts";
-export * from "./ElysiaElement.ts";
-export * from "./Scheduler.ts";
-export * from "./ElysiaStats.ts";
-export * from "./Css.ts";
-export * from "./DefineComponent.ts";
-export * from "./UpdateStrategy.ts";
-export * from "./Theme.ts";
-export * from "./ElysiaImmediateElement.ts";
-export * from "./ElysiaCrossHair.ts";
-export * from "./Internal.ts";
+export { ElysiaElement } from "./ElysiaElement.ts";
+export { defaultScheduler, Scheduler } from "./Scheduler.ts";
+export { default as css } from "./Css.ts";
+export { default as defineComponent } from "./DefineComponent.ts";
+export { OffscreenUpdateStrategy } from "./UpdateStrategy.ts";

@@ -1,25 +1,26 @@
 /**
  * @module Events
- * This module provides event handling functionality.
+ *
+ * @description This module provides event handling functionality.
  * It includes base event types, synchronous event dispatching, and event queuing capabilities.
  *
  * Core Components:
  *
  * 1. Base Events (Event.ts):
- * - ElysiaEvent<T>: Base class for all events with generic type support
+ * - BaseEvent<T>: Base class for all events with generic type support
  * - BeginLoadEvent: Signals the start of a loading operation
  * - ProgressEvent: Reports progress updates
  * - LoadedEvent: Signals completion of loading
  * - ErrorEvent: Reports error conditions
  *
  * 2. Event Dispatcher (EventDispatcher.ts):
- * ElysiaEventDispatcher provides immediate, synchronous event handling with:
+ * EventDispatcher provides immediate, synchronous event handling with:
  * - Static and instance-based event dispatch
  * - Type-safe event listener registration
  * - Automatic error handling for listeners
  *
  * 3. Event Queue (EventQueue.ts):
- * ElysiaEventQueue implements a double-buffered event queue system for:
+ * EventQueue implements a double-buffered event queue system for:
  * - Controlled event processing
  * - Deferred event handling
  * - Safe event accumulation during processing
@@ -27,27 +28,30 @@
  * @example Basic Event Usage
  * ```typescript
  * // Define a custom event
- * class MyEvent extends ElysiaEvent<string> {}
+ * class MyEvent extends BaseEvent<string> {}
+ * // Define a serialized event
+ * const SerializedEvent = createSerializableEvent<string>("SerializedEvent");
  *
  * // Using the dispatcher
- * const dispatcher = new ElysiaEventDispatcher();
+ * const dispatcher = new EventDispatcher();
  * dispatcher.addEventListener(MyEvent, (message) => console.log(message));
+ * dispatcher.addEventListener(SerializedEvent, (data) => console.log(data));
  * dispatcher.dispatchEvent(new MyEvent("Hello!"));
+ * dispatcher.dispatchEvent(SerializedEvent, "Serialized message");
  *
  * // Using the queue
- * const queue = new ElysiaEventQueue();
+ * const queue = new EventQueue();
  * queue.subscribe(MyEvent, (message) => console.log(message));
  * queue.push(new MyEvent("Queued message"));
- * queue.flush();
+ * queue.dispatchQueue();
  * ```
  *
  * @typicaluse
- * - Real-time event handling: Use ElysiaEventDispatcher
- * - Batched processing: Use ElysiaEventQueue
+ * - Real-time event handling / cross thread communication: Use EventDispatcher
+ * - Batched processing: Use EventQueue
  * - Loading operations: Use built-in events (BeginLoadEvent, ProgressEvent, etc.)
  */
 
-export * from "./mod.ts";
-export * from "./EventQueue.ts";
-export * from "./Event.ts";
-export * from "./EventDispatcher.ts";
+export { ProgressEvent, ErrorEvent, LoadedEvent, BeginLoadEvent, BaseEvent, type SerializableEvent, createSerializableEvent } from "./Event.ts";
+export { EventQueue } from "./EventQueue.ts";
+export { EventDispatcher, type EventDispatcherConstructorArgs } from "./EventDispatcher.ts";

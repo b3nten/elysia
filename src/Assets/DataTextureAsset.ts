@@ -4,13 +4,8 @@ import * as Three from 'three'
 
 export class DataTextureAsset extends Asset<Three.DataTexture>
 {
-	constructor(public url: string)
-	{
-		super()
-	}
-
 	static Loader: Three.DataTextureLoader = new Three.DataTextureLoader;
-
+	constructor(public url: string) { super(); }
 	override loader(): Promise<Three.DataTexture>
 	{
 		return new Promise<Three.DataTexture>((resolve) =>

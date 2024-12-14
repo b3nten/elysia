@@ -1,5 +1,5 @@
 import { gradients, type RGB } from "./Gradients.ts";
-import { isColorSupported } from "../Core/Platform.ts";
+import { isColorSupported } from "../Shared/Platform.ts";
 import { LogLevel } from "./Levels.ts";
 import type { Writer } from "./Writer.ts";
 import { BasicConsoleWriter } from "./BasicConsoleWriter.ts";

@@ -1,3 +1,4 @@
+import "./SSRPolyfill.ts";
 import type { ElysiaElement } from "./ElysiaElement.ts";
 
 /**

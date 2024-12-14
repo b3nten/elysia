@@ -1,6 +1,6 @@
 import { ShaderMaterial, Uniform } from "three";
 // @ts-types="npm:@types/three@^0.169"
-import * as Three from 'three'
+import type * as Three from 'three'
 import { ShaderPass } from "postprocessing";
 
 /**
