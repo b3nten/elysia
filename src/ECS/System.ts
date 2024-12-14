@@ -16,7 +16,6 @@ export abstract class System implements IDestroyable
 
 	public get destroyed(): boolean { return this[Internal.isDestroyed]; }
 
-	@CatchAndReport
 	destructor()
 	{
 		this[Internal.isDestroyed] = true;
@@ -44,24 +43,17 @@ export abstract class System implements IDestroyable
 
 	[Internal.uuid]: string = uuid();
 
-	@CatchAndReport
 	[Internal.onStart]() { this.onStart?.(); }
 
-	@CatchAndReport
 	[Internal.onUpdate](context: World, delta: number, elapsed: number) { this.onUpdate?.(context, delta, elapsed); }
 
-	@CatchAndReport
 	[Internal.onStop]() { this.onStop?.(); }
 
-	@CatchAndReport
 	[Internal.onEntityAdded](entity: Entity) { this.onEntityAdded?.(entity); }
 
-	@CatchAndReport
 	[Internal.onEntityRemoved](entity: Entity) { this.onEntityRemoved?.(entity); }
 
-	@CatchAndReport
 	[Internal.onComponentAdded](entity: Entity, component: Component) { this.onComponentAdded?.(entity, component); }
 
-	@CatchAndReport
 	[Internal.onComponentRemoved](entity: Entity, component: Component) { this.onComponentRemoved?.(entity, component); }
 }
