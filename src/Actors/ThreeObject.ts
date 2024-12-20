@@ -37,11 +37,11 @@ export class ThreeObject<T extends Three.Object3D = Three.Object3D> extends Acto
 		this.worldMatrix.decompose(this.object3d.position, this.object3d.quaternion, this.object3d.scale);
 		this.object3d.updateMatrix()
 		this.object3d.updateMatrixWorld();
+		this[s_BoundingBox].setFromObject(this.object3d);
 	}
 
 	override getBoundingBox()
 	{
-		this[s_BoundingBox].setFromObject(this.object3d);
 		return this[s_BoundingBox];
 	}
 

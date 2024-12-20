@@ -194,6 +194,14 @@ export class Actor extends ComponentLifecycle implements IDestroyable
 
 	public getBoundingBox(): Three.Box3
 	{
+		// need to calculate the bounding box of the actor based on its children
+		const box = new Three.Box3();
+		for(const component of this.components)
+		{
+			if(!isActor(component)) continue;
+			box.union(component.getBoundingBox());
+		}
+		this[s_BoundingBox].copy(box);
 		return this[s_BoundingBox];
 	}
 
