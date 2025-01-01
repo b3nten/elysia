@@ -75,7 +75,7 @@ export class BillboardBehavior extends Behavior
 		parent.rotation.setFromEuler(this.euler)
 	}
 
-	euler = new Three.Euler();
+	euler: Three.Euler = new Three.Euler();
 
 	#lockX = false
 	#lockY = false

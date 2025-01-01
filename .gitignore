@@ -1,41 +1,17 @@
-# compiled output
-.build
-dist
-playground/dist
-.wrangler
+*
 
-# IDEs and editors
-.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
+!tsconfig.json
+!README.md
+!package.json
+!package-lock.json
+!build.js
+!.gitignore
 
-# IDE - VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+!dist/
+!src/
+!assets/
 
-# Logs
-logs
-*.log
-npm-debug.log*
-
-# Dependency directories
-node_modules/
-
-# Optional npm cache directory
-.npm
-
-# dotenv environment variables file
-.env
-
-# System Files
-.DS_Store
-Thumbs.db
-
-*.blend1
+!playground/assets
+!playground/entry.ts
+!playground/game.ts
+!playground/server.ts

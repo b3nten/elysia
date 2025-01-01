@@ -23,13 +23,13 @@ export function isColorSupported(): boolean
 	return typeof document !== "undefined" || (!toBoolean(env().NO_COLOR) && (toBoolean(env().FORCE_COLOR) || ((hasTTY() || isWindows()) && env().TERM !== "dumb")))
 }
 
-export function isWorker()
+export function isWorker(): boolean
 {
 	// @ts-ignore - worker only
 	return typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
 }
 
-export function isSecureContext()
+export function isSecureContext(): boolean
 {
 	return typeof window !== "undefined" && globalThis.isSecureContext;
 }

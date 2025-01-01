@@ -228,7 +228,7 @@ export class EventDispatcher
 		}
 	}
 
-	protected static listeners = new Map<ElysiaEventType, Set<Function>>;
-	protected listeners = new Map<ElysiaEventType, Set<Function>>;
+	protected static listeners: Map<ElysiaEventType, Set<Function>> = new Map<ElysiaEventType, Set<Function>>;
+	protected listeners: Map<ElysiaEventType, Set<Function>> = new Map<ElysiaEventType, Set<Function>>;
 	#multithreaded?: boolean | "send" | "receive";
 }

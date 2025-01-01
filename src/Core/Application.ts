@@ -293,7 +293,7 @@ export class Application {
 	}
 
 	/** The main update loop for the application. */
-	public update()
+	public update(): void | boolean
 	{
 		if(!isBrowser())
 		{
@@ -371,13 +371,13 @@ export class Application {
 	}
 
 	/** Destroy the application and all of its resources. */
-	public destructor()
+	public destructor(): void
 	{
 
 		if(!isBrowser())
 		{
 			ELYSIA_LOGGER.warn("destructor() is only available in the browser.")
-			return false;
+			return;
 		}
 
 		ELYSIA_LOGGER.debug("Destroying application")

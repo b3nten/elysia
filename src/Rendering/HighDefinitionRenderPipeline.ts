@@ -144,7 +144,7 @@ export class HDRenderPipeline extends RenderPipeline
 
 	public smaa?: Postprocessing.SMAAEffect;
 
-	public toneMapping = new Postprocessing.ToneMappingEffect;
+	public toneMapping: Postprocessing.ToneMappingEffect = new Postprocessing.ToneMappingEffect;
 
 	public effectComposer: Postprocessing.EffectComposer;
 

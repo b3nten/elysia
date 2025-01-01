@@ -50,8 +50,8 @@ export class Sky extends ThreeObject<SkyImpl>
 	get azimuth(): number { return this.#azimuth; }
 	set azimuth(v: number) { this.#azimuth = v; this.updateSunPosition(); }
 
-	public readonly directionalLight = new Three.DirectionalLight(0xffffff, 5);
-	public readonly skyLight = new Three.HemisphereLight(0xffffff, 0x444444);
+	public readonly directionalLight: Three.DirectionalLight = new Three.DirectionalLight(0xffffff, 5);
+	public readonly skyLight: Three.HemisphereLight = new Three.HemisphereLight(0xffffff, 0x444444);
 
 	constructor()
 	{

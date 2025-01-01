@@ -79,7 +79,7 @@ export class Actor extends ComponentLifecycle implements IDestroyable
 	 * Static actors can improve performance.
 	 * @default false
 	 */
-	get static () { return this[s_Static]; }
+	get static (): boolean { return this[s_Static]; }
 	set static (value: boolean)
 	{
 		this[s_Static] = value;
@@ -120,16 +120,16 @@ export class Actor extends ComponentLifecycle implements IDestroyable
 	get parent(): Actor { return this[s_Parent]!; }
 
 	/** If the transform of the object has changed since the last frame. */
-	get transformDirty () { return this[s_TransformDirty]; }
+	get transformDirty(): Boolean { return this[s_TransformDirty]; }
 
 	/** The position of this actor. */
-	readonly position = new ActorVector;
+	readonly position: ActorVector = new ActorVector;
 
 	/** The rotation of this actor. */
-	readonly rotation = new ActorQuaternion;
+	readonly rotation: ActorQuaternion = new ActorQuaternion;
 
 	/** The scale of this actor. */
-	readonly scale = new ActorVector(1,1,1)
+	readonly scale: ActorVector = new ActorVector(1,1,1)
 
 	/**
 	 * Get the world Matrix4 of this actor.
@@ -454,19 +454,19 @@ export class Actor extends ComponentLifecycle implements IDestroyable
 	[s_Destroyed]: boolean = false;
 
 	/** @internal */
-	[s_WorldMatrix] = new Three.Matrix4();
+	[s_WorldMatrix]: Three.Matrix4 = new Three.Matrix4();
 
 	/** @internal */
-	[s_LocalMatrix] = new Three.Matrix4();
+	[s_LocalMatrix]: Three.Matrix4 = new Three.Matrix4();
 
 	// true after the transform has changed, before onTransformChange is called
 	/** @internal */
-	[s_TransformDirty] = true;
+	[s_TransformDirty]: boolean = true;
 
 	// true after the transform has changed,
 	// before updateWorldMatrix is called or worldMatrix/localMatrix are accessed
 	/** @internal */
-	[s_MatrixDirty] = true;
+	[s_MatrixDirty]: boolean = true;
 
 	/** @internal */
 	[s_ComponentsByType]: Map<Constructor<Component>, ComponentSet<Component>> = new Map;
@@ -475,7 +475,7 @@ export class Actor extends ComponentLifecycle implements IDestroyable
 	[s_ComponentsByTag]: Map<any, ComponentSet<Component>> = new Map;
 
 	/** @internal */
-	[s_BoundingBox] = new Three.Box3();
+	[s_BoundingBox]: Three.Box3 = new Three.Box3();
 
 	/** @internal */
 	[s_OnEnable]()

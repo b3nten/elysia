@@ -1,3 +1,4 @@
+// @ts-nocheck
 /***********************************************************
     Adapted from https://github.com/mrdoob/three.js/blob/dev/src/objects/BatchedMesh.js
 ************************************************************/
@@ -21,19 +22,17 @@ const Frustum = Three.Frustum;
 const Vector3 = Three.Vector3;
 const Color = Three.Color;
 
-function ascIdSort( a, b ) {
-
+function ascIdSort(a: number, b: number) {
 	return a - b;
-
 }
 
-function sortOpaque( a, b ) {
+function sortOpaque(a: any, b: any) {
 
 	return a.z - b.z;
 
 }
 
-function sortTransparent( a, b ) {
+function sortTransparent(a: any, b: any) {
 
 	return b.z - a.z;
 
@@ -49,7 +48,7 @@ class MultiDrawRenderList {
 
 	}
 
-	push( start, count, z, index ) {
+	push( start: any, count: any, z: any, index: any ): void {
 
 		const pool = this.pool;
 		const list = this.list;
@@ -77,13 +76,12 @@ class MultiDrawRenderList {
 
 	}
 
-	reset() {
+	reset(): void {
 
 		this.list.length = 0;
 		this.index = 0;
 
 	}
-
 }
 
 const _matrix = /*@__PURE__*/ new Matrix4();

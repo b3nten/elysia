@@ -1,10 +1,4 @@
-import { serveDir } from "jsr:@std/http@1.0.9";
-import { parseArgs } from "jsr:@std/cli@1.0.6/parse-args";
-import type esbuild from "npm:esbuild@0.24.0"
-import { AutoRouter } from 'npm:itty-router@5.0.18';
-import guard from "../src/Shared/Guard.ts";
-
-const args = parseArgs(Deno.args)
+import type esbuild from "esbuild"
 
 const shell = (entry: string) => `
 <!DOCTYPE html>
@@ -17,6 +11,10 @@ const shell = (entry: string) => `
 </head>
 <body></body>
 </html>`
+
+const args = {
+
+}
 
 const headers = {
 	"Cross-Origin-Opener-Policy": "same-origin",
@@ -47,15 +45,12 @@ const headers = {
 	}
 }
 
-const router = AutoRouter()
 
 let rebuild = async () => {};
 
 if(args.dev || args.build)
 {
 	const esbuild = await import("npm:esbuild").then(m => m.default)
-
-	const denoPlugins = await import("jsr:@luca/esbuild-deno-loader@^0.11.0").then(m => m.denoPlugins)
 
 	const createEsbuildConfig = (mode: string): esbuild.BuildOptions => ({
 		entryPoints: ["./entry.ts"],
@@ -74,9 +69,6 @@ if(args.dev || args.build)
 			"DEFINE_IS_DEV": mode === "dev" ? "true" : "false",
 		},
 		// logLevel: "error",
-		plugins: [
-			...denoPlugins(),
-		],
 	})
 
 	if(args.dev)

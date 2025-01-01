@@ -5,7 +5,7 @@ import { FirstPersonCamera } from "../Behaviors/FirstPersonCamera.ts";
 import {PerspectiveCamera} from "./PerspectiveCamera.ts";
 import type {PhysicsWorldComponent} from "../Jolt/PhysicsWorldComponent.ts";
 import {VirtualCharacter} from "../Jolt/VirtualCharacter.ts";
-import type Jolt from "npm:jolt-physics@0.29.0/wasm-multithread";
+import type Jolt from "jolt-physics/wasm-multithread";
 import {KeyCode} from "../Input/KeyCode.ts";
 import {ASSERT} from "../Shared/Asserts.ts";
 

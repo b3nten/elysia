@@ -4,7 +4,7 @@ import { QueuedEvent } from "./QueuedEvent.ts";
 import type { IDestroyable } from "../Core/Lifecycle.ts";
 import { MouseObserver } from "./Mouse.ts";
 import type { MouseCode } from "./MouseCode.ts";
-import {isBrowser} from "@elysiatech/engine/Shared/Asserts.ts";
+import { isBrowser } from "../Shared/Asserts.ts";
 
 interface InputQueueConstructorArguments
 {

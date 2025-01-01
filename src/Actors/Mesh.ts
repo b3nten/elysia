@@ -16,9 +16,8 @@ import { Actor } from "../Core/Actor.ts";
 import { isArray } from "../Shared/Asserts.ts";
 // @ts-types="npm:@types/three@^0.169.0"
 import * as Three from 'three';
-// @ts-types="npm:@types/three@^0.169/src/objects/BatchedMesh.js"
-import { BatchedMesh } from "../WebGL/BatchedLodMesh.js"
-import {s_BoundingBox} from "@elysiatech/engine/Internal/mod.ts";
+import { BatchedMesh } from "../WebGL/BatchedLodMesh.ts"
+import { s_BoundingBox } from "../Internal/mod.ts";
 
 /**
  * The Mesh class is used to render Three.BufferGeometries and materials. Meshes are batched according to material, so multiple geometries can be rendered
@@ -31,7 +30,7 @@ export class Mesh extends Actor
 	 */
 	static CreateLods = createLodGroup;
 
-	public get visible() { return this.#userVisibility }
+	public get visible(): boolean { return this.#userVisibility }
 	public set visible(value: boolean)
 	{
 		if(this.#userVisibility === value) return;
@@ -59,6 +58,7 @@ export class Mesh extends Actor
 			if (arg1.maxDrawDistance !== undefined) this.#maxDrawDistance = arg1.maxDrawDistance;
 		}
 
+		// @ts-ignore: todo: fix
 		const lods: Array<Mesh | MeshGroup | Array<Mesh>> = isLodGroup(arg1)
 			? arg1.levels.sort((a, b) => a.distance - b.distance)
 			: arg1 instanceof Three.BufferGeometry
@@ -114,7 +114,7 @@ export class Mesh extends Actor
 		}
 	}
 
-	override getBoundingBox()
+	override getBoundingBox(): Three.Box3
 	{
 		// todo: improve performance
 		const box = new Three.Box3();
@@ -170,7 +170,7 @@ export class Mesh extends Actor
 					const maxIndices = 3000;
 					const instanceCount = 10;
 
-					const batchedMesh = new BatchedMesh(instanceCount, maxVertices, maxIndices, meshInstance.material);
+					const batchedMesh: any = new BatchedMesh(instanceCount, maxVertices, maxIndices, meshInstance.material);
 
 					this.scene.object3d.add(batchedMesh);
 
@@ -204,7 +204,7 @@ export class Mesh extends Actor
 
 					geometryId = mesh.batchedMesh.addGeometry(meshInstance.geometry);
 
-					mesh.geoInstances.set(meshInstance.geometry, geometryId);
+					mesh.geoInstances.set(meshInstance.geometry, geometryId!);
 				}
 
 				// update instance count
@@ -226,8 +226,8 @@ export class Mesh extends Actor
 				// @ts-ignore - extended
 				mesh.batchedMesh._instanceInfo[meshInstance.instanceId].getWorldMatrix = () => this.worldMatrix;
 
-				mesh.batchedMesh.castShadow = true;
-				mesh.batchedMesh.receiveShadow = true;
+				(mesh.batchedMesh as any).castShadow = true;
+				(mesh.batchedMesh as any).receiveShadow = true;
 				// register actor
 				mesh.actors.add(this);
 				mesh.refs++;
@@ -259,7 +259,7 @@ export class Mesh extends Actor
 				{
 					meshMap.delete(lod.material.uuid);
 					mesh.batchedMesh.dispose();
-					this.scene.object3d.remove(mesh.batchedMesh);
+					this.scene.object3d.remove(mesh.batchedMesh as any);
 				}
 			}
 		}
@@ -297,7 +297,7 @@ const validateMaterial = (material: Three.Material | Array<Three.Material>): Thr
 }
 
 type BatchedMeshPool = Map<string, {
-	batchedMesh: Three.BatchedMesh,
+	batchedMesh: BatchedMesh,
 	geoInstances: Map<Three.BufferGeometry, number>,
 	actors: Set<Mesh>,
 	refs: number
@@ -326,5 +326,5 @@ export type LodGroup = {
 	maxDrawDistance?: number
 }
 /** Create an LOD group for the Mesh. LOD groups allow you to specify multiple levels of detail for a mesh, which will be rendered based on the distance from the camera. */
-export function createLodGroup(mesh: LodGroup) { return mesh }
+export function createLodGroup(mesh: LodGroup): LodGroup { return mesh }
 const isLodGroup = (obj: any): obj is LodGroup => Array.isArray(obj.levels);

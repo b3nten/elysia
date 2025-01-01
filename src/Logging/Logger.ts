@@ -45,7 +45,7 @@ class Logger
 	/**
 	 * Log a message.
 	*/
-	message = (...msg: any[]) =>
+	message = (...msg: any[]): void =>
 	{
 		this.writer.message(msg);
 	}

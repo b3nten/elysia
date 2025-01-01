@@ -69,7 +69,7 @@ export class Behavior extends ComponentLifecycle implements IDestroyable
 	 * This can be toggled at any time.
 	 * @default false
 	 */
-	get static() { return this[s_Static]; }
+	get static(): boolean { return this[s_Static]; }
 	set static(value: boolean)
 	{
 		this[s_Static] = value;

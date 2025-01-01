@@ -22,7 +22,6 @@ import type {
 } from "three";
 import { env } from "./Platform.ts";
 import { toBoolean } from "./Utilities.ts";
-import process from "node:process";
 
 export class AssertionError extends Error
 {

@@ -19,7 +19,7 @@ import { ThreeObject } from "./ThreeObject.ts";
 
 export class OrthographicCamera extends ThreeObject<Three.OrthographicCamera>
 {
-	override object3d = new Three.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
+	override object3d: Three.OrthographicCamera = new Three.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
 	/**
 	 * The left edge of the camera's view.
 	 */
