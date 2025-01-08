@@ -31,5 +31,5 @@ export function isWorker(): boolean
 
 export function isSecureContext(): boolean
 {
-	return typeof window !== "undefined" && globalThis.isSecureContext;
+	return typeof window !== "undefined" && globalThis.isSecureContext && typeof SharedArrayBuffer !== "undefined";
 }

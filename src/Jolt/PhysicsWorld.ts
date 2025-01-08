@@ -1,7 +1,7 @@
 import type { IDestroyable } from "../Core/Lifecycle.ts";
 import type Jolt from "jolt-physics/wasm-multithread";
 import JoltInitMultithreaded from "jolt-physics/wasm-compat-multithread";
-import JoltInit from "jolt-physics/wasm"
+import JoltInit from "jolt-physics/wasm-compat"
 import { PHYSICS_LAYER_COUNT, PhysicsLayer } from "./PhysicsLayer.ts";
 import { isSecureContext } from "../Shared/Platform.ts";
 import {ELYSIA_LOGGER} from "../Shared/Logger.ts";

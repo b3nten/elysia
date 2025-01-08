@@ -19,6 +19,7 @@ const app = new Elysia.Core.Application({
 	}),
 	stats: true,
 	assets,
+	logLevel: Elysia.Logging.LogLevel.Debug
 })
 
 class ShootBallBehavior extends Elysia.Core.Behavior
@@ -165,4 +166,4 @@ class MyScene extends Elysia.Core.Scene
 
 }
 
-await app.loadScene(new MyScene);
+app.loadScene(new MyScene);
