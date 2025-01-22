@@ -5,14 +5,12 @@ import type * as Three from "three";
 /**
  * An interface for objects with a destructor method.
  */
-export interface IDestroyable
-{
+export interface IDestroyable {
 	destructor(): void;
 }
 
-export class ComponentLifecycle
-{
-	public uuid: string = uuid()
+export class ComponentLifecycle {
+	public uuid: string = uuid();
 	/**
 	 * Called once when the actor is created.
 	 * This is the first method called in the actor's lifecycle and will only be called once.
@@ -95,8 +93,7 @@ export class ComponentLifecycle
 	protected onResize(width: number, height: number): void {}
 }
 
-export class SceneLifecycle
-{
+export class SceneLifecycle {
 	/**
 	 * Called when the s_Scene is loaded. This is the first method called in the s_Scene's lifecycle.
 	 */
@@ -121,8 +118,7 @@ export class SceneLifecycle
 	protected onEnd(): void {}
 }
 
-export interface RenderPipelineLifecycle
-{
+export interface RenderPipelineLifecycle {
 	/**
 	 * Called when the render pipeline is created, usually during application initialization.
 	 * @param scene

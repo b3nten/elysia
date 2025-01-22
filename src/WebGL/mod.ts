@@ -7,5 +7,11 @@
 export { CanvasPass } from "./CanvasPass.ts";
 export { ExponentialHeightFog } from "./ExponentialHeightFog.ts";
 export * from "./Noise.ts";
-export { setGlobalUniform, getGlobalUniform, addMaterialBeforeCompileCallback, addMaterialBeforeRenderCallback, installMaterialAddon } from "./InstallMaterialAddons.ts";
+export {
+	setGlobalUniform,
+	getGlobalUniform,
+	addMaterialBeforeCompileCallback,
+	addMaterialBeforeRenderCallback,
+	installMaterialAddon,
+} from "./InstallMaterialAddons.ts";
 export { MeshTransmissionMaterial } from "./MeshTransmissionMaterial.ts";

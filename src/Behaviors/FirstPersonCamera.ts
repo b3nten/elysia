@@ -1,16 +1,17 @@
 // @ts-types="npm:@types/three@^0.169.0"
-import * as Three from 'three';
+import * as Three from "three";
 import { Behavior } from "../Core/Behavior.ts";
 
-export class FirstPersonCamera extends Behavior
-{
+export class FirstPersonCamera extends Behavior {
 	isLocked = false;
 
 	domElement?: HTMLElement;
 
 	sensitivity = 0.002;
 
-	get target() { return this.parent }
+	get target() {
+		return this.parent;
+	}
 
 	constructor() {
 		super();
@@ -24,29 +25,43 @@ export class FirstPersonCamera extends Behavior
 		this.unlock = this.unlock.bind(this);
 	}
 
-	override onCreate()
-	{
-		this.domElement = this.app!.renderPipeline.getRenderer().domElement
+	override onCreate() {
+		this.domElement = this.app!.renderPipeline.getRenderer().domElement;
 		this.onConnect();
 	}
 
-	onConnect()
-	{
-		this.domElement?.ownerDocument.addEventListener( 'mousemove', this.onMouseMove );
-		this.domElement?.ownerDocument.addEventListener( 'pointerlockchange', this.onPointerLockChange );
-		this.domElement?.ownerDocument.addEventListener( 'pointerlockerror', this.onPointerLockError );
-		this.domElement?.addEventListener( 'click', () => this.lock() );
+	onConnect() {
+		this.domElement?.ownerDocument.addEventListener(
+			"mousemove",
+			this.onMouseMove,
+		);
+		this.domElement?.ownerDocument.addEventListener(
+			"pointerlockchange",
+			this.onPointerLockChange,
+		);
+		this.domElement?.ownerDocument.addEventListener(
+			"pointerlockerror",
+			this.onPointerLockError,
+		);
+		this.domElement?.addEventListener("click", () => this.lock());
 	}
 
-	onDisconnect()
-	{
-		this.domElement?.ownerDocument.removeEventListener( 'mousemove', this.onMouseMove );
-		this.domElement?.ownerDocument.removeEventListener( 'pointerlockchange', this.onPointerLockChange );
-		this.domElement?.ownerDocument.removeEventListener( 'pointerlockerror', this.onPointerLockError );
+	onDisconnect() {
+		this.domElement?.ownerDocument.removeEventListener(
+			"mousemove",
+			this.onMouseMove,
+		);
+		this.domElement?.ownerDocument.removeEventListener(
+			"pointerlockchange",
+			this.onPointerLockChange,
+		);
+		this.domElement?.ownerDocument.removeEventListener(
+			"pointerlockerror",
+			this.onPointerLockError,
+		);
 	}
 
-	onMouseMove = (event: MouseEvent) =>
-	{
+	onMouseMove = (event: MouseEvent) => {
 		if (!this.enabled || !this.isLocked || !this.parent || !this.parent) return;
 
 		const movementX = event.movementX ?? 0;
@@ -57,20 +72,26 @@ export class FirstPersonCamera extends Behavior
 		this.euler.x = Math.min(Math.max(this.euler.x, -1.0472), 1.0472);
 
 		this.target.rotation.setFromEuler(this.euler);
+	};
+
+	onPointerLockChange = (event: Event) =>
+		(this.isLocked =
+			this.domElement?.ownerDocument.pointerLockElement === this.domElement);
+
+	onPointerLockError = (event: Event) => console.error(event);
+
+	lock() {
+		this.domElement?.requestPointerLock();
 	}
 
-	onPointerLockChange = (event: Event) => this.isLocked = this.domElement?.ownerDocument.pointerLockElement === this.domElement;
-
-	onPointerLockError = (event: Event) => console.error(event)
-
-	lock() { this.domElement?.requestPointerLock(); }
-
-	unlock() { this.domElement?.ownerDocument.exitPointerLock(); }
+	unlock() {
+		this.domElement?.ownerDocument.exitPointerLock();
+	}
 
 	override destructor() {
 		super.destructor();
 		this.onDisconnect();
 	}
 
-	private euler = new Three.Euler(0, 0, 0, 'YXZ');
+	private euler = new Three.Euler(0, 0, 0, "YXZ");
 }

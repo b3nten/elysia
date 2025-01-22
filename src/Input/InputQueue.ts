@@ -6,13 +6,12 @@ import { MouseObserver } from "./Mouse.ts";
 import type { MouseCode } from "./MouseCode.ts";
 import { isBrowser } from "../Shared/Asserts.ts";
 
-interface InputQueueConstructorArguments
-{
+interface InputQueueConstructorArguments {
 	mouseTarget?: HTMLElement;
 	/**
 	 * A worker or array of workers to send input events to.
 	 */
-	worker?: Worker | Worker[]
+	worker?: Worker | Worker[];
 	/**
 	 * Receive input events from the main thread.
 	 */
@@ -58,16 +57,15 @@ interface InputQueueConstructorArguments
  *
  * @implements {IDestroyable}
  */
-export class InputQueue implements IDestroyable
-{
-
+export class InputQueue implements IDestroyable {
 	public readonly mouse!: MouseObserver;
 
-	constructor(args: InputQueueConstructorArguments = {})
-	{
-		if(!isBrowser()) return;
+	constructor(args: InputQueueConstructorArguments = {}) {
+		if (!isBrowser()) return;
 
-		this.mouse = new MouseObserver(args.mouseTarget ?? globalThis.document.body);
+		this.mouse = new MouseObserver(
+			args.mouseTarget ?? globalThis.document.body,
+		);
 
 		this.keyDownHandler = this.keyDownHandler.bind(this);
 		this.keyUpHandler = this.keyUpHandler.bind(this);
@@ -88,11 +86,12 @@ export class InputQueue implements IDestroyable
 	 * @param callback The callback to call when the key is pressed.
 	 * @returns A function that can be called to remove the callback.
 	 **/
-	public onKeyDown(key: KeyCode | MouseCode, callback: (key: QueuedEvent) => void)
-	{
-		if(!this.keyDownCallbacks.has(key))
-		{
-			this.keyDownCallbacks.set(key, new Set);
+	public onKeyDown(
+		key: KeyCode | MouseCode,
+		callback: (key: QueuedEvent) => void,
+	) {
+		if (!this.keyDownCallbacks.has(key)) {
+			this.keyDownCallbacks.set(key, new Set());
 		}
 		this.keyDownCallbacks.get(key)!.add(callback);
 	}
@@ -105,39 +104,36 @@ export class InputQueue implements IDestroyable
 	 * @param callback The callback to call when the key is released.
 	 * @returns A function that can be called to remove the callback.
 	 **/
-	public onKeyUp(key: KeyCode | MouseCode, callback: (key: QueuedEvent) => void)
-	{
-		if(!this.keyUpCallbacks.has(key))
-		{
-			this.keyUpCallbacks.set(key, new Set);
+	public onKeyUp(
+		key: KeyCode | MouseCode,
+		callback: (key: QueuedEvent) => void,
+	) {
+		if (!this.keyUpCallbacks.has(key)) {
+			this.keyUpCallbacks.set(key, new Set());
 		}
 		this.keyUpCallbacks.get(key)!.add(callback);
 	}
 
 	/** Add a callback to be called when the specified key is pressed or released. */
-	public onMouseMove(callback: (event: MouseEvent) => void): () => void { return this.mouse.addEventListener("mousemove", callback); }
+	public onMouseMove(callback: (event: MouseEvent) => void): () => void {
+		return this.mouse.addEventListener("mousemove", callback);
+	}
 
 	/** Check if a key or mouse button is down. */
-	public isDown(key: KeyCode | MouseCode): boolean { return this.currentlyPressed.has(key); }
+	public isDown(key: KeyCode | MouseCode): boolean {
+		return this.currentlyPressed.has(key);
+	}
 
 	/** Flush all events in the queue to their respective listeners, without clearing the queue. */
-	public flush(): void
-	{
-		for(const [key, set] of this.queue)
-		{
-			for(const event of set)
-			{
-				if(event.type === "down" && this.keyDownCallbacks.has(key))
-				{
-					for(const callback of this.keyDownCallbacks.get(key)!)
-					{
+	public flush(): void {
+		for (const [key, set] of this.queue) {
+			for (const event of set) {
+				if (event.type === "down" && this.keyDownCallbacks.has(key)) {
+					for (const callback of this.keyDownCallbacks.get(key)!) {
 						callback(event);
 					}
-				}
-				else if(event.type === "up" && this.keyUpCallbacks.has(key))
-				{
-					for(const callback of this.keyUpCallbacks.get(key)!)
-					{
+				} else if (event.type === "up" && this.keyUpCallbacks.has(key)) {
+					for (const callback of this.keyUpCallbacks.get(key)!) {
 						callback(event);
 					}
 				}
@@ -146,49 +142,53 @@ export class InputQueue implements IDestroyable
 	}
 
 	/** clear all events in the queue and free them from the pool. */
-	public clear(): void
-	{
-		for(const set of this.queue.values())
-		{
-			for(const event of set)
-			{
+	public clear(): void {
+		for (const set of this.queue.values()) {
+			for (const event of set) {
 				this.pool.free(event);
 			}
-			set.clear()
+			set.clear();
 		}
 	}
 
-	public destructor()
-	{
-		globalThis.removeEventListener("keydown", this.keyDownHandler)
-		globalThis.removeEventListener("keyup", this.keyUpHandler)
-		this.mouse.removeEventListener("mousedown", this.mouseDownHandler)
-		this.mouse.removeEventListener("mouseup", this.mouseUpHandler)
-		this.mouse.destructor()
-		this.clear()
-		this.keyDownCallbacks.clear()
-		this.keyUpCallbacks.clear()
+	public destructor() {
+		globalThis.removeEventListener("keydown", this.keyDownHandler);
+		globalThis.removeEventListener("keyup", this.keyUpHandler);
+		this.mouse.removeEventListener("mousedown", this.mouseDownHandler);
+		this.mouse.removeEventListener("mouseup", this.mouseUpHandler);
+		this.mouse.destructor();
+		this.clear();
+		this.keyDownCallbacks.clear();
+		this.keyUpCallbacks.clear();
 	}
 
-	private pool: ObjectPool<QueuedEvent> = new ObjectPool(() => new QueuedEvent, 50)
+	private pool: ObjectPool<QueuedEvent> = new ObjectPool(
+		() => new QueuedEvent(),
+		50,
+	);
 
-	private keyDownCallbacks: Map<KeyCode | MouseCode, Set<(key: QueuedEvent) => void>> = new Map;
+	private keyDownCallbacks: Map<
+		KeyCode | MouseCode,
+		Set<(key: QueuedEvent) => void>
+	> = new Map();
 
-	private keyUpCallbacks: Map<KeyCode | MouseCode, Set<(key: QueuedEvent) => void>> = new Map;
+	private keyUpCallbacks: Map<
+		KeyCode | MouseCode,
+		Set<(key: QueuedEvent) => void>
+	> = new Map();
 
-	private queue: Map<KeyCode | MouseCode, Set<QueuedEvent>> = new Map;
+	private queue: Map<KeyCode | MouseCode, Set<QueuedEvent>> = new Map();
 
-	private currentlyPressed: Set<KeyCode | MouseCode> = new Set;
+	private currentlyPressed: Set<KeyCode | MouseCode> = new Set();
 
 	// There is a lot of repetition here, but performance > readability in this case.
 
-	private keyDownHandler(event: KeyboardEvent): void
-	{
+	private keyDownHandler(event: KeyboardEvent): void {
 		const key = event.code as KeyCode;
 
-		if(!this.currentlyPressed.has(key)) {
+		if (!this.currentlyPressed.has(key)) {
 			this.currentlyPressed.add(key);
-			const queued = this.pool.alloc()
+			const queued = this.pool.alloc();
 			queued.key = key;
 			queued.type = "down";
 			queued.timestamp = performance.now();
@@ -203,20 +203,19 @@ export class InputQueue implements IDestroyable
 			queued.mouseX = this.mouse.x;
 			queued.mouseY = this.mouse.y;
 
-			if(!this.queue.has(key)) {
-				this.queue.set(key, new Set);
+			if (!this.queue.has(key)) {
+				this.queue.set(key, new Set());
 			}
 			this.queue.get(key)!.add(queued);
 		}
 	}
 
-	private keyUpHandler(event: KeyboardEvent): void
-	{
+	private keyUpHandler(event: KeyboardEvent): void {
 		const key = event.code as KeyCode;
 
-		if(this.currentlyPressed.has(key)) {
+		if (this.currentlyPressed.has(key)) {
 			this.currentlyPressed.delete(key);
-			const queued = this.pool.alloc()
+			const queued = this.pool.alloc();
 			queued.key = key;
 			queued.type = "up";
 			queued.timestamp = performance.now();
@@ -231,20 +230,19 @@ export class InputQueue implements IDestroyable
 			queued.mouseX = this.mouse.x;
 			queued.mouseY = this.mouse.y;
 
-			if(!this.queue.has(key)) {
-				this.queue.set(key, new Set);
+			if (!this.queue.has(key)) {
+				this.queue.set(key, new Set());
 			}
 			this.queue.get(key)!.add(queued);
 		}
 	}
 
-	private mouseDownHandler(event: MouseEvent): void
-	{
+	private mouseDownHandler(event: MouseEvent): void {
 		const button = event.button as MouseCode;
 
-		if(!this.currentlyPressed.has(button)) {
+		if (!this.currentlyPressed.has(button)) {
 			this.currentlyPressed.add(button);
-			const queued = this.pool.alloc()
+			const queued = this.pool.alloc();
 			queued.key = button;
 			queued.type = "down";
 			queued.timestamp = performance.now();
@@ -259,20 +257,19 @@ export class InputQueue implements IDestroyable
 			queued.mouseX = this.mouse.x;
 			queued.mouseY = this.mouse.y;
 
-			if(!this.queue.has(button)) {
-				this.queue.set(button, new Set);
+			if (!this.queue.has(button)) {
+				this.queue.set(button, new Set());
 			}
 			this.queue.get(button)!.add(queued);
 		}
 	}
 
-	private mouseUpHandler(event: MouseEvent): void
-	{
+	private mouseUpHandler(event: MouseEvent): void {
 		const button = event.button as MouseCode;
 
-		if(this.currentlyPressed.has(button)) {
+		if (this.currentlyPressed.has(button)) {
 			this.currentlyPressed.delete(button);
-			const queued = this.pool.alloc()
+			const queued = this.pool.alloc();
 			queued.key = button;
 			queued.type = "up";
 			queued.timestamp = performance.now();
@@ -287,8 +284,8 @@ export class InputQueue implements IDestroyable
 			queued.mouseX = this.mouse.x;
 			queued.mouseY = this.mouse.y;
 
-			if(!this.queue.has(button)) {
-				this.queue.set(button, new Set);
+			if (!this.queue.has(button)) {
+				this.queue.set(button, new Set());
 			}
 			this.queue.get(button)!.add(queued);
 		}

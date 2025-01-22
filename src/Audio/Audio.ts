@@ -37,8 +37,7 @@ import { ASSERT } from "../Shared/Asserts.ts";
 import { isBrowser } from "../Shared/Asserts.ts";
 import { clamp } from "../Math/Other.ts";
 
-export interface AudioConstructorArguments
-{
+export interface AudioConstructorArguments {
 	/** An array buffer containing the audio file. */
 	bytes: ArrayBuffer;
 	/** The audio player instance to use. */
@@ -54,41 +53,62 @@ export interface AudioConstructorArguments
 /**
  * Represents an audio instance with playback controls and properties.
  */
-export class Audio
-{
+export class Audio {
 	/** Whether the audio is currently loading */
-	get loading(): boolean { return !this.#ready; }
+	get loading(): boolean {
+		return !this.#ready;
+	}
 
 	/** Whether the audio is ready to be played */
-	get ready(): boolean { return this.#ready; }
+	get ready(): boolean {
+		return this.#ready;
+	}
 
 	/** The error that occurred while loading the audio, if any */
-	get error(): Error | undefined { return this.#error; }
+	get error(): Error | undefined {
+		return this.#error;
+	}
 
 	/** Whether the audio is currently playing */
-	get playing(): boolean { return this.#playing; }
-	set playing(value: boolean) { value ? this.play() : this.pause(); }
+	get playing(): boolean {
+		return this.#playing;
+	}
+	set playing(value: boolean) {
+		value ? this.play() : this.pause();
+	}
 
 	/** Whether the audio is currently paused */
-	get paused(): boolean { return this.#paused; }
-	set paused(value: boolean) { value ? this.pause() : this.play(); }
+	get paused(): boolean {
+		return this.#paused;
+	}
+	set paused(value: boolean) {
+		value ? this.pause() : this.play();
+	}
 
 	/** Whether the audio is currently stopped */
-	get stopped(): boolean { return this.#stopped; }
-	set stopped(value: boolean) { value ? this.stop() : this.play(); }
+	get stopped(): boolean {
+		return this.#stopped;
+	}
+	set stopped(value: boolean) {
+		value ? this.stop() : this.play();
+	}
 
 	/** Whether the audio is currently muted */
-	get muted(): boolean { return this.#muted; }
-	set muted(value: boolean) { value ? this.mute() : this.unmute(); }
+	get muted(): boolean {
+		return this.#muted;
+	}
+	set muted(value: boolean) {
+		value ? this.mute() : this.unmute();
+	}
 
 	/** Whether the audio should loop */
-	get loop(): boolean { return this.#loop; }
-	set loop(value: boolean)
-	{
+	get loop(): boolean {
+		return this.#loop;
+	}
+	set loop(value: boolean) {
 		if (!isBrowser()) return;
-		if(!this.#ready)
-		{
-			this.#eventQueue.enqueue(() => this.loop = value);
+		if (!this.#ready) {
+			this.#eventQueue.enqueue(() => (this.loop = value));
 			return;
 		}
 		ASSERT(!!this.#source, "Cannot set loop before audio is loaded");
@@ -97,13 +117,13 @@ export class Audio
 	}
 
 	/** The volume of the audio */
-	get volume(): number { return this.#volume; }
-	set volume(value: number)
-	{
+	get volume(): number {
+		return this.#volume;
+	}
+	set volume(value: number) {
 		if (!isBrowser()) return;
-		if(!this.#ready)
-		{
-			this.#eventQueue.enqueue(() => this.volume = value);
+		if (!this.#ready) {
+			this.#eventQueue.enqueue(() => (this.volume = value));
 			return;
 		}
 		this.#volume = clamp(value, 0, 1);
@@ -111,15 +131,20 @@ export class Audio
 	}
 
 	/** The current position of the audio */
-	get position(): number { return this.#position; }
-	set position(value: number) { this.seek(value); }
+	get position(): number {
+		return this.#position;
+	}
+	set position(value: number) {
+		this.seek(value);
+	}
 
 	/** The duration of the audio */
-	get duration(): number { return this.#duration; }
+	get duration(): number {
+		return this.#duration;
+	}
 
-	constructor(args: AudioConstructorArguments)
-	{
-		if(!isBrowser()){
+	constructor(args: AudioConstructorArguments) {
+		if (!isBrowser()) {
 			return;
 		}
 
@@ -129,38 +154,37 @@ export class Audio
 		this.#loop = args.loop || false;
 		this.#volume = args.volume || 1;
 		this.#gainNode = AudioPlayer.GetContext().createGain();
-		this.addEventListener = this.#eventDispatcher.addEventListener.bind(this.#eventDispatcher);
-		this.removeEventListener = this.#eventDispatcher.removeEventListener.bind(this.#eventDispatcher);
+		this.addEventListener = this.#eventDispatcher.addEventListener.bind(
+			this.#eventDispatcher,
+		);
+		this.removeEventListener = this.#eventDispatcher.removeEventListener.bind(
+			this.#eventDispatcher,
+		);
 
 		this.#player.instances.add(new WeakRef(this));
 
 		this.#player.createAudioBuffer(this.#buffer).then(
-			(buffer) =>
-			{
-				if(!buffer)
-				{
+			(buffer) => {
+				if (!buffer) {
 					this.#error = new Error("Failed to create audio buffer");
 					this.#eventDispatcher.dispatchEvent(new Events.AudioErrorEvent(this));
 					return;
 				}
 				this.#audioBuffer = buffer;
 				this.#duration = buffer.duration;
-				this.#eventQueue.flush(x => x?.())
+				this.#eventQueue.flush((x) => x?.());
 			},
-			(error) =>
-			{
+			(error) => {
 				this.#error = error;
-			}
-		)
+			},
+		);
 	}
 
 	/** Play an instance of the audio once */
-	fire()
-	{
+	fire() {
 		if (!isBrowser()) return;
 
-		if(!this.#ready)
-		{
+		if (!this.#ready) {
 			this.#eventQueue.enqueue(() => this.fire());
 			return;
 		}
@@ -174,12 +198,10 @@ export class Audio
 	}
 
 	/** Begin playing the audio */
-	play()
-	{
+	play() {
 		if (!isBrowser()) return;
 
-		if(!this.#ready)
-		{
+		if (!this.#ready) {
 			this.#eventQueue.enqueue(() => this.play());
 			return;
 		}
@@ -216,19 +238,17 @@ export class Audio
 	}
 
 	/** Pause the audio */
-	pause()
-	{
+	pause() {
 		if (!isBrowser()) return;
 
-		if(!this.#ready)
-		{
+		if (!this.#ready) {
 			this.#eventQueue.enqueue(() => this.pause());
 			return;
 		}
 
 		const ctx = AudioPlayer.GetContext();
 
-		if(this.#source){
+		if (this.#source) {
 			this.destroySource(this.#source);
 		}
 
@@ -241,23 +261,24 @@ export class Audio
 	}
 
 	/** Toggle between playing and pausing the audio */
-	togglePause() { this.#paused ? this.play() : this.pause(); }
+	togglePause() {
+		this.#paused ? this.play() : this.pause();
+	}
 	/** Toggle between playing and pausing the audio */
-	togglePlay() { this.#playing ? this.pause() : this.play(); }
+	togglePlay() {
+		this.#playing ? this.pause() : this.play();
+	}
 
 	/** Stop the audio */
-	stop()
-	{
+	stop() {
 		if (!isBrowser()) return;
 
-		if(!this.#ready)
-		{
+		if (!this.#ready) {
 			this.#eventQueue.enqueue(() => this.stop());
 			return;
 		}
 
-		if(!this.#source)
-		{
+		if (!this.#source) {
 			return;
 		}
 
@@ -275,12 +296,10 @@ export class Audio
 	}
 
 	/** Mute the audio */
-	mute()
-	{
+	mute() {
 		if (!isBrowser()) return;
 
-		if(!this.#ready)
-		{
+		if (!this.#ready) {
 			this.#eventQueue.enqueue(() => this.mute());
 			return;
 		}
@@ -293,12 +312,10 @@ export class Audio
 	}
 
 	/** Unmute the audio */
-	unmute()
-	{
+	unmute() {
 		if (!isBrowser()) return;
 
-		if(!this.#ready)
-		{
+		if (!this.#ready) {
 			this.#eventQueue.enqueue(() => this.unmute());
 			return;
 		}
@@ -311,15 +328,15 @@ export class Audio
 	}
 
 	/** Toggle between muting and unmuting the audio */
-	toggleMute() { this.#muted ? this.unmute() : this.mute(); }
+	toggleMute() {
+		this.#muted ? this.unmute() : this.mute();
+	}
 
 	/** Seek to a specific position in the audio */
-	seek(position: number)
-	{
+	seek(position: number) {
 		if (!isBrowser()) return;
 
-		if(!this.#ready)
-		{
+		if (!this.#ready) {
 			this.#eventQueue.enqueue(() => this.seek(position));
 			return;
 		}
@@ -328,8 +345,7 @@ export class Audio
 
 		this.#eventDispatcher.dispatchEvent(new Events.AudioSeekEvent(this));
 
-		if (this.#playing)
-		{
+		if (this.#playing) {
 			ASSERT(!!this.#source, "No source to seek");
 
 			this.destroySource(this.#source);
@@ -341,12 +357,9 @@ export class Audio
 	}
 
 	/** Clone this audio node */
-	clone(): Audio
-	{
+	clone(): Audio {
 		if (!this.#buffer)
-			throw new Error(
-				"Cannot clone an audio instance without a buffer",
-			);
+			throw new Error("Cannot clone an audio instance without a buffer");
 
 		return new Audio({
 			player: this.#player,
@@ -357,32 +370,30 @@ export class Audio
 		});
 	}
 
-	addEventListener!: EventDispatcher["addEventListener"]
-	removeEventListener!: EventDispatcher["removeEventListener"]
+	addEventListener!: EventDispatcher["addEventListener"];
+	removeEventListener!: EventDispatcher["removeEventListener"];
 
-	private onAudioEnd()
-	{
+	private onAudioEnd() {
 		this.#paused = false;
 		this.#stopped = true;
 		this.#playing = false;
 		this.#position = 0;
 		this.#eventDispatcher.dispatchEvent(new Events.AudioStopEvent(this));
-	};
+	}
 
-	private destroySource(source: AudioBufferSourceNode)
-	{
+	private destroySource(source: AudioBufferSourceNode) {
 		source.disconnect();
 		source.stop();
 		source.removeEventListener("ended", this.onAudioEnd);
 	}
 
-	#eventDispatcher = new EventDispatcher;
+	#eventDispatcher = new EventDispatcher();
 	#paused = false;
 	#stopped = true;
 	#playing = false;
 	#muted = false;
 	#position = 0;
-	#eventQueue = new Queue<any>
+	#eventQueue = new Queue<any>();
 	#gainNode!: GainNode;
 	#userNodes!: AudioNode[];
 	#volume: number = 1;

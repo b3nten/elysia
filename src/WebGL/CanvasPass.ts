@@ -1,6 +1,6 @@
 import { ShaderMaterial, Uniform } from "three";
 // @ts-types="npm:@types/three@^0.169"
-import type * as Three from 'three'
+import type * as Three from "three";
 import { ShaderPass } from "postprocessing";
 
 /**
@@ -17,14 +17,12 @@ import { ShaderPass } from "postprocessing";
  *
  * @param {Three.CanvasTexture} canvas - The canvas texture to blend with the base texture
  */
-export class CanvasMaterial extends ShaderMaterial
-{
-	constructor(canvas: Three.CanvasTexture)
-	{
+export class CanvasMaterial extends ShaderMaterial {
+	constructor(canvas: Three.CanvasTexture) {
 		super({
 			uniforms: {
 				tDiffuse: new Uniform(null),
-				tCanvas: new Uniform(canvas)
+				tCanvas: new Uniform(canvas),
 			},
 			vertexShader: /* glsl */ `
 				varying vec2 vUv;
@@ -54,10 +52,8 @@ export class CanvasMaterial extends ShaderMaterial
  * @extends {ShaderPass}
  * @param {Three.CanvasTexture} canvas - The canvas texture to blend with the base texture
  */
-export class CanvasPass extends ShaderPass
-{
-	constructor(canvas: Three.CanvasTexture)
-	{
+export class CanvasPass extends ShaderPass {
+	constructor(canvas: Three.CanvasTexture) {
 		super(new CanvasMaterial(canvas), "tDiffuse");
 	}
 }

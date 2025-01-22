@@ -20,7 +20,7 @@
  */
 
 // @ts-types="npm:@types/three@^0.169"
-import type * as Three from "three"
+import type * as Three from "three";
 
 /**
  * Internal symbol for the material addon.
@@ -31,68 +31,64 @@ export const Internal = Symbol("MaterialAddonInternal");
  * Installs the material addons to all the material prototypes.
  * @param materials
  */
-export function installMaterialAddonsToPrototypes(materials: typeof Three.Material[])
-{
-	for (const Material of materials)
-	{
-		if(!Material?.prototype) continue;
+export function installMaterialAddonsToPrototypes(
+	materials: (typeof Three.Material)[],
+) {
+	for (const Material of materials) {
+		if (!Material?.prototype) continue;
 		installMaterialAddon(Material.prototype);
 	}
 }
 
-const installedMaterialAddons = new Set<Three.Material>
+const installedMaterialAddons = new Set<Three.Material>();
 /**
  * Installs the material addons to the given material.
  * @param material
  */
-export function installMaterialAddon(material: any)
-{
-	if(installedMaterialAddons.has(material)) return;
+export function installMaterialAddon(material: any) {
+	if (installedMaterialAddons.has(material)) return;
 	installedMaterialAddons.add(material);
 	Object.defineProperty(material, "onBeforeRender", {
 		get() {
 			ASSERT_INTERNAL(this);
-			if(!this[Internal].cachedOnBeforeRender)
-			{
-				this[Internal].cachedOnBeforeRender = (...args: any[]) =>
-				{
+			if (!this[Internal].cachedOnBeforeRender) {
+				this[Internal].cachedOnBeforeRender = (...args: any[]) => {
 					this[Internal].userOnBeforeRender?.(...args);
 					ASSERT_INTERNAL(args[0]);
-					for(const callback of args[0][Internal].materialOnBeforeRenderCallbacks ?? [])
-					{
-						callback(this,...args);
+					for (const callback of args[0][Internal]
+						.materialOnBeforeRenderCallbacks ?? []) {
+						callback(this, ...args);
 					}
-				}
+				};
 			}
-			return this[Internal].cachedOnBeforeRender
+			return this[Internal].cachedOnBeforeRender;
 		},
-		set (v: Function) {
+		set(v: Function) {
 			ASSERT_INTERNAL(this);
 			this[Internal].userOnBeforeRender = v;
-		}
-	})
+		},
+	});
 
 	Object.defineProperty(material, "onBeforeCompile", {
 		get() {
 			ASSERT_INTERNAL(this);
 			return (shader: any, renderer: any) => {
 				ASSERT_INTERNAL(renderer);
-				for(const key in renderer[Internal].globalUniforms ?? [])
-				{
+				for (const key in renderer[Internal].globalUniforms ?? []) {
 					shader.uniforms[key] = renderer[Internal].globalUniforms[key];
 				}
 				this[Internal].userOnBeforeCompile?.(shader, renderer);
-				for(const callback of renderer[Internal]?.materialOnBeforeCompileCallbacks ?? [])
-				{
+				for (const callback of renderer[Internal]
+					?.materialOnBeforeCompileCallbacks ?? []) {
 					callback(this, shader, renderer);
 				}
-			}
+			};
 		},
-		set (v: Function) {
+		set(v: Function) {
 			ASSERT_INTERNAL(this);
 			this[Internal].userOnBeforeCompile = v;
-		}
-	})
+		},
+	});
 }
 
 /**
@@ -101,11 +97,14 @@ export function installMaterialAddon(material: any)
  * @param renderer
  * @param callback
  */
-export function addMaterialBeforeRenderCallback(renderer: Three.WebGLRenderer, callback: (material: Three.Material) => void)
-{
+export function addMaterialBeforeRenderCallback(
+	renderer: Three.WebGLRenderer,
+	callback: (material: Three.Material) => void,
+) {
 	ASSERT_INTERNAL(renderer);
 	// @ts-ignore - extension
-	if(!renderer[Internal]?.materialOnBeforeRenderCallbacks) renderer[Internal].materialOnBeforeRenderCallbacks = [];
+	if (!renderer[Internal]?.materialOnBeforeRenderCallbacks)
+		renderer[Internal].materialOnBeforeRenderCallbacks = [];
 	// @ts-ignore - extension
 	renderer[Internal].materialOnBeforeRenderCallbacks.push(callback);
 }
@@ -116,11 +115,14 @@ export function addMaterialBeforeRenderCallback(renderer: Three.WebGLRenderer, c
  * @param renderer
  * @param callback
  */
-export function addMaterialBeforeCompileCallback(renderer: Three.WebGLRenderer, callback: (material: Three.Material, shader: string) => void)
-{
+export function addMaterialBeforeCompileCallback(
+	renderer: Three.WebGLRenderer,
+	callback: (material: Three.Material, shader: string) => void,
+) {
 	ASSERT_INTERNAL(renderer);
 	// @ts-ignore - extension
-	if(!renderer[Internal].materialOnBeforeCompileCallbacks) renderer[Internal].materialOnBeforeCompileCallbacks = [];
+	if (!renderer[Internal].materialOnBeforeCompileCallbacks)
+		renderer[Internal].materialOnBeforeCompileCallbacks = [];
 	// @ts-ignore - extension
 	renderer[Internal].materialOnBeforeCompileCallbacks.push(callback);
 }
@@ -130,8 +132,10 @@ export function addMaterialBeforeCompileCallback(renderer: Three.WebGLRenderer, 
  * @param renderer
  * @param key
  */
-export function getGlobalUniform<T>(renderer: Three.WebGLRenderer, key: string): T | undefined
-{
+export function getGlobalUniform<T>(
+	renderer: Three.WebGLRenderer,
+	key: string,
+): T | undefined {
 	ASSERT_INTERNAL(renderer);
 	// @ts-ignore - extension
 	return renderer[Internal].globalUniforms?.[key]?.value;
@@ -143,13 +147,18 @@ export function getGlobalUniform<T>(renderer: Three.WebGLRenderer, key: string):
  * @param key
  * @param value
  */
-export function setGlobalUniform(renderer: Three.WebGLRenderer, key: string, value: any)
-{
+export function setGlobalUniform(
+	renderer: Three.WebGLRenderer,
+	key: string,
+	value: any,
+) {
 	ASSERT_INTERNAL(renderer);
 	// @ts-ignore - extension
-	if(!renderer[Internal].globalUniforms) renderer[Internal].globalUniforms = {};
+	if (!renderer[Internal].globalUniforms)
+		renderer[Internal].globalUniforms = {};
 	// @ts-ignore - extension
-	if(!renderer[Internal].globalUniforms[key]) renderer[Internal].globalUniforms[key] = { value };
+	if (!renderer[Internal].globalUniforms[key])
+		renderer[Internal].globalUniforms[key] = { value };
 	// @ts-ignore - extension
 	else renderer[Internal].globalUniforms[key].value = value;
 }

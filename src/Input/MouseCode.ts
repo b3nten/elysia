@@ -1,8 +1,7 @@
 /**
  * Enum for key codes, corresponding to the MouseEvent.code property.
  */
-export enum MouseCode
-{
+export enum MouseCode {
 	/**
 	 * key code of mouse left
 	 */

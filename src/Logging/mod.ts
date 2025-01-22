@@ -44,7 +44,7 @@
  *
  */
 
-export { LogLevel} from "./Levels.ts";
+export { LogLevel } from "./Levels.ts";
 export { type Writer } from "./Writer.ts";
 export { Logger, createLogger } from "./Logger.ts";
 export { gradients } from "./Gradients.ts";

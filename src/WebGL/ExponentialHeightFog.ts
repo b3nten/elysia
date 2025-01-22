@@ -1,5 +1,5 @@
 // @ts-types="npm:@types/three@^0.169"
-import * as Three from "three"
+import * as Three from "three";
 import { setGlobalUniform } from "./InstallMaterialAddons.ts";
 
 const defaultFogParsFragment = Three.ShaderChunk.fog_pars_fragment;
@@ -7,16 +7,15 @@ const defaultFogFragment = Three.ShaderChunk.fog_fragment;
 const defaultFogParsVertex = Three.ShaderChunk.fog_pars_vertex;
 const defaultFogVertex = Three.ShaderChunk.fog_vertex;
 
-export class ExponentialHeightFog extends Three.FogExp2
-{
+export class ExponentialHeightFog extends Three.FogExp2 {
 	static hasShaderModifications = false;
 
-	static InstallShaderModifications()
-	{
+	static InstallShaderModifications() {
+		if (ExponentialHeightFog.hasShaderModifications) return;
 
-		if(ExponentialHeightFog.hasShaderModifications) return;
-
-		Three.ShaderChunk.fog_pars_fragment = _NOISE_GLSL + `
+		Three.ShaderChunk.fog_pars_fragment =
+			_NOISE_GLSL +
+			`
 #ifdef USE_FOG
   uniform float fogTime;
   uniform vec3 fogColor;
@@ -70,9 +69,8 @@ vWorldPosition = fogWorldPosition.xyz;
 		ExponentialHeightFog.hasShaderModifications = true;
 	}
 
-	static UninstallShaderModifications()
-	{
-		if(!ExponentialHeightFog.hasShaderModifications) return;
+	static UninstallShaderModifications() {
+		if (!ExponentialHeightFog.hasShaderModifications) return;
 
 		Three.ShaderChunk.fog_pars_fragment = defaultFogParsFragment;
 		Three.ShaderChunk.fog_fragment = defaultFogFragment;
@@ -86,16 +84,17 @@ vWorldPosition = fogWorldPosition.xyz;
 
 	delta = 0;
 
-	constructor(color: Three.Color | string | number = "#676767", density: number = 0.005)
-	{
+	constructor(
+		color: Three.Color | string | number = "#676767",
+		density: number = 0.005,
+	) {
 		super(color, density);
 		ExponentialHeightFog.InstallShaderModifications();
 	}
 
-	updateUniforms(delta: number)
-	{
-		if(!this.renderer) return;
-		this.delta += 0.0015
+	updateUniforms(delta: number) {
+		if (!this.renderer) return;
+		this.delta += 0.0015;
 		setGlobalUniform(this.renderer, "fogTime", this.delta);
 	}
 }

@@ -25,22 +25,17 @@ import { Audio, type AudioConstructorArguments } from "./Audio.ts";
 /**
  * Represents an audio player that manages multiple audio instances.
  */
-export class AudioPlayer
-{
+export class AudioPlayer {
 	/** Get the shared AudioContext */
-	static GetContext(): AudioContext
-	{
+	static GetContext(): AudioContext {
 		// @ts-ignore - global
 		return globalThis.ELYSIA_AUDIO_CTX;
 	}
 
-	static
-	{
-		if(isBrowser())
-		{
+	static {
+		if (isBrowser()) {
 			// @ts-ignore - global
-			if(!globalThis.ELYSIA_AUDIO_CTX)
-			{
+			if (!globalThis.ELYSIA_AUDIO_CTX) {
 				// @ts-ignore - global
 				globalThis.ELYSIA_AUDIO_CTX = new AudioContext();
 			}
@@ -62,25 +57,23 @@ export class AudioPlayer
 	/**
 	 * The set of all active audio instances, stored weakly.
 	 */
-	readonly instances: Set<WeakRef<Audio>> = new Set;
+	readonly instances: Set<WeakRef<Audio>> = new Set();
 
 	/**
 	 * A cache of audio buffers.
 	 */
-	readonly cache: Map<string | ArrayBuffer, Promise<AudioBuffer>> = new Map;
+	readonly cache: Map<string | ArrayBuffer, Promise<AudioBuffer>> = new Map();
 
 	/**
 	 * Enable debug logd
 	 */
 	debug = false;
 
-	get muteOnBlur(): boolean
-	{
+	get muteOnBlur(): boolean {
 		return this.#muteOnBlur;
 	}
 
-	set muteOnBlur(value: boolean)
-	{
+	set muteOnBlur(value: boolean) {
 		this.#muteOnBlur = value;
 
 		if (!isBrowser()) return;
@@ -99,10 +92,8 @@ export class AudioPlayer
 	 * @param {AudioConstructorArguments} args - The arguments for creating the Audio instance.
 	 * @returns {Audio} A new Audio instance.
 	 */
-	createAudio(args: AudioConstructorArguments): Audio
-	{
-		if(!isBrowser())
-		{
+	createAudio(args: AudioConstructorArguments): Audio {
+		if (!isBrowser()) {
 			return new Audio(args);
 		}
 
@@ -112,8 +103,7 @@ export class AudioPlayer
 	/**
 	 * Mutes all active audio instances associated with this player.
 	 */
-	muteAll()
-	{
+	muteAll() {
 		if (!isBrowser()) return;
 		this.instances.forEach((ref) => {
 			const player = ref.deref();
@@ -126,8 +116,7 @@ export class AudioPlayer
 	/**
 	 * Unmutes all active audio instances associated with this player.
 	 */
-	unmuteAll()
-	{
+	unmuteAll() {
 		if (!isBrowser()) return;
 		this.instances.forEach((ref) => {
 			const player = ref.deref();
@@ -168,9 +157,7 @@ export class AudioPlayer
 	 * @param {ArrayBuffer} input - The input buffer to decode.
 	 * @returns {Promise<AudioBuffer | undefined>} A promise that resolves to the created AudioBuffer, or undefined if not in a browser environment.
 	 */
-	createAudioBuffer(
-		input: ArrayBuffer,
-	): Promise<AudioBuffer | undefined> {
+	createAudioBuffer(input: ArrayBuffer): Promise<AudioBuffer | undefined> {
 		if (!isBrowser()) {
 			return Promise.resolve(undefined);
 		}

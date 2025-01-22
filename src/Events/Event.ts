@@ -3,8 +3,7 @@ import type { Serializable } from "../Shared/Utilities.ts";
 /**
  * Base event class that events can be defined from.
  */
-export class BaseEvent<T extends unknown>
-{
+export class BaseEvent<T extends unknown> {
 	constructor(public readonly value: T) {}
 }
 
@@ -13,10 +12,12 @@ export class BaseEvent<T extends unknown>
  */
 export type SerializableEvent<T extends Serializable> = string & {
 	value: T;
-}
+};
 
 /** Create a serializable event type that can be used with EventDispatcher. */
-export const createSerializableEvent = <T extends Serializable> (name: string): SerializableEvent<T> => name as SerializableEvent<T>;
+export const createSerializableEvent = <T extends Serializable>(
+	name: string,
+): SerializableEvent<T> => name as SerializableEvent<T>;
 
 /**
  * Generic event to indicate that loading has begun.

@@ -28,7 +28,9 @@ export const s_OnUpdate = Symbol.for("Elysia::OnUpdate");
 
 export const s_OnPostUpdate = Symbol.for("Elysia::OnPostUpdate");
 
-export const s_OnBeforePhysicsUpdate = Symbol.for("Elysia::OnBeforePhysicsUpdate");
+export const s_OnBeforePhysicsUpdate = Symbol.for(
+	"Elysia::OnBeforePhysicsUpdate",
+);
 
 export const s_OnEnterScene = Symbol.for("Elysia::OnEnterScene");
 

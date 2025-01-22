@@ -29,32 +29,50 @@ import { Future } from "../Containers/Future.ts";
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import type { Maybe, MaybePromise } from "../Shared/Utilities.ts";
 import { clamp } from "../Math/Other.ts";
-import { BeginLoadEvent, LoadedEvent, ErrorEvent, ProgressEvent } from "../Events/Event.ts";
+import {
+	BeginLoadEvent,
+	LoadedEvent,
+	ErrorEvent,
+	ProgressEvent,
+} from "../Events/Event.ts";
 
 /**
  * Abstract base class for asset loading.
  * @template T The type of data this asset will load.
  */
 
-export abstract class Asset<T>
-{
+export abstract class Asset<T> {
 	/**
 	 * Abstract method to be implemented by subclasses. Defines how to load the asset.
 	 * @returns {MaybePromise<Maybe<T>>} A promise that resolves with the loaded asset data.
 	 */
 	abstract loader(): MaybePromise<Maybe<T>>;
 
-	get data(): Maybe<T> { if(!this.#started) this.load(); return this.#data; }
-	get error(): Maybe<Error> { return this.#error; }
-	get loaded(): boolean { return this.#loaded; }
-	get loading(): boolean { return this.#loading; }
-	get progress(): number { return this.#progress; }
+	get data(): Maybe<T> {
+		if (!this.#started) this.load();
+		return this.#data;
+	}
+	get error(): Maybe<Error> {
+		return this.#error;
+	}
+	get loaded(): boolean {
+		return this.#loaded;
+	}
+	get loading(): boolean {
+		return this.#loading;
+	}
+	get progress(): number {
+		return this.#progress;
+	}
 
-	constructor()
-	{
-		this.#eventDispatcher = new EventDispatcher;
-		this.addEventListener = this.#eventDispatcher.addEventListener.bind(this.#eventDispatcher);
-		this.removeEventListener = this.#eventDispatcher.removeEventListener.bind(this.#eventDispatcher);
+	constructor() {
+		this.#eventDispatcher = new EventDispatcher();
+		this.addEventListener = this.#eventDispatcher.addEventListener.bind(
+			this.#eventDispatcher,
+		);
+		this.removeEventListener = this.#eventDispatcher.removeEventListener.bind(
+			this.#eventDispatcher,
+		);
 
 		this.updateProgress = this.updateProgress.bind(this);
 		this.load = this.load.bind(this);
@@ -65,13 +83,11 @@ export abstract class Asset<T>
 	 * Initiates the asset loading process.
 	 * @returns {Promise<Maybe<T>>} A promise that resolves with the loaded asset data.
 	 */
-	load(): Promise<Maybe<T>>
-	{
-		if(!this.#started)
-		{
+	load(): Promise<Maybe<T>> {
+		if (!this.#started) {
 			this.loadImpl();
 		}
-		return this.#future
+		return this.#future;
 	}
 
 	addEventListener: EventDispatcher["addEventListener"];
@@ -84,8 +100,10 @@ export abstract class Asset<T>
 	 * @param {Function} [options.onProgress] - Callback for progress updates.
 	 * @returns {Promise<Response>} A promise that resolves with the fetched response.
 	 */
-	protected async fetch(url: string, options?: RequestInit & { onProgress?: (progress: number) => void }): Promise<Response>
-	{
+	protected async fetch(
+		url: string,
+		options?: RequestInit & { onProgress?: (progress: number) => void },
+	): Promise<Response> {
 		const response = await fetch(url, options);
 
 		const reader = response.body?.getReader();
@@ -100,15 +118,13 @@ export abstract class Asset<T>
 
 		let received = 0;
 
-		const updateProgress =
-			options?.onProgress ?? this.updateProgress;
+		const updateProgress = options?.onProgress ?? this.updateProgress;
 
 		const stream = new ReadableStream({
 			start(controller) {
 				const pump = () => {
 					reader.read().then(({ done, value }) => {
-						if (done)
-						{
+						if (done) {
 							controller.close();
 							updateProgress(1);
 							return;
@@ -133,15 +149,13 @@ export abstract class Asset<T>
 	 * Updates the loading progress and dispatches a ProgressEvent.
 	 * @param {number} progress - The current progress value between 0 and 1.
 	 */
-	protected updateProgress(progress: number)
-	{
+	protected updateProgress(progress: number) {
 		this.#progress = clamp(progress, 0, 1);
 		this.#eventDispatcher.dispatchEvent(new ProgressEvent(this.#progress));
 	}
 
-	private async loadImpl()
-	{
-		this.#eventDispatcher.dispatchEvent(new BeginLoadEvent);
+	private async loadImpl() {
+		this.#eventDispatcher.dispatchEvent(new BeginLoadEvent());
 		this.#started = true;
 		this.#loading = true;
 		this.#progress = 0;
@@ -149,19 +163,15 @@ export abstract class Asset<T>
 		try {
 			const d = await this.loader();
 			this.#data = d;
-			this.#eventDispatcher.dispatchEvent(new LoadedEvent);
+			this.#eventDispatcher.dispatchEvent(new LoadedEvent());
 			this.#future.resolve(d);
-		}
-		catch(e)
-		{
+		} catch (e) {
 			this.#error = e instanceof Error ? e : new Error(String(e));
 			this.#loaded = true;
 			this.#loading = false;
 			this.#eventDispatcher.dispatchEvent(new ErrorEvent(this.error!));
 			this.#future.reject(e);
-		}
-		finally
-		{
+		} finally {
 			this.#loading = false;
 			this.#loaded = true;
 			this.#progress = 1;

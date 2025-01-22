@@ -1,28 +1,32 @@
-import type { IDestroyable, RenderPipelineLifecycle } from "../Core/Lifecycle.ts";
+import type {
+	IDestroyable,
+	RenderPipelineLifecycle,
+} from "../Core/Lifecycle.ts";
 import type { Scene } from "../Core/Scene.ts";
 // @ts-types="npm:@types/three@^0.169"
-import type * as Three from 'three';
+import type * as Three from "three";
 import { s_OnCreate } from "../Internal/mod.ts";
 import {
 	addMaterialBeforeCompileCallback,
-	addMaterialBeforeRenderCallback
+	addMaterialBeforeRenderCallback,
 } from "../WebGL/InstallMaterialAddons.ts";
 
 /**
  * Abstract base RenderPipeline class used to implement custom render pipelines.
  */
-export abstract class RenderPipeline implements RenderPipelineLifecycle, IDestroyable {
-
+export abstract class RenderPipeline
+	implements RenderPipelineLifecycle, IDestroyable
+{
 	/**
 	 * Called when the pipeline is created for a given scene.
 	 * It may be called multiple times if the scene is changed.
 	 */
-	abstract onCreate(scene: Scene, output: HTMLCanvasElement): void
+	abstract onCreate(scene: Scene, output: HTMLCanvasElement): void;
 
 	/**
 	 * Called when the active camera is changed.
 	 */
-	onCameraChange(camera: Three.Camera) { }
+	onCameraChange(camera: Three.Camera) {}
 
 	/**
 	 * Retrieves the renderer used by the pipeline.
@@ -48,10 +52,7 @@ export abstract class RenderPipeline implements RenderPipelineLifecycle, IDestro
 	 * @param material
 	 * @param group
 	 */
-	onMaterialBeforeRender(material: Three.Material)
-	{
-
-	}
+	onMaterialBeforeRender(material: Three.Material) {}
 
 	/**
 	 * Called for each material before it is compiled.
@@ -61,18 +62,21 @@ export abstract class RenderPipeline implements RenderPipelineLifecycle, IDestro
 	 * @param geometry
 	 * @param group
 	 */
-	onMaterialBeforeCompile(material: Three.Material, shader: string)
-	{
-
-	}
+	onMaterialBeforeCompile(material: Three.Material, shader: string) {}
 
 	destructor() {}
 
-	[s_OnCreate](scene: Scene, output: HTMLCanvasElement)
-	{
+	[s_OnCreate](scene: Scene, output: HTMLCanvasElement) {
 		this.onCreate(scene, output);
-		if(this.onMaterialBeforeRender) addMaterialBeforeRenderCallback(this.getRenderer(), this.onMaterialBeforeRender.bind(this));
-		if(this.onMaterialBeforeCompile) addMaterialBeforeCompileCallback(this.getRenderer(), this.onMaterialBeforeCompile.bind(this));
+		if (this.onMaterialBeforeRender)
+			addMaterialBeforeRenderCallback(
+				this.getRenderer(),
+				this.onMaterialBeforeRender.bind(this),
+			);
+		if (this.onMaterialBeforeCompile)
+			addMaterialBeforeCompileCallback(
+				this.getRenderer(),
+				this.onMaterialBeforeCompile.bind(this),
+			);
 	}
 }
-

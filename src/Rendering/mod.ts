@@ -29,6 +29,6 @@
  * ```
  */
 
-export { RenderPipeline} from "./RenderPipeline.ts";
+export { RenderPipeline } from "./RenderPipeline.ts";
 export { BasicRenderPipeline } from "./BasicRenderPipeline.ts";
 export { HDRenderPipeline } from "./HighDefinitionRenderPipeline.ts";

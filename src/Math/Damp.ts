@@ -1,5 +1,10 @@
- import { lerp } from './Other.ts';
-import type { Vector2Like, Vector3Like, Vector4Like, VectorLike } from "./Vectors.ts";
+import { lerp } from "./Other.ts";
+import type {
+	Vector2Like,
+	Vector3Like,
+	Vector4Like,
+	VectorLike,
+} from "./Vectors.ts";
 
 /**
  * Improved lerp for smoothing that prevents overshoot and is frame rate independent.
@@ -10,33 +15,63 @@ import type { Vector2Like, Vector3Like, Vector4Like, VectorLike } from "./Vector
  * @param halflife - The half-life of decay (smoothing)
  * @returns If smoothing number, returns the smoothed number. If smoothing Vector, returns void.
  */
-export function lerpSmooth(start: number, end: number, delta: number, halflife: number): number;
-export function lerpSmooth(start: VectorLike, end: VectorLike, delta: number, halflife: number): void;
-export function lerpSmooth(start: number | VectorLike, end: number | VectorLike, delta: number, halflife: number): number | void
-{
-	if(typeof start === 'number')
-	{
+export function lerpSmooth(
+	start: number,
+	end: number,
+	delta: number,
+	halflife: number,
+): number;
+export function lerpSmooth(
+	start: VectorLike,
+	end: VectorLike,
+	delta: number,
+	halflife: number,
+): void;
+export function lerpSmooth(
+	start: number | VectorLike,
+	end: number | VectorLike,
+	delta: number,
+	halflife: number,
+): number | void {
+	if (typeof start === "number") {
 		// @ts-ignore
-		return lerp(start, end, -Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)))
+		return lerp(
+			start,
+			end,
+			-Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)),
+		);
 	} else {
-		if(start.x)
-		{
+		if (start.x) {
 			// @ts-ignore
-			start.x = lerp(start.x, end.x, -Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)))
+			start.x = lerp(
+				start.x,
+				end.x,
+				-Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)),
+			);
 		}
-		if(start.y)
-		{
+		if (start.y) {
 			// @ts-ignore
-			start.y = lerp(start.y, end.y, -Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)))
+			start.y = lerp(
+				start.y,
+				end.y,
+				-Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)),
+			);
 		}
-		if(start.z)
-		{
+		if (start.z) {
 			// @ts-ignore
-			start.z = lerp(start.z, end.z, -Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)))
+			start.z = lerp(
+				start.z,
+				end.z,
+				-Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)),
+			);
 		}
-		if(start.w)
-		{// @ts-ignore
-			start.w = lerp(start.w, end.w, -Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)))
+		if (start.w) {
+			// @ts-ignore
+			start.w = lerp(
+				start.w,
+				end.w,
+				-Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)),
+			);
 		}
 	}
 }

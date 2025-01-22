@@ -1,13 +1,14 @@
-/** @internal */ export class GameClock
-{
-	public get elapsed(): number { return this.#elapsed; }
+/** @internal */ export class GameClock {
+	public get elapsed(): number {
+		return this.#elapsed;
+	}
 
-	public get delta(): number { return this.#delta; }
+	public get delta(): number {
+		return this.#delta;
+	}
 
-	public capture(): void
-	{
-		if(!this.#started)
-		{
+	public capture(): void {
+		if (!this.#started) {
 			this.#started = true;
 			this.#now = performance.now();
 			this.#last = this.#now;

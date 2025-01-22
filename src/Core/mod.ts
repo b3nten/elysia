@@ -3,8 +3,25 @@
 export { Actor } from "./Actor.ts";
 export { Application } from "./Application.ts";
 export { Behavior } from "./Behavior.ts";
-export { type Component, isThreeActor, isActor, isComponent, isBehavior } from "./Component.ts";
+export {
+	type Component,
+	isThreeActor,
+	isActor,
+	isComponent,
+	isBehavior,
+} from "./Component.ts";
 export { Scene } from "./Scene.ts";
-export { ElysiaEvents, TagAddedEvent, ComponentAddedEvent, ComponentRemovedEvent, TagRemovedEvent } from "./ElysiaEvents.ts";
-export type { ComponentLifecycle, IDestroyable, SceneLifecycle, RenderPipelineLifecycle } from "./Lifecycle.ts"
+export {
+	ElysiaEvents,
+	TagAddedEvent,
+	ComponentAddedEvent,
+	ComponentRemovedEvent,
+	TagRemovedEvent,
+} from "./ElysiaEvents.ts";
+export type {
+	ComponentLifecycle,
+	IDestroyable,
+	SceneLifecycle,
+	RenderPipelineLifecycle,
+} from "./Lifecycle.ts";
 export { definePrefab } from "./Prefab.ts";

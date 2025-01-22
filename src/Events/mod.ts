@@ -52,6 +52,17 @@
  * - Loading operations: Use built-in events (BeginLoadEvent, ProgressEvent, etc.)
  */
 
-export { ProgressEvent, ErrorEvent, LoadedEvent, BeginLoadEvent, BaseEvent, type SerializableEvent, createSerializableEvent } from "./Event.ts";
+export {
+	ProgressEvent,
+	ErrorEvent,
+	LoadedEvent,
+	BeginLoadEvent,
+	BaseEvent,
+	type SerializableEvent,
+	createSerializableEvent,
+} from "./Event.ts";
 export { EventQueue } from "./EventQueue.ts";
-export { EventDispatcher, type EventDispatcherConstructorArgs } from "./EventDispatcher.ts";
+export {
+	EventDispatcher,
+	type EventDispatcherConstructorArgs,
+} from "./EventDispatcher.ts";

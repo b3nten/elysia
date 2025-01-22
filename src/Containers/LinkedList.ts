@@ -1,28 +1,35 @@
 export class SinglyLinkedListNode<T> {
-	constructor(public data: T, public next: SinglyLinkedListNode<T> | null = null) {}
+	constructor(
+		public data: T,
+		public next: SinglyLinkedListNode<T> | null = null,
+	) {}
 }
 
-export class SinglyLinkedList<T>
-{
-	get length(): number { return this.#length; }
+export class SinglyLinkedList<T> {
+	get length(): number {
+		return this.#length;
+	}
 
-	get head(): SinglyLinkedListNode<T> | null { return this.#head; }
+	get head(): SinglyLinkedListNode<T> | null {
+		return this.#head;
+	}
 
-	get tail(): SinglyLinkedListNode<T> | null { return this.#tail; }
+	get tail(): SinglyLinkedListNode<T> | null {
+		return this.#tail;
+	}
 
 	/**
 	 * Add a node to the end of the list
 	 * @param data - The data to add to the list
 	 */
-	append(data: T)
-	{
+	append(data: T) {
 		const node = new SinglyLinkedListNode(data);
 
 		if (!this.#head) {
 			this.#head = node;
 			this.#tail = node;
 		} else {
-			if(this.#tail){
+			if (this.#tail) {
 				this.#tail.next = node;
 			}
 			this.#tail = node;
@@ -35,8 +42,7 @@ export class SinglyLinkedList<T>
 	 * Add a node to the beginning of the list
 	 * @param data - The data to add to the list
 	 */
-	prepend(data: T)
-	{
+	prepend(data: T) {
 		const node = new SinglyLinkedListNode(data);
 
 		if (!this.#head) {
@@ -55,10 +61,9 @@ export class SinglyLinkedList<T>
 	 * @param index - The index to insert the node at
 	 * @param data - The data to insert
 	 */
-	insert(index: number, data: T)
-	{
+	insert(index: number, data: T) {
 		if (index < 0 || index > this.#length) {
-			throw new Error('Index out of bounds');
+			throw new Error("Index out of bounds");
 		}
 
 		if (index === 0) {
@@ -91,7 +96,6 @@ export class SinglyLinkedList<T>
 		}
 
 		this.#length++;
-
 	}
 
 	/**
@@ -99,10 +103,9 @@ export class SinglyLinkedList<T>
 	 * @param index - The index to get the node at
 	 * @returns The node at the index
 	 */
-	getAt(index: number): SinglyLinkedListNode<T> | null
-	{
+	getAt(index: number): SinglyLinkedListNode<T> | null {
 		if (index < 0 || index >= this.#length) {
-			throw new Error('Index out of bounds');
+			throw new Error("Index out of bounds");
 		}
 
 		let current = this.#head;
@@ -120,10 +123,9 @@ export class SinglyLinkedList<T>
 	 * Remove a node from a specific index
 	 * @param {number} index - The index to remove the node from
 	 */
-	remove(index: number)
-	{
+	remove(index: number) {
 		if (index < 0 || index >= this.#length) {
-			throw new Error('Index out of bounds');
+			throw new Error("Index out of bounds");
 		}
 
 		let current = this.#head;
@@ -153,11 +155,9 @@ export class SinglyLinkedList<T>
 	 * Convert the list to an array
 	 * @returns - The array representation of the list
 	 */
-	toArray(): T[]
-	{
+	toArray(): T[] {
 		const result: T[] = [];
-		for(const node of this)
-		{
+		for (const node of this) {
 			result.push(node.data);
 		}
 		return result;
@@ -185,15 +185,13 @@ export class SinglyLinkedList<T>
 	/**
 	 * Clear the list
 	 */
-	clear()
-	{
+	clear() {
 		this.#head = null;
 		this.#tail = null;
 		this.#length = 0;
 	}
 
-	*[Symbol.iterator](): any
-	{
+	*[Symbol.iterator](): any {
 		let current = this.#head;
 
 		while (current) {

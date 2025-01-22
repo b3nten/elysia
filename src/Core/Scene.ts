@@ -25,15 +25,20 @@
  * ```
  */
 
-import {Actor} from "./Actor.ts";
+import { Actor } from "./Actor.ts";
 // @ts-types="npm:@types/three@^0.169"
-import * as Three from 'three';
+import * as Three from "three";
 import type { IDestroyable } from "./Lifecycle.ts";
 import { Future } from "../Containers/Future.ts";
 import { type Constructor, noop } from "../Shared/Utilities.ts";
 import type { Behavior } from "./Behavior.ts";
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
-import { ComponentAddedEvent, ComponentRemovedEvent, TagAddedEvent, TagRemovedEvent } from "./ElysiaEvents.ts";
+import {
+	ComponentAddedEvent,
+	ComponentRemovedEvent,
+	TagAddedEvent,
+	TagRemovedEvent,
+} from "./ElysiaEvents.ts";
 import { type Component, isThreeActor } from "./Component.ts";
 import { ComponentSet } from "../Containers/ComponentSet.ts";
 import {
@@ -55,23 +60,22 @@ import {
 	s_SceneLoadPromise,
 	s_Started,
 	s_SceneRoot,
-	s_OnPreUpdate, s_OnPostUpdate
+	s_OnPreUpdate,
+	s_OnPostUpdate,
 } from "../Internal/mod.ts";
 import type { Application } from "./Application.ts";
 import { LifeCycleError, reportLifecycleError } from "./Errors.ts";
 import { AutoInitializedMap } from "../Containers/AutoInitializedMap.ts";
 import type { ThreeObject } from "../Actors/ThreeObject.ts";
 
-export interface IScenePhysics extends IDestroyable
-{
+export interface IScenePhysics extends IDestroyable {
 	onLoad?(scene: Scene): void | Promise<void>;
 	onBeforePhysicsUpdate?(delta: number, elapsed: number): void;
 	onUpdate?(delta: number, elapsed: number): void;
 }
 
-export class Scene implements IDestroyable
-{
-	public readonly userData: Map<any, any> = new Map;
+export class Scene implements IDestroyable {
+	public readonly userData: Map<any, any> = new Map();
 
 	/**
 	 * The physics world for this Scene.
@@ -80,53 +84,54 @@ export class Scene implements IDestroyable
 	public physics?: IScenePhysics;
 
 	/** Get the root Three.Scene */
-	get object3d(): Three.Scene { return this[s_Object3D]; }
+	get object3d(): Three.Scene {
+		return this[s_Object3D];
+	}
 
 	/** Get the owning Application */
-	get app(): Application | null { return this[s_App]; }
+	get app(): Application | null {
+		return this[s_App];
+	}
 
 	/** The s_Scene's active camera */
-	get activeCamera(): Three.Camera { return this.getActiveCamera(); }
+	get activeCamera(): Three.Camera {
+		return this.getActiveCamera();
+	}
 
-	set activeCamera(camera: Three.Camera | ThreeObject<Three.Camera>)
-	{
+	set activeCamera(camera: Three.Camera | ThreeObject<Three.Camera>) {
 		this[s_ActiveCamera] = isThreeActor(camera) ? camera.object3d : camera;
 		this.app?.renderPipeline.onCameraChange(this[s_ActiveCamera]);
 	}
 
-	constructor()
-	{
+	constructor() {
 		EventDispatcher.addEventListener(ComponentAddedEvent, (e) => {
-			const type = e.child.constructor as Constructor<Component>
+			const type = e.child.constructor as Constructor<Component>;
 			this.#componentsByType.get(type).add(e.child);
-		})
+		});
 
 		EventDispatcher.addEventListener(ComponentRemovedEvent, (e) => {
-			const type = e.child.constructor as Constructor<Component>
+			const type = e.child.constructor as Constructor<Component>;
 			this.#componentsByType.get(type).delete(e.child);
-			for(const tag of e.child.tags)
-			{
+			for (const tag of e.child.tags) {
 				this.#componentsByTag.get(tag).delete(e.child);
 			}
-		})
+		});
 
 		EventDispatcher.addEventListener(TagAddedEvent, (event) => {
 			this.#componentsByTag.get(event.tag).add(event.target);
-		})
+		});
 
 		EventDispatcher.addEventListener(TagRemovedEvent, (event) => {
 			this.#componentsByTag.get(event.tag).delete(event.target);
-		})
+		});
 	}
 
 	/**
 	 * Adds a component to this s_Scene.
 	 * @param component
 	 */
-	public addComponent(...components: Component[]): this
-	{
-		for(const c of components)
-		{
+	public addComponent(...components: Component[]): this {
+		for (const c of components) {
 			this[s_SceneRoot].addComponent(c);
 		}
 		return this;
@@ -137,10 +142,8 @@ export class Scene implements IDestroyable
 	 * @param component
 	 * @returns `true` if the component was successfully added, `false` otherwise.
 	 */
-	public removeComponent(...components: Component[]): this
-	{
-		for(const c of components)
-		{
+	public removeComponent(...components: Component[]): this {
+		for (const c of components) {
 			this[s_SceneRoot].removeComponent(c);
 		}
 		return this;
@@ -150,48 +153,45 @@ export class Scene implements IDestroyable
 	 * Returns all actors in the s_Scene with the given tag.
 	 * @param tag
 	 */
-	public getComponentsByTag(tag: any): ComponentSet<Component>
-	{
+	public getComponentsByTag(tag: any): ComponentSet<Component> {
 		const set = this.#componentsByTag.get(tag);
-		if(!set)
-		{
+		if (!set) {
 			const newSet = new ComponentSet<Component>();
 			this.#componentsByTag.set(tag, newSet);
 			return newSet;
-		}
-		else return set;
+		} else return set;
 	}
 
 	/**
 	 * Returns all actors in the s_Scene with the given type.
 	 */
-	public getComponentsByType<T extends Actor | Behavior>(type: Constructor<T>): ComponentSet<T>
-	{
+	public getComponentsByType<T extends Actor | Behavior>(
+		type: Constructor<T>,
+	): ComponentSet<T> {
 		const set = this.#componentsByType.get(type);
-		if(!set)
-		{
+		if (!set) {
 			const newSet = new ComponentSet<T>();
 			this.#componentsByType.set(type, newSet);
 			return newSet;
-		}
-		else return set as ComponentSet<T>;
+		} else return set as ComponentSet<T>;
 	}
 
 	/**
 	 * Returns the active camera in the s_Scene (if one is set via ActiveCameraTag).
 	 * If multiple cameras are set as active, the first one found is returned.
 	 */
-	public getActiveCamera(): Three.Camera { return this[s_ActiveCamera]; }
+	public getActiveCamera(): Three.Camera {
+		return this[s_ActiveCamera];
+	}
 
 	onLoad(): void | Promise<void> {}
-	onCreate(){}
-	onStart(){}
+	onCreate() {}
+	onStart() {}
 	onBeforePhysicsUpdate(delta: number, elapsed: number) {}
 	onUpdate(delta: number, elapsed: number) {}
-	onDestroy(){}
+	onDestroy() {}
 
-	destructor()
-	{
+	destructor() {
 		this[s_OnDestroy]();
 		this.physics?.destructor();
 		this.#componentsByTag.clear();
@@ -215,10 +215,10 @@ export class Scene implements IDestroyable
 	[s_ActiveCamera]: Three.Camera = new Three.PerspectiveCamera();
 
 	/** @internal */
-	[s_Object3D]: Three.Scene = new Three.Scene;
+	[s_Object3D]: Three.Scene = new Three.Scene();
 
 	/** @internal */
-	[s_SceneRoot]: SceneActor = new SceneActor;
+	[s_SceneRoot]: SceneActor = new SceneActor();
 
 	/** @internal */
 	[s_App]: Application | null = null;
@@ -236,23 +236,21 @@ export class Scene implements IDestroyable
 	[s_Destroyed] = false;
 
 	/** @internal */
-	async [s_OnLoad]()
-	{
-		if(this[s_Loaded] || this[s_Destroyed]) return;
+	async [s_OnLoad]() {
+		if (this[s_Loaded] || this[s_Destroyed]) return;
 		await Promise.all([
 			this.onLoad(),
-			this.physics?.onLoad ? this.physics.onLoad(this) : Promise.resolve()
+			this.physics?.onLoad ? this.physics.onLoad(this) : Promise.resolve(),
 		]).catch((e) => {
 			throw new LifeCycleError("Scene", "onLoad", e);
-		})
+		});
 		this[s_Loaded] = true;
-		this[s_SceneLoadPromise].resolve()
+		this[s_SceneLoadPromise].resolve();
 	}
 
 	/** @internal */
-	[s_OnCreate]()
-	{
-		if(this[s_Created] || !this[s_Loaded] || this[s_Destroyed]) return;
+	[s_OnCreate]() {
+		if (this[s_Created] || !this[s_Loaded] || this[s_Destroyed]) return;
 
 		this[s_SceneRoot][s_App] = this[s_App];
 		this[s_SceneRoot][s_Scene] = this;
@@ -266,50 +264,59 @@ export class Scene implements IDestroyable
 	}
 
 	/** @internal */
-	[s_OnStart]()
-	{
-		if(this[s_Started] || !this[s_Created] || this[s_Destroyed]) return;
+	[s_OnStart]() {
+		if (this[s_Started] || !this[s_Created] || this[s_Destroyed]) return;
 		reportLifecycleError(this, this.onStart);
 		this[s_Started] = true;
 		this[s_SceneRoot][s_OnStart]();
 	}
 
 	/** @internal */
-	[s_OnBeforePhysicsUpdate](delta: number, elapsed: number)
-	{
-		if(!this.physics) return;
-		if(this[s_Destroyed]) return;
-		if(!this[s_Started]) this[s_OnStart]();
+	[s_OnBeforePhysicsUpdate](delta: number, elapsed: number) {
+		if (!this.physics) return;
+		if (this[s_Destroyed]) return;
+		if (!this[s_Started]) this[s_OnStart]();
 		reportLifecycleError(this, this.onBeforePhysicsUpdate, delta, elapsed);
-		if(this.physics.onBeforePhysicsUpdate) reportLifecycleError(this.physics, this.physics.onBeforePhysicsUpdate, delta, elapsed);
+		if (this.physics.onBeforePhysicsUpdate)
+			reportLifecycleError(
+				this.physics,
+				this.physics.onBeforePhysicsUpdate,
+				delta,
+				elapsed,
+			);
 		this[s_SceneRoot][s_OnBeforePhysicsUpdate](delta, elapsed);
 	}
 
 	/** @internal */
-	[s_OnUpdate](delta: number, elapsed: number)
-	{
-		if(this[s_Destroyed]) return;
-		if(!this[s_Started]) this[s_OnStart]();
+	[s_OnUpdate](delta: number, elapsed: number) {
+		if (this[s_Destroyed]) return;
+		if (!this[s_Started]) this[s_OnStart]();
 		reportLifecycleError(this, this.onUpdate, delta, elapsed);
-		if(this.physics?.onUpdate) reportLifecycleError(this.physics, this.physics.onUpdate, delta, elapsed);
+		if (this.physics?.onUpdate)
+			reportLifecycleError(this.physics, this.physics.onUpdate, delta, elapsed);
 		this[s_SceneRoot][s_OnPreUpdate](delta, elapsed);
 		this[s_SceneRoot][s_OnUpdate](delta, elapsed);
 		this[s_SceneRoot][s_OnPostUpdate](delta, elapsed);
 	}
 
 	/** @internal */
-	[s_OnDestroy]()
-	{
-		if(this[s_Destroyed]) return;
+	[s_OnDestroy]() {
+		if (this[s_Destroyed]) return;
 		reportLifecycleError(this[s_SceneRoot], this[s_SceneRoot].destructor);
 		reportLifecycleError(this, this.onDestroy);
 	}
 
-	#componentsByTag = new AutoInitializedMap<any, ComponentSet<Component>>(ComponentSet)
-	#componentsByType = new AutoInitializedMap<Constructor<Component>, ComponentSet<Component>>(ComponentSet)
+	#componentsByTag = new AutoInitializedMap<any, ComponentSet<Component>>(
+		ComponentSet,
+	);
+	#componentsByType = new AutoInitializedMap<
+		Constructor<Component>,
+		ComponentSet<Component>
+	>(ComponentSet);
 }
 
-class SceneActor extends Actor
-{
-	constructor() { super(); }
+class SceneActor extends Actor {
+	constructor() {
+		super();
+	}
 }

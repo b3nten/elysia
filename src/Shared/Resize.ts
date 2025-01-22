@@ -3,33 +3,31 @@ import { isBrowser } from "./Asserts.ts";
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
 import { BaseEvent } from "../Events/Event.ts";
 
-export class ResizeEvent extends BaseEvent<{ x: number, y: number }> {}
+export class ResizeEvent extends BaseEvent<{ x: number; y: number }> {}
 
-export class ResizeController implements IDestroyable
-{
+export class ResizeController implements IDestroyable {
 	width = 0;
 	height = 0;
 
 	constructor(private element?: HTMLElement) {
-		if(!isBrowser()) return;
+		if (!isBrowser()) return;
 
-		if(element)
-		{
+		if (element) {
 			this.#observer = new ResizeObserver((entries) => {
 				const cr = entries[0].contentRect;
 				this.width = cr.width;
 				this.height = cr.height;
-				this.#event.dispatchEvent(new ResizeEvent({ x: this.width, y: this.height }));
-			})
+				this.#event.dispatchEvent(
+					new ResizeEvent({ x: this.width, y: this.height }),
+				);
+			});
 			this.#observer.observe(element);
 			const bounds = element.getBoundingClientRect();
 			this.width = bounds.width;
 			this.height = bounds.height;
 
 			globalThis.addEventListener("resize", this.#onResize);
-		}
-		else
-		{
+		} else {
 			this.width = globalThis.innerWidth;
 			this.height = globalThis.innerHeight;
 		}
@@ -37,7 +35,9 @@ export class ResizeController implements IDestroyable
 		globalThis.addEventListener("resize", this.#onResize);
 
 		this.addEventListener = this.#event.addEventListener.bind(this.#event);
-		this.removeEventListener = this.#event.removeEventListener.bind(this.#event);
+		this.removeEventListener = this.#event.removeEventListener.bind(
+			this.#event,
+		);
 	}
 
 	addEventListener!: EventDispatcher["addEventListener"];
@@ -50,24 +50,24 @@ export class ResizeController implements IDestroyable
 		this.#event.clear();
 	}
 
-	#event = new EventDispatcher;
+	#event = new EventDispatcher();
 
 	#observer?: ResizeObserver;
 
-	#onResize = (e: Event) =>
-	{
-		if(this.element)
-		{
+	#onResize = (e: Event) => {
+		if (this.element) {
 			const bounds = this.element.getBoundingClientRect();
 			this.width = bounds.width;
 			this.height = bounds.height;
-			this.#event.dispatchEvent(new ResizeEvent({ x: this.width, y: this.height }));
-		}
-		else
-		{
+			this.#event.dispatchEvent(
+				new ResizeEvent({ x: this.width, y: this.height }),
+			);
+		} else {
 			this.width = globalThis.innerWidth;
 			this.height = globalThis.innerHeight;
-			this.#event.dispatchEvent(new ResizeEvent({ x: this.width, y: this.height }));
+			this.#event.dispatchEvent(
+				new ResizeEvent({ x: this.width, y: this.height }),
+			);
 		}
-	}
+	};
 }

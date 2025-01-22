@@ -11,4 +11,4 @@ export const Colors = {
 	Purple: "#BD93F9",
 	Cyan: "#8BE9FD",
 	Pink: "#FF79C6",
-}
+};

@@ -16,28 +16,25 @@ import type { Constructor } from "../Shared/Utilities.ts";
 /**
  * A map of sets which automatically initializes a set for a key if it doesn't exist.
  */
-export class AutoInitializedMap<K, V> extends Map
-{
+export class AutoInitializedMap<K, V> extends Map {
 	/**
 	 * Whether the map has a set for the given key.
 	 * Will always return true.
 	 * @param key
 	 */
-	public override has(key: K): boolean { return true; }
+	public override has(key: K): boolean {
+		return true;
+	}
 
 	/**
 	 * Get the set for the given key.
 	 * @param key
 	 */
-	public override get(key: K): V
-	{
-		if(this.exists(key))
-		{
+	public override get(key: K): V {
+		if (this.exists(key)) {
 			return super.get(key);
-		}
-		else
-		{
-			this.set(key, new this.ConstructorType);
+		} else {
+			this.set(key, new this.ConstructorType());
 			return super.get(key);
 		}
 	}
@@ -47,8 +44,7 @@ export class AutoInitializedMap<K, V> extends Map
 	 * Unlike `has()`, it will return false if the value for a given key has not been initialized yet.
 	 * @param key
 	 */
-	public exists(key: K): boolean
-	{
+	public exists(key: K): boolean {
 		return super.has(key);
 	}
 
@@ -56,11 +52,10 @@ export class AutoInitializedMap<K, V> extends Map
 	 * A map of sets which automatically initializes a set for a key if it doesn't exist.
 	 * @param ConstructorType The constructor for the set to use.
 	 */
-	constructor(ConstructorType: Constructor<V>)
-	{
-		super()
+	constructor(ConstructorType: Constructor<V>) {
+		super();
 		this.ConstructorType = ConstructorType;
 	}
 
-	private readonly ConstructorType: Constructor<V>
+	private readonly ConstructorType: Constructor<V>;
 }

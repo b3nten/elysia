@@ -1,8 +1,8 @@
 // @ts-types="npm:@types/three@^0.169"
-import * as Three from 'three';
+import * as Three from "three";
 import { RenderPipeline } from "./RenderPipeline.ts";
 import type { Scene } from "../Core/Scene.ts";
-import * as Postprocessing from "postprocessing"
+import * as Postprocessing from "postprocessing";
 import { ExponentialHeightFog } from "../WebGL/ExponentialHeightFog.ts";
 
 Postprocessing.OverrideMaterialManager.workaroundEnabled = true;
@@ -10,12 +10,11 @@ Postprocessing.OverrideMaterialManager.workaroundEnabled = true;
 let _PREPASS_DEPTH = false;
 export const PREPASS_DEPTH = () => !!_PREPASS_DEPTH;
 
-interface HDRenderPipelineConstructorArguments
-{
+interface HDRenderPipelineConstructorArguments {
 	/**
 	 * The number of samples to use for multisampling.
 	 */
-	multisampling?: number
+	multisampling?: number;
 
 	/**
 	 * Enable SMAA antialiasing.
@@ -23,29 +22,29 @@ interface HDRenderPipelineConstructorArguments
 	 * If an SMAAEffect is provided, it will be used.
 	 * @default false
 	 */
-	smaa?: boolean | Postprocessing.SMAAEffect
+	smaa?: boolean | Postprocessing.SMAAEffect;
 
 	/**
 	 * The tone mapping mode to use.
 	 * @default Postprocessing.ToneMappingMode.ACES_FILMIC
 	 */
-	toneMapping?: Postprocessing.ToneMappingMode
+	toneMapping?: Postprocessing.ToneMappingMode;
 
 	/**
 	 * An array of Postprocessing.Effect instances to apply to the scene.
 	 */
-	effects?: Postprocessing.Effect[]
+	effects?: Postprocessing.Effect[];
 
 	/**
 	 * See Postprocessing.EffectComposer for more information.
 	 */
-	alpha?: boolean
+	alpha?: boolean;
 
 	/**
 	 * @experimental
 	 * Accepts Three.js default Fog or FogExp2, or a custom ExponentialHeightFog instance with support for noise.
 	 */
-	fog?: Three.FogExp2 | Three.Fog | ExponentialHeightFog,
+	fog?: Three.FogExp2 | Three.Fog | ExponentialHeightFog;
 
 	/**
 	 * @experimental
@@ -53,30 +52,27 @@ interface HDRenderPipelineConstructorArguments
 	 * This will render the scene to the depth buffer first, then render the scene again
 	 * with the main shader.
 	 */
-	depthPrePass?: boolean
+	depthPrePass?: boolean;
 }
 
 class DepthPrePass extends Postprocessing.RenderPass {
-
-	constructor(scene: Three.Scene, camera: Three.Camera)
-	{
-		class EmptyFragShader extends Three.ShaderMaterial
-		{
+	constructor(scene: Three.Scene, camera: Three.Camera) {
+		class EmptyFragShader extends Three.ShaderMaterial {
 			override vertexShader: string = `
 			void main()
 			{
 				gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 			}
-			`
+			`;
 			override fragmentShader: string = `
 			void main()
 			{
 				gl_FragColor = vec4(0., 1.);
 			}
-			`
+			`;
 		}
 
-		super(scene, camera, new EmptyFragShader);
+		super(scene, camera, new EmptyFragShader());
 		this.ignoreBackground = true;
 	}
 
@@ -85,9 +81,8 @@ class DepthPrePass extends Postprocessing.RenderPass {
 		inputBuffer: Three.WebGLRenderTarget,
 		outputBuffer: Three.WebGLRenderTarget,
 		deltaTime?: number | undefined,
-		stencilTest?: boolean | undefined
+		stencilTest?: boolean | undefined,
 	): void {
-
 		renderer.getContext().depthFunc(renderer.getContext().LEQUAL);
 		_PREPASS_DEPTH = true;
 		super.render(renderer, inputBuffer, outputBuffer, deltaTime, stencilTest);
@@ -96,7 +91,6 @@ class DepthPrePass extends Postprocessing.RenderPass {
 }
 
 class MainRenderPass extends Postprocessing.RenderPass {
-
 	constructor(scene: Three.Scene, camera: Three.Camera) {
 		super(scene, camera);
 		// Avoid clearing the depth buffer before rendering as that would throw out all the depth data
@@ -109,7 +103,7 @@ class MainRenderPass extends Postprocessing.RenderPass {
 		inputBuffer: Three.WebGLRenderTarget,
 		outputBuffer: Three.WebGLRenderTarget,
 		deltaTime?: number | undefined,
-		stencilTest?: boolean | undefined
+		stencilTest?: boolean | undefined,
 	) {
 		const ctx = renderer.getContext();
 
@@ -117,7 +111,13 @@ class MainRenderPass extends Postprocessing.RenderPass {
 		// automatically discard fragments that aren't visible to the camera
 		ctx.depthFunc(ctx.LEQUAL);
 		ctx.depthRange(0.0, 0.999999);
-		super.render.apply(this, [renderer, inputBuffer, outputBuffer, deltaTime, stencilTest]);
+		super.render.apply(this, [
+			renderer,
+			inputBuffer,
+			outputBuffer,
+			deltaTime,
+			stencilTest,
+		]);
 		ctx.depthFunc(ctx.LESS);
 		ctx.depthRange(0.0, 1.0);
 	}
@@ -125,31 +125,38 @@ class MainRenderPass extends Postprocessing.RenderPass {
 /**
  * A basic render pipeline that uses Three.js to render the scene with the default WebGLRenderer.
  */
-export class HDRenderPipeline extends RenderPipeline
-{
+export class HDRenderPipeline extends RenderPipeline {
+	get multisampling(): number {
+		return this.effectComposer.multisampling;
+	}
+	set multisampling(v: number) {
+		this.effectComposer.multisampling = v;
+	}
 
-	get multisampling(): number { return this.effectComposer.multisampling; }
-	set multisampling(v: number) { this.effectComposer.multisampling = v; }
+	get toneMappingMode(): Postprocessing.ToneMappingMode {
+		return this.toneMapping.mode;
+	}
+	set toneMappingMode(v: Postprocessing.ToneMappingMode) {
+		this.toneMapping.mode = v;
+	}
 
-	get toneMappingMode(): Postprocessing.ToneMappingMode { return this.toneMapping.mode; }
-	set toneMappingMode(v: Postprocessing.ToneMappingMode) { this.toneMapping.mode = v; }
-
-	get fog(): Three.FogExp2 | Three.Fog | ExponentialHeightFog | undefined { return this.#fog; }
-	set fog(v: Three.FogExp2 | Three.Fog | ExponentialHeightFog | undefined)
-	{
+	get fog(): Three.FogExp2 | Three.Fog | ExponentialHeightFog | undefined {
+		return this.#fog;
+	}
+	set fog(v: Three.FogExp2 | Three.Fog | ExponentialHeightFog | undefined) {
 		this.#fog = v;
 		// @ts-ignore - custom fog type
-		if(this.scene) this.scene.object3d.fog = v;
+		if (this.scene) this.scene.object3d.fog = v;
 	}
 
 	public smaa?: Postprocessing.SMAAEffect;
 
-	public toneMapping: Postprocessing.ToneMappingEffect = new Postprocessing.ToneMappingEffect;
+	public toneMapping: Postprocessing.ToneMappingEffect =
+		new Postprocessing.ToneMappingEffect();
 
 	public effectComposer: Postprocessing.EffectComposer;
 
-	constructor(args: HDRenderPipelineConstructorArguments = {})
-	{
+	constructor(args: HDRenderPipelineConstructorArguments = {}) {
 		super();
 		this.effectComposer = new Postprocessing.EffectComposer(undefined, {
 			frameBufferType: Three.HalfFloatType,
@@ -157,30 +164,26 @@ export class HDRenderPipeline extends RenderPipeline
 			stencilBuffer: true,
 			alpha: !!args.alpha,
 			multisampling: args.multisampling ?? 0,
-		})
+		});
 
 		// disabled for now, as we need a separate occlusion scene for occlusion meshes based on LOD (todo)
 		this.#depthPrepass = false;
 
 		this.#fog = args.fog;
 
-		if(args.effects)
-		{
+		if (args.effects) {
 			this.effects = args.effects;
 		}
 
-		if(args.toneMapping)
-		{
+		if (args.toneMapping) {
 			this.toneMapping.mode = args.toneMapping;
-		}
-		else
-		{
+		} else {
 			this.toneMapping.mode = Postprocessing.ToneMappingMode.ACES_FILMIC;
 		}
 
-		if(args.smaa)
-		{
-			this.smaa = args.smaa === true ? new Postprocessing.SMAAEffect() : args.smaa;
+		if (args.smaa) {
+			this.smaa =
+				args.smaa === true ? new Postprocessing.SMAAEffect() : args.smaa;
 		}
 	}
 
@@ -201,12 +204,10 @@ export class HDRenderPipeline extends RenderPipeline
 		this.renderer.shadowMap.enabled = true;
 		this.renderer.shadowMap.type = Three.PCFSoftShadowMap;
 
-		if(this.#fog)
-		{
+		if (this.#fog) {
 			// @ts-ignore - custom fog type
 			scene.object3d.fog = this.#fog;
-			if(this.#fog instanceof ExponentialHeightFog)
-			{
+			if (this.#fog instanceof ExponentialHeightFog) {
 				// see ExponentialHeightFog.ts
 				this.#fog.renderer = this.renderer;
 			}
@@ -218,50 +219,50 @@ export class HDRenderPipeline extends RenderPipeline
 
 		let renderPass: Postprocessing.RenderPass;
 
-		if(this.#depthPrepass)
-		{
+		if (this.#depthPrepass) {
 			this.renderer.autoClear = false;
 			this.renderer.autoClearDepth = false;
 			const prepassDepth = new DepthPrePass(scene.object3d, scene.activeCamera);
 			renderPass = new MainRenderPass(scene.object3d, scene.activeCamera);
 			this.effectComposer.addPass(prepassDepth);
-		}
-		else
-		{
-			renderPass = new Postprocessing.RenderPass(scene.object3d, scene.activeCamera);
+		} else {
+			renderPass = new Postprocessing.RenderPass(
+				scene.object3d,
+				scene.activeCamera,
+			);
 		}
 
 		const effectPass = new Postprocessing.EffectPass(
 			scene.activeCamera,
-			...([...this.effects, this.smaa, this.toneMapping].filter(Boolean) as Array<Postprocessing.Effect>),
-		)
+			...([...this.effects, this.smaa, this.toneMapping].filter(
+				Boolean,
+			) as Array<Postprocessing.Effect>),
+		);
 
 		this.effectComposer.addPass(renderPass);
-		this.effectComposer.addPass(effectPass)
+		this.effectComposer.addPass(effectPass);
 	}
 
-	override onResize(width: number, height: number)
-	{
+	override onResize(width: number, height: number) {
 		this.renderer?.setSize(width, height, false);
 		this.renderer?.setPixelRatio(globalThis.devicePixelRatio);
 		this.effectComposer.setSize(width, height);
 	}
 
-	override onCameraChange(camera: Three.Camera)
-	{
+	override onCameraChange(camera: Three.Camera) {
 		this.effectComposer.setMainCamera(camera);
 	}
 
-	override onRender(scene: Scene, camera: Three.Camera)
-	{
-		if(this.#fog instanceof ExponentialHeightFog)
-		{
+	override onRender(scene: Scene, camera: Three.Camera) {
+		if (this.#fog instanceof ExponentialHeightFog) {
 			this.#fog.updateUniforms(0.016);
 		}
 		this.effectComposer.render();
 	}
 
-	getRenderer(): Three.WebGLRenderer { return this.renderer!; }
+	getRenderer(): Three.WebGLRenderer {
+		return this.renderer!;
+	}
 
 	private renderer?: Three.WebGLRenderer;
 	private effects: Array<Postprocessing.Effect> = [];

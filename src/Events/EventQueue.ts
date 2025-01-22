@@ -34,11 +34,8 @@ import type { Constructor } from "../Shared/Utilities.ts";
  * unsubscribe();
  * ```
  */
-export class EventQueue
-{
-
-	constructor()
-	{
+export class EventQueue {
+	constructor() {
 		this.dispatchQueue = this.dispatchQueue.bind(this);
 		this.dispatchAndClear = this.dispatchAndClear.bind(this);
 		this.clear = this.clear.bind(this);
@@ -52,10 +49,8 @@ export class EventQueue
 	 * Push an event to the queue.
 	 * @param event
 	 */
-	public push(event: BaseEvent<any>)
-	{
-		if(this.hasFlushed)
-		{
+	public push(event: BaseEvent<any>) {
+		if (this.hasFlushed) {
 			this.nextQueue.push(event);
 			return;
 		}
@@ -65,33 +60,27 @@ export class EventQueue
 	/**
 	 * Iterate over the queue.
 	 */
-	public iterator(): IterableIterator<BaseEvent<any>>
-	{
+	public iterator(): IterableIterator<BaseEvent<any>> {
 		return this.queue[Symbol.iterator]();
 	}
 
 	/**
 	 * Dispatch all events in the queue.
 	 */
-	public dispatchQueue()
-	{
+	public dispatchQueue() {
 		this.hasFlushed = true;
-		for(const event of this.queue)
-		{
-			const listeners = this.listeners.get(event.constructor as Constructor<BaseEvent<any>>);
-			if(!listeners)
-			{
+		for (const event of this.queue) {
+			const listeners = this.listeners.get(
+				event.constructor as Constructor<BaseEvent<any>>,
+			);
+			if (!listeners) {
 				continue;
 			}
 
-			for(const listener of listeners)
-			{
-				try
-				{
+			for (const listener of listeners) {
+				try {
 					listener(event.value);
-				}
-				catch(e)
-				{
+				} catch (e) {
 					console.error(e);
 				}
 			}
@@ -101,8 +90,7 @@ export class EventQueue
 	/**
 	 * Dispatch all events in the queue and clear it.
 	 */
-	public dispatchAndClear()
-	{
+	public dispatchAndClear() {
 		this.dispatchQueue();
 		this.clear();
 	}
@@ -110,8 +98,7 @@ export class EventQueue
 	/**
 	 * Clear the queue.
 	 */
-	public clear()
-	{
+	public clear() {
 		const temp = this.queue;
 		temp.length = 0;
 		this.queue = this.nextQueue;
@@ -124,8 +111,10 @@ export class EventQueue
 	 * @param type
 	 * @param listener
 	 */
-	public subscribe<T extends Constructor<BaseEvent<any>>>(type: T, listener: (value: InstanceType<T>['value']) => void): () => void
-	{
+	public subscribe<T extends Constructor<BaseEvent<any>>>(
+		type: T,
+		listener: (value: InstanceType<T>["value"]) => void,
+	): () => void {
 		const listeners = this.listeners.get(type) ?? new Set();
 		listeners.add(listener);
 		this.listeners.set(type, listeners);
@@ -138,18 +127,24 @@ export class EventQueue
 	 * @param type
 	 * @param listener
 	 */
-	public unsubscribe<T extends Constructor<BaseEvent<any>>>(type: T, listener: (value: InstanceType<T>['value']) => void): void
-	{
+	public unsubscribe<T extends Constructor<BaseEvent<any>>>(
+		type: T,
+		listener: (value: InstanceType<T>["value"]) => void,
+	): void {
 		const listeners = this.listeners.get(type);
-		if(!listeners)
-		{
+		if (!listeners) {
 			return;
 		}
 
 		listeners.delete(listener);
 	}
 
-	protected readonly listeners: Map<new (value: any) => BaseEvent<any>, Set<(value: any) => void>> = new Map;
+	protected readonly listeners: Map<
+		new (
+			value: any,
+		) => BaseEvent<any>,
+		Set<(value: any) => void>
+	> = new Map();
 
 	protected queue: BaseEvent<any>[] = [];
 

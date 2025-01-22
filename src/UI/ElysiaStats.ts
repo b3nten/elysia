@@ -2,8 +2,7 @@ import { ElysiaElement, defineComponent, html } from "./ElysiaElement.ts";
 import { ELYSIA_VERSION } from "../Shared/Constants.ts";
 import { css, defaultScheduler } from "./mod.ts";
 
-export class ElysiaStats extends ElysiaElement
-{
+export class ElysiaStats extends ElysiaElement {
 	static override Tag = "elysia-stats";
 
 	static override Styles = css`
@@ -38,7 +37,7 @@ export class ElysiaStats extends ElysiaElement
 		.red { color: #FF5555; }
 		.white { color: #f8f8f2; }
 		.inv { opacity: 0; transform: translateY(100%); }
-	`
+	`;
 
 	visible = false;
 
@@ -49,38 +48,38 @@ export class ElysiaStats extends ElysiaElement
 		points: 0,
 		triangles: 0,
 		memory: 0,
-	}
+	};
 
 	override onMount() {
 		document.head.insertAdjacentHTML(
-			'beforeend',
-			`<link href="https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400..700&display=swap" rel="stylesheet">`
+			"beforeend",
+			`<link href="https://fonts.googleapis.com/css2?family=Kode+Mono:wght@400..700&display=swap" rel="stylesheet">`,
 		);
-		setTimeout(() => this.visible = true, 500);
+		setTimeout(() => (this.visible = true), 500);
 	}
 
 	lastTenFrames: number[] = [];
 
-	override onRender()
-	{
+	override onRender() {
 		this.lastTenFrames.push(this.stats.fps);
 		if (this.lastTenFrames.length > 10) this.lastTenFrames.shift();
-		const frameAverage = this.lastTenFrames.reduce((a, b) => a + b, 0) / this.lastTenFrames.length;
+		const frameAverage =
+			this.lastTenFrames.reduce((a, b) => a + b, 0) / this.lastTenFrames.length;
 		this.stats.fps = Math.round(frameAverage);
 
 		return html`
-			<aside id="stats" class=${this.visible ? '' : 'inv'}>
+			<aside id="stats" class=${this.visible ? "" : "inv"}>
 				<div class="purple">elsyia ${ELYSIA_VERSION}</div>
-				<div class=${this.stats.fps < 30 ? 'red' : 'white'}>fps: ${this.stats.fps}</div>
-				<div class=${this.stats.calls > 1000 ? 'red' : 'white'}>drawcalls: ${this.stats.calls}</div>
+				<div class=${this.stats.fps < 30 ? "red" : "white"}>fps: ${this.stats.fps}</div>
+				<div class=${this.stats.calls > 1000 ? "red" : "white"}>drawcalls: ${this.stats.calls}</div>
 				<div>memory: ${this.stats.memory}</div>
 				<div>triangles: ${this.stats.triangles}</div>
 				<div>lines: ${this.stats.lines}</div>
 				<div>points: ${this.stats.points}</div>
-				${defaultScheduler.components.size > 1 ? html`<div>ui components: ${defaultScheduler.components.size}</div>` : ''}
-				${defaultScheduler.components.size > 1 ? html`<div>ui updates: ${defaultScheduler.frametime.toFixed(0)}ms</div>` : ''}
+				${defaultScheduler.components.size > 1 ? html`<div>ui components: ${defaultScheduler.components.size}</div>` : ""}
+				${defaultScheduler.components.size > 1 ? html`<div>ui updates: ${defaultScheduler.frametime.toFixed(0)}ms</div>` : ""}
 			</aside>
-		`
+		`;
 	}
 }
 

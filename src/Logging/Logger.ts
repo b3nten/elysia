@@ -11,17 +11,15 @@ export { Logger, type LogConfig, createLogger };
 globalThis.__LOG_FILTERS = null;
 
 // @ts-ignore - global
-globalThis.FILTER_LOGS = (...args: any[]) =>
-{
-	if(args.length === 0 || args[0] === null || !args[0]) {
+globalThis.FILTER_LOGS = (...args: any[]) => {
+	if (args.length === 0 || args[0] === null || !args[0]) {
 		// @ts-ignore - global
 		globalThis.__LOG_FILTERS = null;
-	}
-	else {
+	} else {
 		// @ts-ignore - global
 		globalThis.__LOG_FILTERS = args;
 	}
-}
+};
 
 /**
  * A logging utility class that provides different logging levels and message types.
@@ -34,8 +32,7 @@ globalThis.FILTER_LOGS = (...args: any[]) =>
  * @param {LogLevel} level - The minimum logging level to output
  * @param {Writer} writer - The writer implementation for log output
  */
-class Logger
-{
+class Logger {
 	constructor(
 		public readonly name: string,
 		public level: LogLevel,
@@ -44,27 +41,24 @@ class Logger
 
 	/**
 	 * Log a message.
-	*/
-	message = (...msg: any[]): void =>
-	{
+	 */
+	message = (...msg: any[]): void => {
 		this.writer.message(msg);
-	}
+	};
 
 	/**
 	 * Log a message for debugging purposes.
 	 * @param  {...any} msg
 	 * @returns void
 	 */
-	debug = (...msg: any[]) =>
-	{
+	debug = (...msg: any[]) => {
 		// @ts-ignore
-		if(globalThis.__LOG_FILTERS !== null)
-		{
+		if (globalThis.__LOG_FILTERS !== null) {
 			// @ts-ignore
-			if(!globalThis.__LOG_FILTERS.includes(this.name)) return;
+			if (!globalThis.__LOG_FILTERS.includes(this.name)) return;
 		}
 		this.level <= LogLevel.Debug && this.writer.debug(msg);
-	}
+	};
 
 	/**
 	 * Log a message that provides non critical information for the user.
@@ -72,80 +66,70 @@ class Logger
 	 * @returns void
 	 */
 
-	info = (...msg: any[]) =>
-	{
+	info = (...msg: any[]) => {
 		// @ts-ignore
-		if(globalThis.__LOG_FILTERS !== null)
-		{
+		if (globalThis.__LOG_FILTERS !== null) {
 			// @ts-ignore
-			if(!globalThis.__LOG_FILTERS.includes(this.name)) return
+			if (!globalThis.__LOG_FILTERS.includes(this.name)) return;
 		}
 		this.level <= LogLevel.Info && this.writer.info(msg);
-	}
+	};
 	/**
 	 * Log a message that indicates a successful operation to the user.
 	 * @param  {...any} msg
 	 * @returns void
 	 */
 
-	success = (...msg: any[]) =>
-	{
+	success = (...msg: any[]) => {
 		// @ts-ignore
-		if(globalThis.__LOG_FILTERS !== null)
-		{
+		if (globalThis.__LOG_FILTERS !== null) {
 			// @ts-ignore
-			if(!globalThis.__LOG_FILTERS.includes(this.name)) return;
+			if (!globalThis.__LOG_FILTERS.includes(this.name)) return;
 		}
 		this.level <= LogLevel.Info && this.writer.success(msg);
-	}
+	};
 
 	/**
 	 * Log a message that indicates a warning to the user.
 	 * @param  {...any} msg
 	 * @returns void
 	 */
-	warn = (...msg: any[]) =>
-	{
+	warn = (...msg: any[]) => {
 		// @ts-ignore
-		if(globalThis.__LOG_FILTERS !== null)
-		{
+		if (globalThis.__LOG_FILTERS !== null) {
 			// @ts-ignore
-			if(!globalThis.__LOG_FILTERS.includes(this.name)) return;
+			if (!globalThis.__LOG_FILTERS.includes(this.name)) return;
 		}
 		this.level <= LogLevel.Warn && this.writer.warn(msg);
-	}
+	};
 
 	/**
 	 * Log a message that indicates an error to the user.
 	 * @param  {...any} msg
 	 * @returns void
 	 */
-	error = (...msg: any[]) =>
-	{
+	error = (...msg: any[]) => {
 		// @ts-ignore
-		if(globalThis.__LOG_FILTERS !== null)
-		{
+		if (globalThis.__LOG_FILTERS !== null) {
 			// @ts-ignore
-			if(!globalThis.__LOG_FILTERS.includes(this.name)) return;
+			if (!globalThis.__LOG_FILTERS.includes(this.name)) return;
 		}
 		this.level <= LogLevel.Error && this.writer.error(msg);
-	}
+	};
 
 	/**
 	 * Log a message that indicates a critical error to the user.
 	 * @param  {...any} msg
 	 * @returns void
 	 */
-	critical = (...msg: any[]) =>
-	{
+	critical = (...msg: any[]) => {
 		// @ts-ignore
-		if(globalThis.__LOG_FILTERS !== null)
-		{
+		if (globalThis.__LOG_FILTERS !== null) {
 			// @ts-ignore
-			if(!globalThis.__LOG_FILTERS.includes(this.name)) return;
+			if (!globalThis.__LOG_FILTERS.includes(this.name)) return;
 		}
 		this.level <= LogLevel.Critical && this.writer.critical(msg);
-	}
+	};
 }
 
 type LogConfig = {
@@ -155,10 +139,13 @@ type LogConfig = {
 	writer?: Logger["writer"];
 };
 
-function createLogger(config: LogConfig = {}): Logger
-{
+function createLogger(config: LogConfig = {}): Logger {
 	const level = config.level ?? LogLevel.Info;
 	const color = config.color ?? gradients.sunset;
-	const writer = config.writer ?? (isColorSupported() ? new FancyConsoleWriter(config.name ?? "App", color) : new BasicConsoleWriter(config.name ?? "App"));
+	const writer =
+		config.writer ??
+		(isColorSupported()
+			? new FancyConsoleWriter(config.name ?? "App", color)
+			: new BasicConsoleWriter(config.name ?? "App"));
 	return new Logger(config.name ?? "App", level, writer);
 }

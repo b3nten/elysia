@@ -12,13 +12,17 @@
  * const model1 = ModelWithSharedGltf(new Three.Color("red"));
  * const model2 = ModelWithSharedGltf(new Three.Color("blue"));
  */
-export function definePrefab<Resources extends Record<string, any>, Arguments extends any[], Output>(
-	resources: () => Resources, factory: (resources: Resources, ...restArgs: Arguments) => Output
-): (...args: Arguments) => Output
-{
+export function definePrefab<
+	Resources extends Record<string, any>,
+	Arguments extends any[],
+	Output,
+>(
+	resources: () => Resources,
+	factory: (resources: Resources, ...restArgs: Arguments) => Output,
+): (...args: Arguments) => Output {
 	let r: Resources;
 	return (...args: Arguments) => {
 		if (!r) r = resources();
 		return factory(r, ...args);
-	}
+	};
 }

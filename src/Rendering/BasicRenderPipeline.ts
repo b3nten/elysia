@@ -1,7 +1,7 @@
 import { RenderPipeline } from "./RenderPipeline.ts";
 import type { Scene } from "../Core/Scene.ts";
 // @ts-types="npm:@types/three@^0.169"
-import * as Three from 'three';
+import * as Three from "three";
 
 type BasicRenderPipelineArguments = Three.WebGLRendererParameters & {
 	toneMapping?: Three.ToneMapping;
@@ -13,10 +13,8 @@ type BasicRenderPipelineArguments = Three.WebGLRendererParameters & {
 /**
  * A basic render pipeline that uses Three.js to render the scene with the default WebGLRenderer.
  */
-export class BasicRenderPipeline extends RenderPipeline
-{
-	constructor(args: BasicRenderPipelineArguments = {})
-	{
+export class BasicRenderPipeline extends RenderPipeline {
+	constructor(args: BasicRenderPipelineArguments = {}) {
 		super();
 		this.args = args;
 	}
@@ -25,24 +23,32 @@ export class BasicRenderPipeline extends RenderPipeline
 		this.renderer = new Three.WebGLRenderer({ ...this.args, canvas: output });
 		this.renderer.shadowMap.enabled = this.args.shadows ?? true;
 		this.renderer.shadowMap.type = Three.PCFSoftShadowMap;
-		if (this.args.devicePixelRatio) { this.renderer.setPixelRatio(this.args.devicePixelRatio); }
-		else { this.renderer.setPixelRatio(globalThis.devicePixelRatio); }
-		if (this.args.toneMapping) { this.renderer.toneMapping = this.args.toneMapping ?? Three.ACESFilmicToneMapping; }
-		if (this.args.toneMappingExposure) { this.renderer.toneMappingExposure = this.args.toneMappingExposure; }
+		if (this.args.devicePixelRatio) {
+			this.renderer.setPixelRatio(this.args.devicePixelRatio);
+		} else {
+			this.renderer.setPixelRatio(globalThis.devicePixelRatio);
+		}
+		if (this.args.toneMapping) {
+			this.renderer.toneMapping =
+				this.args.toneMapping ?? Three.ACESFilmicToneMapping;
+		}
+		if (this.args.toneMappingExposure) {
+			this.renderer.toneMappingExposure = this.args.toneMappingExposure;
+		}
 	}
 
-	override onResize(width: number, height: number)
-	{
+	override onResize(width: number, height: number) {
 		this.renderer?.setSize(width, height, false);
 		this.renderer?.setPixelRatio(globalThis.devicePixelRatio);
 	}
 
-	onRender(scene: Scene, camera: Three.Camera)
-	{
+	onRender(scene: Scene, camera: Three.Camera) {
 		this.renderer!.render(scene.object3d, camera);
 	}
 
-	getRenderer(): Three.WebGLRenderer { return this.renderer!; }
+	getRenderer(): Three.WebGLRenderer {
+		return this.renderer!;
+	}
 
 	private renderer?: Three.WebGLRenderer;
 	private args: BasicRenderPipelineArguments;

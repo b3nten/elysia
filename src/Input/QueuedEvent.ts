@@ -16,8 +16,7 @@ import type { MouseCode } from "./MouseCode.ts";
  * if they need to persist beyond the callback scope, as they will be
  * recycled by the object pool.
  */
-export class QueuedEvent
-{
+export class QueuedEvent {
 	key: KeyCode | MouseCode;
 	type: "down" | "up";
 	timestamp: number;
@@ -62,8 +61,7 @@ export class QueuedEvent
 		this.mouseY = mouseY;
 	}
 
-	clone(): QueuedEvent
-	{
+	clone(): QueuedEvent {
 		return new QueuedEvent(
 			this.key,
 			this.type,

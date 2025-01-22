@@ -44,7 +44,8 @@ import {
 	s_OnDisable,
 	s_OnEnable,
 	s_OnEnterScene,
-	s_OnLeaveScene, s_OnPostUpdate,
+	s_OnLeaveScene,
+	s_OnPostUpdate,
 	s_OnPreUpdate,
 	s_OnResize,
 	s_OnStart,
@@ -54,75 +55,84 @@ import {
 	s_Started,
 	s_Static,
 	s_Tags,
-	s_UserEnabled
+	s_UserEnabled,
 } from "../Internal/mod.ts";
 import { reportLifecycleError } from "./Errors.ts";
 
 /**
  * A behavior is a component that can be attached to an actor to add functionality.
  */
-export class Behavior extends ComponentLifecycle implements IDestroyable
-{
-
+export class Behavior extends ComponentLifecycle implements IDestroyable {
 	/**
 	 * Static behaviors are not updated during onUpdate, onBeforePhysicsUpdate, or onTransformUpdate.
 	 * This can be toggled at any time.
 	 * @default false
 	 */
-	get static(): boolean { return this[s_Static]; }
-	set static(value: boolean)
-	{
+	get static(): boolean {
+		return this[s_Static];
+	}
+	set static(value: boolean) {
 		this[s_Static] = value;
-		if(this.parent)
-		{
+		if (this.parent) {
 			this.parent.components.delete(this);
 			this.parent.staticComponents.delete(this);
-			if(value)
-			{
+			if (value) {
 				this.parent.staticComponents.add(this);
-			}
-			else
-			{
+			} else {
 				this.parent.components.add(this);
 			}
 		}
 	}
 	/** If this behavior has completed it's onCreate() lifecycle. */
-	get created(): boolean { return this[s_Created]; }
+	get created(): boolean {
+		return this[s_Created];
+	}
 
 	/** If this behavior has completed it's onStart() lifecycle. */
-	get started(): boolean { return this[s_Started]; }
+	get started(): boolean {
+		return this[s_Started];
+	}
 
 	/** If this behavior has been destroyed. */
-	get destroyed(): boolean { return this[s_Destroyed]; }
+	get destroyed(): boolean {
+		return this[s_Destroyed];
+	}
 
 	/** If this behavior is enabled. */
-	get enabled(): boolean { return this[s_Enabled]; }
+	get enabled(): boolean {
+		return this[s_Enabled];
+	}
 
 	/** The parent actor of this behavior. */
-	get parent(): Actor { return this[s_Parent]!; }
+	get parent(): Actor {
+		return this[s_Parent]!;
+	}
 
 	/** The scene this behavior belongs to. */
-	get scene(): Scene { return this[s_Scene]!; }
+	get scene(): Scene {
+		return this[s_Scene]!;
+	}
 
 	/** The application this behavior belongs to. */
-	get app(): Application { return this[s_App]!; }
+	get app(): Application {
+		return this[s_App]!;
+	}
 
 	/** The tags associated with this behavior. */
-	get tags(): Set<any> { return this[s_Tags]; }
+	get tags(): Set<any> {
+		return this[s_Tags];
+	}
 
 	/** Enables this behavior. This means it receives updates and is visible. */
-	public enable()
-	{
-		if(this[s_UserEnabled]) return;
+	public enable() {
+		if (this[s_UserEnabled]) return;
 		this[s_UserEnabled] = true;
 		this[s_OnEnable]();
 	}
 
 	/** Disables this behavior. This means it does not receive updates and is not visible. */
-	public disable()
-	{
-		if(!this[s_UserEnabled]) return;
+	public disable() {
+		if (!this[s_UserEnabled]) return;
 		this[s_UserEnabled] = false;
 		this[s_OnDisable]();
 	}
@@ -131,8 +141,7 @@ export class Behavior extends ComponentLifecycle implements IDestroyable
 	 * Adds a tag to this behavior
 	 * @param tag
 	 */
-	addTag(tag: any)
-	{
+	addTag(tag: any) {
 		EventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
 		this.tags.add(tag);
 	}
@@ -141,15 +150,13 @@ export class Behavior extends ComponentLifecycle implements IDestroyable
 	 * Removes a tag from this behavior.
 	 * @param tag
 	 */
-	removeTag(tag: any)
-	{
+	removeTag(tag: any) {
 		EventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
 		this.tags.delete(tag);
 	}
 
-	destructor()
-	{
-		if(this[s_Destroyed]) return;
+	destructor() {
+		if (this[s_Destroyed]) return;
 		this[s_OnLeaveScene]();
 		this[s_OnDisable]();
 		this[s_OnDestroy]();
@@ -173,10 +180,10 @@ export class Behavior extends ComponentLifecycle implements IDestroyable
 	[s_Scene]: Scene | null = null;
 
 	/** @internal */
-	[s_Parent] : Actor | null = null;
+	[s_Parent]: Actor | null = null;
 
 	/** @internal */
-	[s_Tags]:Set<any> = new Set;
+	[s_Tags]: Set<any> = new Set();
 
 	/** @internal */
 	[s_Static] = false;
@@ -200,27 +207,23 @@ export class Behavior extends ComponentLifecycle implements IDestroyable
 	[s_Destroyed] = false;
 
 	/** @internal */
-	[s_OnEnable]()
-	{
-		if(this[s_Enabled] || !this[s_UserEnabled]) return;
+	[s_OnEnable]() {
+		if (this[s_Enabled] || !this[s_UserEnabled]) return;
 		this[s_Enabled] = true;
 		reportLifecycleError(this, this.onEnable);
 	}
 
 	/** @internal */
-	[s_OnDisable]()
-	{
-		if(!this[s_Enabled] || this[s_Destroyed]) return;
+	[s_OnDisable]() {
+		if (!this[s_Enabled] || this[s_Destroyed]) return;
 		this[s_Enabled] = false;
 		reportLifecycleError(this, this.onDisable);
 	}
 
 	/** @internal */
-	[s_OnCreate]()
-	{
-		if(this[s_Created]) return;
-		if(this[s_Destroyed])
-		{
+	[s_OnCreate]() {
+		if (this[s_Created]) return;
+		if (this[s_Destroyed]) {
 			ELYSIA_LOGGER.warn(`Trying to create a destroyed actor: ${this}`);
 			return;
 		}
@@ -229,11 +232,9 @@ export class Behavior extends ComponentLifecycle implements IDestroyable
 	}
 
 	/** @internal */
-	[s_OnEnterScene]()
-	{
-		if(this[s_InScene] || !this[s_Created]) return;
-		if(this.destroyed)
-		{
+	[s_OnEnterScene]() {
+		if (this[s_InScene] || !this[s_Created]) return;
+		if (this.destroyed) {
 			ELYSIA_LOGGER.warn(`Trying to add a destroyed actor to scene: ${this}`);
 			return;
 		}
@@ -242,12 +243,10 @@ export class Behavior extends ComponentLifecycle implements IDestroyable
 	}
 
 	/** @internal */
-	[s_OnStart]()
-	{
-		if(this[s_Started]) return;
-		if(!this[s_InScene] || !this.enabled) return;
-		if(this[s_Destroyed])
-		{
+	[s_OnStart]() {
+		if (this[s_Started]) return;
+		if (!this[s_InScene] || !this.enabled) return;
+		if (this[s_Destroyed]) {
 			ELYSIA_LOGGER.warn(`Trying to start a destroyed actor: ${this}`);
 			return;
 		}
@@ -256,63 +255,54 @@ export class Behavior extends ComponentLifecycle implements IDestroyable
 	}
 
 	/** @internal */
-	[s_OnBeforePhysicsUpdate](delta: number, elapsed: number)
-	{
-		if(!this[s_Enabled]  || !this[s_InScene]) return;
-		if(this.destroyed)
-		{
+	[s_OnBeforePhysicsUpdate](delta: number, elapsed: number) {
+		if (!this[s_Enabled] || !this[s_InScene]) return;
+		if (this.destroyed) {
 			ELYSIA_LOGGER.warn(`Trying to update a destroyed actor: ${this}`);
 			return;
 		}
-		if(!this[s_Started]) this[s_OnStart]();
+		if (!this[s_Started]) this[s_OnStart]();
 		reportLifecycleError(this, this.onBeforePhysicsUpdate, delta, elapsed);
 	}
 
 	/** @internal */
-	[s_OnPreUpdate](delta: number, elapsed: number)
-	{
+	[s_OnPreUpdate](delta: number, elapsed: number) {
 		reportLifecycleError(this, this.onPreUpdate, delta, elapsed);
 	}
 
 	/** @internal */
-	[s_OnUpdate](delta: number, elapsed: number)
-	{
-		if(!this[s_Enabled] || !this[s_InScene]) return;
-		if(this.destroyed)
-		{
+	[s_OnUpdate](delta: number, elapsed: number) {
+		if (!this[s_Enabled] || !this[s_InScene]) return;
+		if (this.destroyed) {
 			ELYSIA_LOGGER.warn(`Trying to update a destroyed actor: ${this}`);
 			return;
 		}
-		if(!this[s_Started]) this[s_OnStart]();
+		if (!this[s_Started]) this[s_OnStart]();
 		reportLifecycleError(this, this.onUpdate, delta, elapsed);
 	}
 
 	/** @internal */
-	[s_OnPostUpdate](delta: number, elapsed: number)
-	{
+	[s_OnPostUpdate](delta: number, elapsed: number) {
 		reportLifecycleError(this, this.onPostUpdate, delta, elapsed);
 	}
 
 	/** @internal */
-	[s_OnLeaveScene]()
-	{
-		if(this[s_Destroyed]) return;
-		if(!this[s_InScene]) return;
+	[s_OnLeaveScene]() {
+		if (this[s_Destroyed]) return;
+		if (!this[s_InScene]) return;
 		reportLifecycleError(this, this.onLeaveScene);
 		this[s_InScene] = false;
 	}
 
 	/** @internal */
-	[s_OnDestroy]()
-	{
-		if(this[s_Destroyed]) return;
-		reportLifecycleError(this, this.onDestroy)
+	[s_OnDestroy]() {
+		if (this[s_Destroyed]) return;
+		reportLifecycleError(this, this.onDestroy);
 		this[s_Destroyed] = true;
 	}
 
 	/** @internal */
-	[s_OnResize](width: number, height: number)
-	{
+	[s_OnResize](width: number, height: number) {
 		reportLifecycleError(this, this.onResize, width, height);
 	}
 }

@@ -7,6 +7,7 @@
     "build": "tsc --rewriteRelativeImportExtensions --project tsconfig.json"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.9.4",
     "@types/three": "^0.171.0",
     "esbuild": "^0.24.2",
     "mkdist": "^2.2.0",

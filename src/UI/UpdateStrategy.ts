@@ -1,5 +1,4 @@
-export enum OffscreenUpdateStrategy
-{
+export enum OffscreenUpdateStrategy {
 	/**
 	 * The component is only updated when it is visible.
 	 */
@@ -7,5 +6,5 @@ export enum OffscreenUpdateStrategy
 	/**
 	 * The component is updated each frame when it is visible or when it is near the visible area.
 	 */
-	HighPriority
+	HighPriority,
 }

@@ -6,18 +6,15 @@
 ************************************************************/
 
 // @ts-types="npm:@types/three@^0.169"
-import * as Three from 'three'
+import * as Three from "three";
 import type { Application } from "../Core/Application.ts";
 import type { Scene } from "../Core/Scene.ts";
-interface Uniform<T>
-{
-	value: T
+interface Uniform<T> {
+	value: T;
 }
 
-class DiscardMaterial extends Three.ShaderMaterial
-{
-	constructor()
-	{
+class DiscardMaterial extends Three.ShaderMaterial {
+	constructor() {
 		super({
 			uniforms: {},
 			vertexShader: /* glsl */ `
@@ -30,35 +27,50 @@ class DiscardMaterial extends Three.ShaderMaterial
 					gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 					discard;
 				}
-			`
-		})
+			`,
+		});
 	}
 }
 
-export class MeshTransmissionMaterial extends Three.MeshPhysicalMaterial
-{
-
+export class MeshTransmissionMaterial extends Three.MeshPhysicalMaterial {
 	uniforms: {
-		chromaticAberration: Uniform<number>
-		transmission: Uniform<number>
-		transmissionMap: Uniform<Three.Texture | null>
-		_transmission: Uniform<number>
-		thickness: Uniform<number>
-		roughness: Uniform<number>
-		thicknessMap: Uniform<Three.Texture | null>
-		attenuationDistance: Uniform<number>
-		attenuationColor: Uniform<Three.Color>
-		anisotropicBlur: Uniform<number>
-		time: Uniform<number>
-		distortion: Uniform<number>
-		distortionScale: Uniform<number>
-		temporalDistortion: Uniform<number>
-		buffer: Uniform<Three.Texture | null>
-	}
+		chromaticAberration: Uniform<number>;
+		transmission: Uniform<number>;
+		transmissionMap: Uniform<Three.Texture | null>;
+		_transmission: Uniform<number>;
+		thickness: Uniform<number>;
+		roughness: Uniform<number>;
+		thicknessMap: Uniform<Three.Texture | null>;
+		attenuationDistance: Uniform<number>;
+		attenuationColor: Uniform<Three.Color>;
+		anisotropicBlur: Uniform<number>;
+		time: Uniform<number>;
+		distortion: Uniform<number>;
+		distortionScale: Uniform<number>;
+		temporalDistortion: Uniform<number>;
+		buffer: Uniform<Three.Texture | null>;
+	};
 
-	constructor({ samples = 6, transmissionSampler = false, chromaticAberration = 0.05, transmission = 0, _transmission = 1, transmissionMap = null, roughness = 0, thickness = 0, thicknessMap = null, attenuationDistance = Infinity, attenuationColor = new Three.Color('white'), anisotropicBlur = 0.1, time = 0, distortion = 0.0, distortionScale = 0.5, temporalDistortion = 0.0, buffer = null } = {})
-	{
-		super()
+	constructor({
+		samples = 6,
+		transmissionSampler = false,
+		chromaticAberration = 0.05,
+		transmission = 0,
+		_transmission = 1,
+		transmissionMap = null,
+		roughness = 0,
+		thickness = 0,
+		thicknessMap = null,
+		attenuationDistance = Infinity,
+		attenuationColor = new Three.Color("white"),
+		anisotropicBlur = 0.1,
+		time = 0,
+		distortion = 0.0,
+		distortionScale = 0.5,
+		temporalDistortion = 0.0,
+		buffer = null,
+	} = {}) {
+		super();
 
 		this.uniforms = {
 			chromaticAberration: { value: chromaticAberration },
@@ -79,23 +91,23 @@ export class MeshTransmissionMaterial extends Three.MeshPhysicalMaterial
 			distortionScale: { value: distortionScale },
 			temporalDistortion: { value: temporalDistortion },
 			buffer: { value: buffer },
-		}
+		};
 
 		this.onBeforeCompile = (shader: any) => {
 			shader.uniforms = {
 				...shader.uniforms,
 				...this.uniforms,
-			}
+			};
 
 			// Fix for r153-r156 anisotropy chunks
 			// https://github.com/mrdoob/three.js/pull/26716
-			if ((this as any).anisotropy > 0) shader.defines.USE_ANISOTROPY = ''
+			if ((this as any).anisotropy > 0) shader.defines.USE_ANISOTROPY = "";
 
 			// If the transmission sampler is active inject a flag
-			if (transmissionSampler) shader.defines.USE_SAMPLER = ''
-				// Otherwise we do use use .transmission and must therefore force USE_TRANSMISSION
+			if (transmissionSampler) shader.defines.USE_SAMPLER = "";
+			// Otherwise we do use use .transmission and must therefore force USE_TRANSMISSION
 			// because threejs won't inject it for us
-			else shader.defines.USE_TRANSMISSION = ''
+			else shader.defines.USE_TRANSMISSION = "";
 
 			// Head
 			shader.fragmentShader =
@@ -187,11 +199,11 @@ export class MeshTransmissionMaterial extends Three.MeshPhysicalMaterial
               +0.2666667* snoise(2.0*m)
               +0.1333333* snoise(4.0*m)
               +0.0666667* snoise(8.0*m);
-      }\n` + shader.fragmentShader
+      }\n` + shader.fragmentShader;
 
 			// Remove transmission
 			shader.fragmentShader = shader.fragmentShader.replace(
-				'#include <transmission_pars_fragment>',
+				"#include <transmission_pars_fragment>",
 				/*glsl*/ `
         #ifdef USE_TRANSMISSION
           // Transmission code is based on glTF-Sampler-Viewer
@@ -268,12 +280,12 @@ export class MeshTransmissionMaterial extends Three.MeshPhysicalMaterial
             vec3 F = EnvironmentBRDF( n, v, specularColor, specularF90, roughness );
             return vec4( ( 1.0 - F ) * attenuatedColor * diffuseColor, transmittedLight.a );
           }
-        #endif\n`
-			)
+        #endif\n`,
+			);
 
 			// Add refraction
 			shader.fragmentShader = shader.fragmentShader.replace(
-				'#include <transmission_fragment>',
+				"#include <transmission_fragment>",
 				/*glsl*/ `
         // Improve the refraction to use the world pos
         material.transmission = _transmission;
@@ -323,24 +335,32 @@ export class MeshTransmissionMaterial extends Three.MeshPhysicalMaterial
           transmission.b += transmissionB;
         }
         transmission /= ${samples}.0;
-        totalDiffuse = mix( totalDiffuse, transmission.rgb, material.transmission );\n`
-			)
-		}
+        totalDiffuse = mix( totalDiffuse, transmission.rgb, material.transmission );\n`,
+			);
+		};
 
-		this.uniforms.buffer = { value: this.fboMain.texture }
+		this.uniforms.buffer = { value: this.fboMain.texture };
 	}
 
-	fboBack: Three.WebGLRenderTarget = new Three.WebGLRenderTarget(globalThis.innerWidth, globalThis.innerHeight, {
-		minFilter: Three.LinearFilter,
-		magFilter: Three.LinearFilter,
-		type: Three.HalfFloatType,
-	})
+	fboBack: Three.WebGLRenderTarget = new Three.WebGLRenderTarget(
+		globalThis.innerWidth,
+		globalThis.innerHeight,
+		{
+			minFilter: Three.LinearFilter,
+			magFilter: Three.LinearFilter,
+			type: Three.HalfFloatType,
+		},
+	);
 
-	fboMain: Three.WebGLRenderTarget = new Three.WebGLRenderTarget(globalThis.innerWidth, globalThis.innerHeight, {
-		minFilter: Three.LinearFilter,
-		magFilter: Three.LinearFilter,
-		type: Three.HalfFloatType,
-	})
+	fboMain: Three.WebGLRenderTarget = new Three.WebGLRenderTarget(
+		globalThis.innerWidth,
+		globalThis.innerHeight,
+		{
+			minFilter: Three.LinearFilter,
+			magFilter: Three.LinearFilter,
+			type: Three.HalfFloatType,
+		},
+	);
 
 	oldBg: any;
 	oldTone: any;
@@ -350,10 +370,9 @@ export class MeshTransmissionMaterial extends Three.MeshPhysicalMaterial
 		thickness: 1,
 		backsideThickness: 0.5,
 	};
-	discardMat: DiscardMaterial = new DiscardMaterial;
+	discardMat: DiscardMaterial = new DiscardMaterial();
 
-	onUpdate(time: number, app: Application, scene: Scene, mesh: Three.Mesh)
-	{
+	onUpdate(time: number, app: Application, scene: Scene, mesh: Three.Mesh) {
 		const gl = app.renderPipeline.getRenderer();
 
 		this.uniforms.time.value += time;
@@ -362,7 +381,7 @@ export class MeshTransmissionMaterial extends Three.MeshPhysicalMaterial
 			// Save defaults
 			this.oldTone = gl.toneMapping;
 			this.oldBg = scene.object3d.background;
-			if(Array.isArray(mesh.material)) this.oldSide = mesh.material[0].side;
+			if (Array.isArray(mesh.material)) this.oldSide = mesh.material[0].side;
 			else this.oldSide = mesh.material.side;
 
 			// Switch off tonemapping lest it double tone maps

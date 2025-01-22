@@ -2,7 +2,7 @@
     From https://github.com/ashima/webgl-noise
  	With thanks <3
 ************************************************************/
- 
+
 /**
  * Array and textureless GLSL 2D simplex noise function `snoise(vec2)`.
  */
@@ -67,7 +67,7 @@ float snoise(vec2 v)
   g.yz = a0.yz * x12.xz + h.yz * x12.yw;
   return 130.0 * dot(m, g);
 }
-`
+`;
 
 /**
  * Array and textureless GLSL 3D simplex noise function `snoise(vec3)`.
@@ -164,11 +164,11 @@ float snoise(vec3 v)
   return 105.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), 
                                 dot(p2,x2), dot(p3,x3) ) );
 }
- `
+ `;
 
 /**
  * GLSL textureless classic 2D noise `cnoise(vec2)` with an RSL-style periodic variant `pnoise(vec2, vec2)`.
-*/
+ */
 export const classic2d: string = `
 vec4 mod289(vec4 x)
 {
@@ -269,7 +269,7 @@ float pnoise(vec2 P, vec2 rep)
   float n_xy = mix(n_x.x, n_x.y, fade_xy.y);
   return 2.3 * n_xy;
 }
-`
+`;
 
 /**
  * GLSL textureless classic 3D noise `cnoise(vec3)` with an RSL-style periodic variant `pnoise(vec3, vec3)`.
@@ -438,7 +438,7 @@ float pnoise(vec3 P, vec3 rep)
   float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x); 
   return 2.2 * n_xyz;
 }
-`
+`;
 
 /**
  * Cellular noise ("Worley noise") in 2D`cellular(vec2)`.
@@ -507,7 +507,7 @@ vec2 cellular(vec2 P) {
 	d1.y = min(d1.y, d2.x); // F2 is in d1.y, we're done.
 	return sqrt(d1.xy);
 }
-`
+`;
 
 /**
  * Cellular noise ("Worley noise") in 3D `cellular(vec3)`.
@@ -700,4 +700,4 @@ vec2 cellular(vec3 P) {
 	return sqrt(d11.xy); // F1, F2
 #endif
 }
-`
+`;

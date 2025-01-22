@@ -26,35 +26,32 @@
  * ```
  */
 
-
 /**
  * A sparse set that stores components of type T.
  * @typeParam T The type of the components to store.
  */
-export class SparseSet<T>
-{
+export class SparseSet<T> {
 	/**
 	 * The number of entities in the set.
 	 */
-	get size(): number { return this.dense.length; }
+	get size(): number {
+		return this.dense.length;
+	}
 
 	/**
 	 * The first component in the set.
 	 */
-	get first(): T | undefined
-	{
-		if(this.size === 0) return undefined;
+	get first(): T | undefined {
+		if (this.size === 0) return undefined;
 		return this.components[0];
 	}
 
 	/**
 	 * Add an entity and its component to the set.
 	 */
-	add(entity: number, component: T): boolean
-	{
-		if(this.has(entity)) return false;
-		if(this.#locked)
-		{
+	add(entity: number, component: T): boolean {
+		if (this.has(entity)) return false;
+		if (this.#locked) {
 			this.#additionQueue.push(entity, component);
 			return true;
 		}
@@ -68,11 +65,9 @@ export class SparseSet<T>
 	/**
 	 * Remove an entity and it's component from the set.
 	 */
-	remove(entity: number)
-	{
-		if(!this.has(entity)) return;
-		if(this.#locked)
-		{
+	remove(entity: number) {
+		if (!this.has(entity)) return;
+		if (this.#locked) {
 			this.#removalQueue.push(entity);
 			return;
 		}
@@ -87,40 +82,41 @@ export class SparseSet<T>
 	/**
 	 * Get the component of an entity.
 	 */
-	get(entity: number): T | undefined
-	{
-		if(!this.has(entity)) return undefined;
+	get(entity: number): T | undefined {
+		if (!this.has(entity)) return undefined;
 		return this.components[this.sparse[entity]];
 	}
 
 	/**
 	 * Check if an entity is in the set.
 	 */
-	has(entity: number): boolean
-	{
+	has(entity: number): boolean {
 		return this.sparse[entity] !== undefined;
 	}
 
 	/**
 	 * Lock the set. This will queue any additions or removals from taking effect until the set is unlocked.
 	 */
-	lock(){ this.#locked = true; }
+	lock() {
+		this.#locked = true;
+	}
 
 	/**
 	 * Unlock the set. This will apply any queued additions or removals.
 	 */
-	unlock()
-	{
-		if(!this.#locked) return;
+	unlock() {
+		if (!this.#locked) return;
 		this.#locked = false;
-		if(this.#additionQueue.length === 0 && this.#removalQueue.length === 0) return;
-		for(let i = 0; i < this.#additionQueue.length; i+=2)
-		{
-			this.add(this.#additionQueue[i] as number, this.#additionQueue[i+1] as T);
+		if (this.#additionQueue.length === 0 && this.#removalQueue.length === 0)
+			return;
+		for (let i = 0; i < this.#additionQueue.length; i += 2) {
+			this.add(
+				this.#additionQueue[i] as number,
+				this.#additionQueue[i + 1] as T,
+			);
 		}
 		this.#additionQueue.length = 0;
-		for(let i = 0; i < this.#removalQueue.length; i++)
-		{
+		for (let i = 0; i < this.#removalQueue.length; i++) {
 			this.remove(this.#removalQueue[i]);
 		}
 		this.#removalQueue.length = 0;
@@ -129,8 +125,7 @@ export class SparseSet<T>
 	/**
 	 * Clear the set.
 	 */
-	clear()
-	{
+	clear() {
 		this.dense.length = 0;
 		this.components.length = 0;
 		this.sparse.length = 0;
@@ -139,11 +134,9 @@ export class SparseSet<T>
 	/**
 	 * Iterate over the set, returning a tuple of the entity and component.
 	 */
-	*[Symbol.iterator](): Iterator<[entity: number, component: T]>
-	{
-		for(let i = 0; i < this.dense.length; i++)
-		{
-			yield [this.dense[i], this.components[i]]
+	*[Symbol.iterator](): Iterator<[entity: number, component: T]> {
+		for (let i = 0; i < this.dense.length; i++) {
+			yield [this.dense[i], this.components[i]];
 		}
 	}
 
@@ -151,7 +144,7 @@ export class SparseSet<T>
 	private dense: number[] = [];
 	private components: T[] = [];
 
-	#additionQueue: Array<number | T>  = [];
+	#additionQueue: Array<number | T> = [];
 	#removalQueue: number[] = [];
 	#locked = false;
 }

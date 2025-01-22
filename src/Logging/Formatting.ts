@@ -2,8 +2,7 @@ import type { Gradient, RGB } from "./Gradients.ts";
 import { lerp } from "../Math/Other.ts";
 
 // given a start and end color, and a t value between 0 and 1, return the color that is t percent between the start and end color
-export function interpolateRGB(startColor: RGB, endColor: RGB, t: number): RGB
-{
+export function interpolateRGB(startColor: RGB, endColor: RGB, t: number): RGB {
 	if (t < 0) {
 		return startColor;
 	}
@@ -17,8 +16,7 @@ export function interpolateRGB(startColor: RGB, endColor: RGB, t: number): RGB
 	];
 }
 
-function isBrowser()
-{
+function isBrowser() {
 	return (
 		//@ts-ignore
 		typeof window !== "undefined" && typeof globalThis.Deno === "undefined"
@@ -35,10 +33,9 @@ export function formatAnsi(
 		background?: RGB;
 	} = {},
 ): {
-    content: string;
-    styles: never[];
-}
-{
+	content: string;
+	styles: never[];
+} {
 	let c = "";
 	if (styles.bold) c += "1;";
 	if (styles.italic) c += "3;";
@@ -62,8 +59,7 @@ function formatBrowser(
 		background?: RGB;
 		size?: number;
 	} = {},
-)
-{
+) {
 	const styles: string[] = [];
 	if (options.bold) styles.push("font-weight: bold;");
 	if (options.italic) styles.push("font-style: italic;");
@@ -79,30 +75,32 @@ function formatBrowser(
 	};
 }
 
-export function format(string: string, options = {}): {
-    content: string;
-    styles: string[];
-}
-{
+export function format(
+	string: string,
+	options = {},
+): {
+	content: string;
+	styles: string[];
+} {
 	if (isBrowser()) return formatBrowser(string, options);
 	return formatAnsi(string, options);
 }
 
-export function stringGradient(str: string, gradient: Gradient, options = {}):
-{
-   content: string
-   styles: string[]
-}
-{
+export function stringGradient(
+	str: string,
+	gradient: Gradient,
+	options = {},
+): {
+	content: string;
+	styles: string[];
+} {
 	const result = {
 		content: "",
 		styles: [] as string[],
 	};
-	if (isBrowser())
-	{
+	if (isBrowser()) {
 		result.content = "%c" + str.split("").join("%c");
-		for (let i = 0; i < str.length; i++)
-		{
+		for (let i = 0; i < str.length; i++) {
 			const g = interpolateRGB(gradient[0], gradient[1], i / str.length);
 			result.styles.push(
 				formatBrowser(str[i], { ...options, foreground: g }).styles[0],
@@ -110,8 +108,7 @@ export function stringGradient(str: string, gradient: Gradient, options = {}):
 		}
 		return result;
 	}
-	for (let i = 0; i < str.length; i++)
-	{
+	for (let i = 0; i < str.length; i++) {
 		result.content += formatAnsi(str[i], {
 			...options,
 			foreground: interpolateRGB(gradient[0], gradient[1], i / str.length),
