@@ -9,5 +9,4 @@ export * as Input from "./Input/mod.ts";
 export * as Logging from "./Logging/mod.ts";
 export * as Math from "./Math/mod.ts";
 export * as Rendering from "./Rendering/mod.ts";
-export * as UI from "./UI/mod.ts";
 export * as WebGL from "./WebGL/mod.ts";

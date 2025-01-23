@@ -13,8 +13,6 @@ import type { RenderPipeline } from "../Rendering/RenderPipeline.ts";
 import { BasicRenderPipeline } from "../Rendering/BasicRenderPipeline.ts";
 import { ELYSIA_LOGGER, SET_ELYSIA_LOGLEVEL } from "../Shared/Logger.ts";
 import { ResizeController, ResizeEvent } from "../Shared/Resize.ts";
-import { defaultScheduler } from "../UI/Scheduler.ts";
-import { ElysiaStats } from "../UI/ElysiaStats.ts";
 import {
 	s_App,
 	s_OnBeforePhysicsUpdate,
@@ -84,23 +82,12 @@ export interface ApplicationConstructorArguments {
 	stats?: boolean;
 
 	/**
-	 * If the application should manage the default UI scheduler in it's event loop.
-	 */
-	updateDefaultUiScheduler?: boolean;
-
-	/**
 	 * If the application should defer calling `Application.update()` to the user.
 	 */
 	manualUpdate?: boolean;
 }
 
 export class Application {
-	/**
-	 * If this App should call Elysia UIs `defaultScheduler.update()` in it's update loop.
-	 * @default true
-	 */
-	public updateDefaultUiScheduler?: boolean;
-
 	/**
 	 * The maximum number of consecutive errors that can occur inside update() before stopping.
 	 * If manualUpdate is enabled this will have no effect.
@@ -189,7 +176,6 @@ export class Application {
 		this.audio = config.audio ?? new AudioPlayer();
 		this.#assets = config.assets ?? new AssetLoader({});
 		this.#renderPipeline = config.renderPipeline ?? new BasicRenderPipeline();
-		this.#stats = config.stats ?? false;
 		this.#output = config.output ?? document.createElement("canvas");
 
 		if (!config.output) {
@@ -214,13 +200,6 @@ export class Application {
 		);
 
 		this.mouse = new MouseObserver(this.#output);
-
-		this.updateDefaultUiScheduler = config.updateDefaultUiScheduler ?? true;
-
-		if (config.stats) {
-			this.#stats = document.createElement("elysia-stats") as ElysiaStats;
-			this.#output.parentElement?.appendChild(this.#stats);
-		}
 
 		globalThis.addEventListener(
 			"blur",
@@ -338,24 +317,6 @@ export class Application {
 			this.input.flush();
 			this.events.dispatchQueue();
 
-			// update stats
-			if (this.#stats instanceof ElysiaStats) {
-				this.renderPipeline!.getRenderer().info.autoReset = false;
-				this.#stats.stats.fps = Math.round(1 / this.#clock.delta);
-				this.#stats.stats.calls =
-					this.renderPipeline!.getRenderer().info.render.calls;
-				this.#stats.stats.lines =
-					this.renderPipeline!.getRenderer().info.render.lines;
-				this.#stats.stats.points =
-					this.renderPipeline!.getRenderer().info.render.points;
-				this.#stats.stats.triangles =
-					this.renderPipeline!.getRenderer().info.render.triangles;
-				this.#stats.stats.memory =
-					this.renderPipeline!.getRenderer().info.memory.geometries +
-					this.renderPipeline!.getRenderer().info.memory.textures;
-				this.#renderPipeline!.getRenderer().info.reset();
-			}
-
 			if (this.#sizeHasChanged) {
 				this.#scene[s_SceneRoot][s_OnResize](
 					this.#resizeController.width,
@@ -383,9 +344,6 @@ export class Application {
 				);
 			}
 
-			// update default UI scheduler
-			this.updateDefaultUiScheduler && defaultScheduler.update();
-
 			// clear input and event queues
 			this.input.clear();
 			this.events.clear();
@@ -411,7 +369,6 @@ export class Application {
 		for (const prop of Object.values(this))
 			if (isDestroyable(prop)) prop.destructor();
 
-		if (this.#stats instanceof ElysiaStats) this.#stats.remove();
 		this.#scene?.destructor();
 		this.#renderPipeline?.destructor();
 		this.#output.remove();
@@ -424,7 +381,6 @@ export class Application {
 	#scene?: Scene;
 	#rendering = false;
 	readonly #assets!: AssetLoader<any>;
-	readonly #stats: boolean | ElysiaStats = false;
 	readonly #renderPipeline?: RenderPipeline;
 	readonly #output!: HTMLCanvasElement;
 }

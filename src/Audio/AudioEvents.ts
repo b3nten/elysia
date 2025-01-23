@@ -1,4 +1,4 @@
-import { createEvent } from "../Events/event";
+import { createEvent } from "../Events/mod.ts";
 import type { Audio } from "./Audio.ts";
 
 export const AudioPlayEvent = createEvent<Audio>("AudioPlayEvent");

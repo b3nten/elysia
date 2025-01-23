@@ -34,42 +34,37 @@ export function lerpSmooth(
 	halflife: number,
 ): number | void {
 	if (typeof start === "number") {
-		// @ts-ignore
 		return lerp(
 			start,
-			end,
+			end as number,
 			-Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)),
 		);
 	} else {
 		if (start.x) {
-			// @ts-ignore
 			start.x = lerp(
 				start.x,
-				end.x,
+				(end as VectorLike).x,
 				-Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)),
 			);
 		}
 		if (start.y) {
-			// @ts-ignore
 			start.y = lerp(
 				start.y,
-				end.y,
+				(end as VectorLike).y,
 				-Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)),
 			);
 		}
 		if (start.z) {
-			// @ts-ignore
 			start.z = lerp(
 				start.z,
-				end.z,
+				(end as VectorLike).z,
 				-Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)),
 			);
 		}
 		if (start.w) {
-			// @ts-ignore
 			start.w = lerp(
 				start.w,
-				end.w,
+				(end as VectorLike).w,
 				-Math.expm1(-(0.69314718056 * delta) / (halflife + 1e-5)),
 			);
 		}

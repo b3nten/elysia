@@ -142,7 +142,7 @@ export class Behavior extends ComponentLifecycle implements IDestroyable {
 	 * @param tag
 	 */
 	addTag(tag: any) {
-		EventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
+		EventDispatcher.dispatchEvent(TagAddedEvent, { tag, target: this });
 		this.tags.add(tag);
 	}
 
@@ -151,7 +151,7 @@ export class Behavior extends ComponentLifecycle implements IDestroyable {
 	 * @param tag
 	 */
 	removeTag(tag: any) {
-		EventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
+		EventDispatcher.dispatchEvent(TagAddedEvent, { tag, target: this });
 		this.tags.delete(tag);
 	}
 

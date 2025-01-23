@@ -200,10 +200,12 @@ export function isBrowser(): boolean {
 }
 
 export function isNode(): boolean {
-	// @ts-ignore - Node specific
 	return (
+		// @ts-ignore - Node specific
 		typeof process !== "undefined" &&
+		// @ts-ignore - Node specific
 		process.versions != null &&
+		// @ts-ignore - Node specific
 		process.versions.node != null
 	);
 }

@@ -17,7 +17,6 @@ const app = new Elysia.Core.Application({
 	renderPipeline: new Elysia.Rendering.HDRenderPipeline({
 		smaa: true,
 	}),
-	stats: true,
 	assets,
 	logLevel: Elysia.Logging.LogLevel.Debug,
 });
