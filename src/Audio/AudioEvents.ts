@@ -1,10 +1,10 @@
-import { BaseEvent } from "../Events/Event.ts";
+import { createEvent } from "../Events/event";
 import type { Audio } from "./Audio.ts";
 
-export class AudioPlayEvent extends BaseEvent<Audio> {}
-export class AudioPauseEvent extends BaseEvent<Audio> {}
-export class AudioStopEvent extends BaseEvent<Audio> {}
-export class AudioSeekEvent extends BaseEvent<Audio> {}
-export class AudioVolumeEvent extends BaseEvent<Audio> {}
-export class AudioErrorEvent extends BaseEvent<Audio> {}
-export class AudioMuteEvent extends BaseEvent<Audio> {}
+export const AudioPlayEvent = createEvent<Audio>("AudioPlayEvent");
+export const AudioPauseEvent = createEvent<Audio>("AudioPauseEvent");
+export const AudioStopEvent = createEvent<Audio>("AudioStopEvent");
+export const AudioSeekEvent = createEvent<Audio>("AudioSeekEvent");
+export const AudioVolumeEvent = createEvent<Audio>("AudioVolumeEvent");
+export const AudioErrorEvent = createEvent<Audio>("AudioErrorEvent");
+export const AudioMuteEvent = createEvent<Audio>("AudioMuteEvent");

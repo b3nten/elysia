@@ -34,7 +34,7 @@ import {
 	LoadedEvent,
 	ErrorEvent,
 	ProgressEvent,
-} from "../Events/Event.ts";
+} from "./Events.ts";
 
 /**
  * Abstract base class for asset loading.
@@ -151,11 +151,11 @@ export abstract class Asset<T> {
 	 */
 	protected updateProgress(progress: number) {
 		this.#progress = clamp(progress, 0, 1);
-		this.#eventDispatcher.dispatchEvent(new ProgressEvent(this.#progress));
+		this.#eventDispatcher.dispatchEvent(ProgressEvent, this.#progress);
 	}
 
 	private async loadImpl() {
-		this.#eventDispatcher.dispatchEvent(new BeginLoadEvent());
+		this.#eventDispatcher.dispatchEvent(BeginLoadEvent, undefined);
 		this.#started = true;
 		this.#loading = true;
 		this.#progress = 0;
@@ -163,13 +163,13 @@ export abstract class Asset<T> {
 		try {
 			const d = await this.loader();
 			this.#data = d;
-			this.#eventDispatcher.dispatchEvent(new LoadedEvent());
+			this.#eventDispatcher.dispatchEvent(LoadedEvent, this);
 			this.#future.resolve(d);
 		} catch (e) {
 			this.#error = e instanceof Error ? e : new Error(String(e));
 			this.#loaded = true;
 			this.#loading = false;
-			this.#eventDispatcher.dispatchEvent(new ErrorEvent(this.error!));
+			this.#eventDispatcher.dispatchEvent(ErrorEvent, this.error);
 			this.#future.reject(e);
 		} finally {
 			this.#loading = false;

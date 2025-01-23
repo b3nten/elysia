@@ -167,7 +167,7 @@ export class Audio {
 			(buffer) => {
 				if (!buffer) {
 					this.#error = new Error("Failed to create audio buffer");
-					this.#eventDispatcher.dispatchEvent(new Events.AudioErrorEvent(this));
+					this.#eventDispatcher.dispatchEvent(Events.AudioErrorEvent, this);
 					return;
 				}
 				this.#audioBuffer = buffer;
@@ -234,7 +234,7 @@ export class Audio {
 
 		this.#source!.addEventListener("ended", this.onAudioEnd);
 
-		this.#eventDispatcher.dispatchEvent(new Events.AudioPlayEvent(this));
+		this.#eventDispatcher.dispatchEvent(Events.AudioPlayEvent, this);
 	}
 
 	/** Pause the audio */
@@ -257,7 +257,7 @@ export class Audio {
 		this.#paused = true;
 		this.#stopped = false;
 
-		this.#eventDispatcher.dispatchEvent(new Events.AudioPauseEvent(this));
+		this.#eventDispatcher.dispatchEvent(Events.AudioPauseEvent, this);
 	}
 
 	/** Toggle between playing and pausing the audio */
@@ -292,7 +292,7 @@ export class Audio {
 
 		this.#position = 0;
 
-		this.#eventDispatcher.dispatchEvent(new Events.AudioStopEvent(this));
+		this.#eventDispatcher.dispatchEvent(Events.AudioStopEvent, this);
 	}
 
 	/** Mute the audio */
@@ -308,7 +308,7 @@ export class Audio {
 
 		this.#muted = true;
 
-		this.#eventDispatcher.dispatchEvent(new Events.AudioMuteEvent(this));
+		this.#eventDispatcher.dispatchEvent(Events.AudioMuteEvent, this);
 	}
 
 	/** Unmute the audio */
@@ -324,7 +324,7 @@ export class Audio {
 
 		this.#muted = false;
 
-		this.#eventDispatcher.dispatchEvent(new Events.AudioVolumeEvent(this));
+		this.#eventDispatcher.dispatchEvent(Events.AudioVolumeEvent, this);
 	}
 
 	/** Toggle between muting and unmuting the audio */
@@ -343,7 +343,7 @@ export class Audio {
 
 		this.#position = clamp(position, 0, this.#duration);
 
-		this.#eventDispatcher.dispatchEvent(new Events.AudioSeekEvent(this));
+		this.#eventDispatcher.dispatchEvent(Events.AudioSeekEvent, this);
 
 		if (this.#playing) {
 			ASSERT(!!this.#source, "No source to seek");
@@ -378,7 +378,7 @@ export class Audio {
 		this.#stopped = true;
 		this.#playing = false;
 		this.#position = 0;
-		this.#eventDispatcher.dispatchEvent(new Events.AudioStopEvent(this));
+		this.#eventDispatcher.dispatchEvent(Events.AudioStopEvent, this);
 	}
 
 	private destroySource(source: AudioBufferSourceNode) {

@@ -6,12 +6,10 @@
  *
  * Core Components:
  *
- * 1. Base Events (Event.ts):
- * - BaseEvent<T>: Base class for all events with generic type support
- * - BeginLoadEvent: Signals the start of a loading operation
- * - ProgressEvent: Reports progress updates
- * - LoadedEvent: Signals completion of loading
- * - ErrorEvent: Reports error conditions
+ * 1. Base Events (event.ts):
+ * - EventType<T>: Type for events
+ * - createEvent<T>: Base class for all events with generic type support
+ * - unwrapEvent<T>: Unwrap an event to its payload
  *
  * 2. Event Dispatcher (EventDispatcher.ts):
  * EventDispatcher provides immediate, synchronous event handling with:
@@ -28,21 +26,17 @@
  * @example Basic Event Usage
  * ```typescript
  * // Define a custom event
- * class MyEvent extends BaseEvent<string> {}
- * // Define a serialized event
- * const SerializedEvent = createSerializableEvent<string>("SerializedEvent");
+ * let MyEvent = createEvent<string>("MyEvent")
  *
  * // Using the dispatcher
  * const dispatcher = new EventDispatcher();
  * dispatcher.addEventListener(MyEvent, (message) => console.log(message));
- * dispatcher.addEventListener(SerializedEvent, (data) => console.log(data));
- * dispatcher.dispatchEvent(new MyEvent("Hello!"));
- * dispatcher.dispatchEvent(SerializedEvent, "Serialized message");
+ * dispatcher.dispatchEvent(MyEvent, "Hello!");
  *
  * // Using the queue
  * const queue = new EventQueue();
  * queue.subscribe(MyEvent, (message) => console.log(message));
- * queue.push(new MyEvent("Queued message"));
+ * queue.push(MyEvent, "Queued message");
  * queue.dispatchQueue();
  * ```
  *
@@ -52,17 +46,7 @@
  * - Loading operations: Use built-in events (BeginLoadEvent, ProgressEvent, etc.)
  */
 
-export {
-	ProgressEvent,
-	ErrorEvent,
-	LoadedEvent,
-	BeginLoadEvent,
-	BaseEvent,
-	type SerializableEvent,
-	createSerializableEvent,
-} from "./Event.ts";
-export { EventQueue } from "./EventQueue.ts";
-export {
-	EventDispatcher,
-	type EventDispatcherConstructorArgs,
-} from "./EventDispatcher.ts";
+/**
+ * Base Event type
+ */
+export * from "./Event.ts";

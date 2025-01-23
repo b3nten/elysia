@@ -1,5 +1,4 @@
-import type { BaseEvent } from "./Event.ts";
-import type { Constructor } from "../Shared/Utilities.ts";
+import type { EventType } from "./Event.ts";
 
 /**
  * A double-buffered event queue system that manages event dispatching and subscriptions.
@@ -9,7 +8,7 @@ import type { Constructor } from "../Shared/Utilities.ts";
  * @example
  * ```ts
  * // Define an event
- * class UserLoginEvent extends BaseEvent<{ userId: string }> {}
+ * let UserLoginEvent = createEvent<{ userId: string }>("userLoginEvent")
  *
  * // Create the event queue
  * const eventQueue = new EventQueue();
@@ -35,21 +34,11 @@ import type { Constructor } from "../Shared/Utilities.ts";
  * ```
  */
 export class EventQueue {
-	constructor() {
-		this.dispatchQueue = this.dispatchQueue.bind(this);
-		this.dispatchAndClear = this.dispatchAndClear.bind(this);
-		this.clear = this.clear.bind(this);
-		this.push = this.push.bind(this);
-		this.subscribe = this.subscribe.bind(this);
-		this.unsubscribe = this.unsubscribe.bind(this);
-		this.iterator = this.iterator.bind(this);
-	}
-
 	/**
 	 * Push an event to the queue.
 	 * @param event
 	 */
-	public push(event: BaseEvent<any>) {
+	public push(event: EventType<any>) {
 		if (this.hasFlushed) {
 			this.nextQueue.push(event);
 			return;
@@ -60,7 +49,7 @@ export class EventQueue {
 	/**
 	 * Iterate over the queue.
 	 */
-	public iterator(): IterableIterator<BaseEvent<any>> {
+	public iterator(): IterableIterator<EventType<any>> {
 		return this.queue[Symbol.iterator]();
 	}
 
@@ -70,16 +59,13 @@ export class EventQueue {
 	public dispatchQueue() {
 		this.hasFlushed = true;
 		for (const event of this.queue) {
-			const listeners = this.listeners.get(
-				event.constructor as Constructor<BaseEvent<any>>,
-			);
+			const listeners = this.listeners.get(event);
 			if (!listeners) {
 				continue;
 			}
-
 			for (const listener of listeners) {
 				try {
-					listener(event.value);
+					listener(event);
 				} catch (e) {
 					console.error(e);
 				}
@@ -111,9 +97,9 @@ export class EventQueue {
 	 * @param type
 	 * @param listener
 	 */
-	public subscribe<T extends Constructor<BaseEvent<any>>>(
+	public subscribe<T extends EventType<any>>(
 		type: T,
-		listener: (value: InstanceType<T>["value"]) => void,
+		listener: (value: T["__type"]) => void,
 	): () => void {
 		const listeners = this.listeners.get(type) ?? new Set();
 		listeners.add(listener);
@@ -127,9 +113,9 @@ export class EventQueue {
 	 * @param type
 	 * @param listener
 	 */
-	public unsubscribe<T extends Constructor<BaseEvent<any>>>(
+	public unsubscribe<T extends EventType<any>>(
 		type: T,
-		listener: (value: InstanceType<T>["value"]) => void,
+		listener: (value: T["__type"]) => void,
 	): void {
 		const listeners = this.listeners.get(type);
 		if (!listeners) {
@@ -139,16 +125,12 @@ export class EventQueue {
 		listeners.delete(listener);
 	}
 
-	protected readonly listeners: Map<
-		new (
-			value: any,
-		) => BaseEvent<any>,
-		Set<(value: any) => void>
-	> = new Map();
+	protected readonly listeners: Map<EventType<any>, Set<(value: any) => void>> =
+		new Map();
 
-	protected queue: BaseEvent<any>[] = [];
+	protected queue: EventType<any>[] = [];
 
-	protected nextQueue: BaseEvent<any>[] = [];
+	protected nextQueue: EventType<any>[] = [];
 
 	protected hasFlushed = false;
 }

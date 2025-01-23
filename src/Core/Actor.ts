@@ -221,7 +221,7 @@ export class Actor extends ComponentLifecycle implements IDestroyable {
 	 * @param tag
 	 */
 	public addTag(tag: any) {
-		EventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
+		EventDispatcher.dispatchEvent(TagAddedEvent, { tag, target: this });
 		this.tags.add(tag);
 	}
 
@@ -230,7 +230,7 @@ export class Actor extends ComponentLifecycle implements IDestroyable {
 	 * @param tag
 	 */
 	public removeTag(tag: any) {
-		EventDispatcher.dispatchEvent(new TagAddedEvent({ tag, target: this }));
+		EventDispatcher.dispatchEvent(TagAddedEvent, { tag, target: this });
 		this.tags.delete(tag);
 	}
 
@@ -280,9 +280,10 @@ export class Actor extends ComponentLifecycle implements IDestroyable {
 			component.markTransformDirty();
 		}
 
-		EventDispatcher.dispatchEvent(
-			new ComponentAddedEvent({ parent: this, child: component }),
-		);
+		EventDispatcher.dispatchEvent(ComponentAddedEvent, {
+			parent: this,
+			child: component,
+		});
 
 		component[s_Parent] = this;
 		component[s_Scene] = this[s_Scene];
@@ -314,9 +315,10 @@ export class Actor extends ComponentLifecycle implements IDestroyable {
 			return false;
 		}
 
-		EventDispatcher.dispatchEvent(
-			new ComponentRemovedEvent({ parent: this, child: component }),
-		);
+		EventDispatcher.dispatchEvent(ComponentRemovedEvent, {
+			parent: this,
+			child: component,
+		});
 
 		this.components.delete(component);
 		this.staticComponents.delete(component);

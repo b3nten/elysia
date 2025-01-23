@@ -1,21 +1,22 @@
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
-import { BaseEvent } from "../Events/Event.ts";
+import { createEvent } from "../Events/mod.ts";
 import type { Actor } from "./Actor.ts";
 import type { Component } from "./Component.ts";
 
 export const ElysiaEvents: EventDispatcher = new EventDispatcher();
 
-export class TagAddedEvent extends BaseEvent<{ tag: any; target: Component }> {}
-export class TagRemovedEvent extends BaseEvent<{
+export const TagAddedEvent = createEvent<{ tag: any; target: Component }>(
+	"elysia:TagAddedEvent",
+);
+export const TagRemovedEvent = createEvent<{
 	tag: any;
 	target: Component;
-}> {}
-
-export class ComponentAddedEvent extends BaseEvent<{
+}>("elysia:TagRemovedEvent");
+export const ComponentAddedEvent = createEvent<{
 	parent: Actor;
 	child: Component;
-}> {}
-export class ComponentRemovedEvent extends BaseEvent<{
+}>("elysia:ComponentAddedEvent");
+export const ComponentRemovedEvent = createEvent<{
 	parent: Actor;
 	child: Component;
-}> {}
+}>("elysia:ComponentRemovedEvent");

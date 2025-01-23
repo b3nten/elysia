@@ -24,8 +24,8 @@
 import type { Asset } from "./Asset.ts";
 import type { Constructor } from "../Shared/Utilities.ts";
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
-import { LoadedEvent, ProgressEvent, ErrorEvent } from "../Events/Event.ts";
 import { ELYSIA_LOGGER } from "../Shared/Logger.ts";
+import { ErrorEvent, LoadedEvent, ProgressEvent } from "./Events.ts";
 
 /**
  * Class for managing and loading multiple assets.
@@ -75,7 +75,7 @@ export class AssetLoader<A extends Record<string, Asset<any>>> {
 				this.#progress =
 					Object.values(this.#assets).reduce((acc, a) => acc + a.progress, 0) /
 					len;
-				this.#eventDispatcher.dispatchEvent(new ProgressEvent(this.#progress));
+				this.#eventDispatcher.dispatchEvent(ProgressEvent, this.#progress);
 			});
 			return asset.load();
 		});
@@ -85,13 +85,13 @@ export class AssetLoader<A extends Record<string, Asset<any>>> {
 				this.#loaded = true;
 				this.#loading = false;
 				this.#progress = 1;
-				this.#eventDispatcher.dispatchEvent(new LoadedEvent());
+				this.#eventDispatcher.dispatchEvent(LoadedEvent, null);
 			})
 			.catch((e) => {
 				ELYSIA_LOGGER.error("Error loading asset:", e);
 				this.#error = e;
 				this.#loading = false;
-				this.#eventDispatcher.dispatchEvent(new ErrorEvent(e));
+				this.#eventDispatcher.dispatchEvent(ErrorEvent, e);
 				throw e;
 			});
 	}

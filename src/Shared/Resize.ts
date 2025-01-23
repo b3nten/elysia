@@ -1,9 +1,9 @@
 import type { IDestroyable } from "../Core/Lifecycle.ts";
 import { isBrowser } from "./Asserts.ts";
 import { EventDispatcher } from "../Events/EventDispatcher.ts";
-import { BaseEvent } from "../Events/Event.ts";
+import { createEvent } from "../Events/mod.ts";
 
-export class ResizeEvent extends BaseEvent<{ x: number; y: number }> {}
+export const ResizeEvent = createEvent<{ x: number; y: number }>("ResizeEvent");
 
 export class ResizeController implements IDestroyable {
 	width = 0;
@@ -17,9 +17,10 @@ export class ResizeController implements IDestroyable {
 				const cr = entries[0].contentRect;
 				this.width = cr.width;
 				this.height = cr.height;
-				this.#event.dispatchEvent(
-					new ResizeEvent({ x: this.width, y: this.height }),
-				);
+				this.#event.dispatchEvent(ResizeEvent, {
+					x: this.width,
+					y: this.height,
+				});
 			});
 			this.#observer.observe(element);
 			const bounds = element.getBoundingClientRect();
@@ -59,15 +60,11 @@ export class ResizeController implements IDestroyable {
 			const bounds = this.element.getBoundingClientRect();
 			this.width = bounds.width;
 			this.height = bounds.height;
-			this.#event.dispatchEvent(
-				new ResizeEvent({ x: this.width, y: this.height }),
-			);
+			this.#event.dispatchEvent(ResizeEvent, { x: this.width, y: this.height });
 		} else {
 			this.width = globalThis.innerWidth;
 			this.height = globalThis.innerHeight;
-			this.#event.dispatchEvent(
-				new ResizeEvent({ x: this.width, y: this.height }),
-			);
+			this.#event.dispatchEvent(ResizeEvent, { x: this.width, y: this.height });
 		}
 	};
 }

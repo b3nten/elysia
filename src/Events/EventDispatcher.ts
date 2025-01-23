@@ -1,9 +1,8 @@
-import { BaseEvent, type SerializableEvent } from "./Event.ts";
-import type { Constructor, Serializable } from "../Shared/Utilities.ts";
-import { isWorker } from "../Shared/Platform.ts";
 import { hasKeys } from "../Shared/Asserts.ts";
+import { isWorker } from "../Shared/Platform.ts";
+import { type EventType } from "./Event.ts";
 
-export interface EventDispatcherConstructorArgs {
+export interface EventDispatcherArgs {
 	/**
 	 * Listen to messages from other threads.
 	 * If `true`, listens to all messages.
@@ -11,16 +10,9 @@ export interface EventDispatcherConstructorArgs {
 	 * If `"receive"`, listens to messages from other threads.
 	 */
 	multithreaded?: boolean | "send" | "receive";
-	/** Dispatch Serializable events to these Workers. */
-	worker?: Worker | Worker[];
+	/** Dispatch events to these Workers. */
+	workers?: Worker[];
 }
-
-/**
- * Union of all event types that can be dispatched by the event dispatcher.
- */
-export type ElysiaEventType<T = any> =
-	| Constructor<BaseEvent<T>>
-	| SerializableEvent<T extends Serializable ? T : never>;
 
 /**
  * A synchronous event dispatcher that provides both static and instance-level event handling capabilities.
@@ -34,7 +26,7 @@ export type ElysiaEventType<T = any> =
  * @example
  * ```typescript
  * // Define your event
- * class UserLoginEvent extends BaseEvent<{ userId: string }> {}
+ * let UserLoginEvent = createEvent<{ userId: string }>("UserLoginEvent");
  *
  * // Using static (global) event handling
  * const unsubscribeGlobal = EventDispatcher.addEventListener(
@@ -50,8 +42,8 @@ export type ElysiaEventType<T = any> =
  * );
  *
  * // Dispatch events
- * EventDispatcher.dispatchEvent(new UserLoginEvent({ userId: "123" }));
- * dispatcher.dispatchEvent(new UserLoginEvent({ userId: "456" }));
+ * EventDispatcher.dispatchEvent(UserLoginEvent, { userId: "123" });
+ * dispatcher.dispatchEvent(UserLoginEvent, { userId: "456" });
  *
  * // Clean up
  * unsubscribeGlobal();
@@ -69,12 +61,12 @@ export class EventDispatcher {
 	 */
 	public readonly workers: Worker[] = [];
 
-	constructor(args: EventDispatcherConstructorArgs = {}) {
+	constructor(args: EventDispatcherArgs = {}) {
 		this.workers.push(
-			...(args.worker
-				? Array.isArray(args.worker)
-					? args.worker
-					: [args.worker]
+			...(args.workers
+				? Array.isArray(args.workers)
+					? args.workers
+					: [args.workers]
 				: []),
 		);
 
@@ -95,9 +87,9 @@ export class EventDispatcher {
 	 * @param type
 	 * @param listener
 	 */
-	static addEventListener<T extends ElysiaEventType>(
+	static addEventListener<T extends EventType<any>>(
 		type: T,
-		listener: (value: T extends ElysiaEventType<infer U> ? U : never) => void,
+		listener: (value: T extends EventType<infer U> ? U : never) => void,
 	): () => void {
 		const listeners = this.listeners.get(type) ?? new Set();
 		listeners.add(listener);
@@ -111,9 +103,9 @@ export class EventDispatcher {
 	 * @param type
 	 * @param listener
 	 */
-	addEventListener<T extends ElysiaEventType>(
+	addEventListener<T extends EventType<any>>(
 		type: T,
-		listener: (value: T extends ElysiaEventType<infer U> ? U : never) => void,
+		listener: (value: T extends EventType<infer U> ? U : never) => void,
 	): () => void {
 		const listeners = this.listeners.get(type) ?? new Set();
 		listeners.add(listener);
@@ -127,7 +119,7 @@ export class EventDispatcher {
 	 * @param type
 	 * @param listener
 	 */
-	static removeEventListener<T extends ElysiaEventType>(
+	static removeEventListener<T extends EventType<any>>(
 		type: T,
 		listener: Function,
 	): void {
@@ -141,7 +133,7 @@ export class EventDispatcher {
 	 * @param type
 	 * @param listener
 	 */
-	removeEventListener<T extends ElysiaEventType>(
+	removeEventListener<T extends EventType<any>>(
 		type: T,
 		listener: Function,
 	): void {
@@ -154,24 +146,13 @@ export class EventDispatcher {
 	 * Dispatch an event to listeners on the static EventDispatcher.
 	 * @param event
 	 */
-	static dispatchEvent<T extends SerializableEvent<any> | BaseEvent<any>>(
+	static dispatchEvent<T extends EventType<any>>(
 		event: T,
-		data?: T extends BaseEvent<infer U> ? U : never,
+		data: T extends EventType<infer U> ? U : never,
 	) {
 		let listeners: Set<Function> | undefined;
-
-		if (typeof event === "string") {
-			listeners = this.listeners.get(event);
-		} else {
-			listeners = this.listeners.get(
-				event.constructor as Constructor<BaseEvent<any>>,
-			);
-		}
-
+		listeners = this.listeners.get(event);
 		if (!listeners) return;
-
-		data = event instanceof BaseEvent ? event.value : data;
-
 		for (const listener of listeners) {
 			listener(data);
 		}
@@ -181,26 +162,17 @@ export class EventDispatcher {
 	 * Dispatch an event.
 	 * @param event
 	 */
-	dispatchEvent<T extends SerializableEvent<any> | BaseEvent<any>>(
+	dispatchEvent<T extends EventType<any>>(
 		event: T,
-		data?: T extends BaseEvent<infer U> ? U : never,
+		data: T extends EventType<infer U> ? U : never,
 	) {
 		let listeners: Set<Function> | undefined;
+		listeners = this.listeners.get(event);
 
-		if (typeof event === "string") {
-			listeners = this.listeners.get(event);
-		} else {
-			listeners = this.listeners.get(
-				event.constructor as Constructor<BaseEvent<any>>,
-			);
-		}
-
-		if (!listeners) return;
-
-		data = event instanceof BaseEvent ? event.value : data;
-
-		for (const listener of listeners) {
-			listener(data);
+		if (listeners) {
+			for (const listener of listeners) {
+				listener(data);
+			}
 		}
 
 		if (
@@ -229,20 +201,14 @@ export class EventDispatcher {
 
 	protected receiveMessageEvent = (event: MessageEvent<unknown>) => {
 		if (!hasKeys(event.data, "event", "data")) return;
-		const listener = this.listeners.get(event.data.event as ElysiaEventType);
+		const listener = this.listeners.get(event.data.event as EventType<any>);
 		if (!listener) return;
 		for (const l of listener) {
 			l(event.data.data);
 		}
 	};
 
-	protected static listeners: Map<ElysiaEventType, Set<Function>> = new Map<
-		ElysiaEventType,
-		Set<Function>
-	>();
-	protected listeners: Map<ElysiaEventType, Set<Function>> = new Map<
-		ElysiaEventType,
-		Set<Function>
-	>();
+	protected static listeners: Map<EventType<any>, Set<Function>> = new Map();
+	protected listeners: Map<EventType<any>, Set<Function>> = new Map();
 	#multithreaded?: boolean | "send" | "receive";
 }
