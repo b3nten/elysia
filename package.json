@@ -1,7 +1,7 @@
 {
   "name": "elysiatech",
   "type": "module",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "scripts": {
     "dev": "cd playground && vite",
     "build": "tsc --rewriteRelativeImportExtensions --project tsconfig.json"
@@ -34,9 +34,9 @@
       "import": "./src/Audio/mod.js",
       "types": "./src/Audio/mod.d.ts"
     },
-    "./behaviours": {
-      "import": "./src/Behaviours/mod.js",
-      "types": "./src/Behaviours/mod.d.ts"
+    "./behaviors": {
+      "import": "./src/Behaviors/mod.js",
+      "types": "./src/Behaviors/mod.d.ts"
     },
     "./containers": {
       "import": "./src/Containers/mod.js",
