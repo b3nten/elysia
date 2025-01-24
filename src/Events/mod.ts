@@ -50,3 +50,5 @@
  * Base Event type
  */
 export * from "./Event.ts";
+export { EventDispatcher, type EventDispatcherArgs } from "./EventDispatcher.ts";
+export { EventQueue } from "./EventQueue.ts";
