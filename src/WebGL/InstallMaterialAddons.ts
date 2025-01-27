@@ -36,7 +36,8 @@ export function installMaterialAddonsToPrototypes(
 ) {
 	for (const Material of materials) {
 		if (!Material?.prototype) continue;
-		installMaterialAddon(Material.prototype);
+		if (!Material.prototype[Internal])
+		  installMaterialAddon(Material.prototype);
 	}
 }
 
