@@ -76,7 +76,7 @@ export class Environment extends Actor {
 	/**
 	 * Whether the environment map should be used as the background.
 	 */
-	get background(): boolean {
+	get background(): boolean | Three.Texture | Three.Color | Three.CubeTexture {
 		return this.#background;
 	}
 	set background(v: boolean) {
@@ -137,13 +137,15 @@ export class Environment extends Actor {
 		}
 
 		if (this.#background) {
-			this.scene.object3d.backgroundIntensity = this.#backgroundIntensity;
-			this.scene.object3d.backgroundRotation =
-				new Three.Euler().setFromQuaternion(this.rotation);
-			this.scene.object3d.backgroundBlurriness = this.#backgroundBlur;
-			this.scene.object3d.background = this.#texture;
-		} else {
-			this.scene.object3d.background = null;
+			if(typeof this.background === "boolean") {
+				this.scene.object3d.backgroundIntensity = this.#backgroundIntensity;
+				this.scene.object3d.backgroundRotation =
+					new Three.Euler().setFromQuaternion(this.rotation);
+				this.scene.object3d.backgroundBlurriness = this.#backgroundBlur;
+				this.scene.object3d.background = this.#texture;
+			} else {
+				this.scene.object3d.background = this.background
+			}
 		}
 
 		this.scene.object3d.environmentIntensity = this.#environmentIntensity;
