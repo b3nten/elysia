@@ -29,24 +29,26 @@ export let build = async (args: { defines: Record<string, any>, drop: string[] }
 
 let mode = args.includes("--prod") ? "production" : "development"
 
-console.log(`Building in ${mode} mode...`)
+console.info(`Building in ${mode} mode...`)
+
+let t = performance.now()
 
 if(mode === "production") {
 	await build({
 		defines: {
 			ELYSIA_DEV: "false",
 			ELYSIA_PROD: "true",
-			ELYSIA_PROFILE: "false",
 		},
-		drop: ["ELYSIA_DEV", "ELYSIA_PROFILE"],
+		drop: ["ELYSIA_DEV"],
 	})
 } else {
 	await build({
 		defines: {
 			ELYSIA_DEV: "true",
 			ELYSIA_PROD: "false",
-			ELYSIA_PROFILE: "false",
 		},
-		drop: ["ELYSIA_PROD", "ELYSIA_PROFILE"],
+		drop: ["ELYSIA_PROD"],
 	})
 }
+
+console.info(`Built in ${(performance.now() - t).toFixed(0)}ms`)
