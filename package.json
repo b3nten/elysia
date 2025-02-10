@@ -3,12 +3,18 @@
   "type": "module",
   "version": "1.0.5",
   "scripts": {
-    "dev": "cd playground && vite",
-    "build": "tsc --rewriteRelativeImportExtensions --project tsconfig.json"
+    "playground": "cd playground && vite",
+    "dev": "tsx --watch-path=./src build",
+    "dev-types": "tsc --declaration --watch --emitDeclarationOnly --project tsconfig.json",
+    "build-src": "tsx build",
+    "build-types": "tsc --declaration --emitDeclarationOnly --project tsconfig.json",
+    "build": "npm run build-src && npm run build-types",
+    "lint": "biome format --fix && biome lint --fix --unsafe"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
     "@types/three": "^0.171.0",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vite": "^6.0.7"
   },

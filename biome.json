@@ -6,6 +6,7 @@
 		"useIgnoreFile": false
 	},
 	"files": {
+		"include": ["src/**/*.ts"],
 		"ignoreUnknown": false,
 		"ignore": []
 	},
@@ -19,7 +20,27 @@
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"correctness": {
+				"recommended": true,
+				"useImportExtensions": "error",
+				"noUnusedLabels": "off"
+			},
+			"suspicious": {
+				"recommended": true,
+				"noExplicitAny": "off",
+				"noConfusingLabels": "off"
+			},
+			"style": {
+				"recommended": true,
+				"useConst": "off"
+			},
+			"complexity": {
+				"recommended": true,
+				"noForEach": "off",
+				"noStaticOnlyClass": "off",
+				"noBannedTypes": "off"
+			}
 		}
 	},
 	"javascript": {

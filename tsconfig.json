@@ -3,11 +3,15 @@
     "allowImportingTsExtensions": true,
     "moduleResolution": "Bundler",
     "isolatedModules": true,
+    "verbatimModuleSyntax": true,
     "target": "ES2023",
+    "lib": ["ES2023", "DOM"],
     "module": "ESNext",
     "declaration": true,
-    "outDir": "dist",
-    "removeComments": true
+    "outDir": ".dist",
+    "removeComments": true,
+    "types": ["./defines.d.ts"],
+    "allowUnusedLabels": true
   },
-  "include": ["src/*"]
+    "include": ["src/**/*", "./defines.d.ts"],
 }

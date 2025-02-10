@@ -1,5 +1,6 @@
 # compiled output
 dist
+.dist
 playground/dist
 
 # IDEs and editors
