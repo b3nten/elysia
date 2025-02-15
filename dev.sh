@@ -13,6 +13,8 @@ trap cleanup SIGINT SIGTERM
 
 echo "Starting playground and dev servers in parallel..."
 
+rm -rf .dist/  # Remove dist folder
+
 # Run both commands in parallel
 npm run playground & # Run playground in background
 PLAYGROUND_PID=$!   # Store playground process ID
@@ -20,7 +22,7 @@ PLAYGROUND_PID=$!   # Store playground process ID
 npm run dev &       # Run dev in background
 DEV_PID=$!         # Store dev process ID
 
-npm run dev-types & # Run build-types in background
+npm run build-types && npm run dev-types & # Run build-types in background
 BUILD_TYPES_PID=$!   # Store build-types process ID
 
 # Wait for both processes to complete

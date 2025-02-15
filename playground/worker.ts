@@ -1,3 +1,5 @@
-import { Input } from "../.dist/input/mod";
-console.log("Worker instantiated.")
-Input.init();
+import { Application } from "../.dist/core/application";
+
+const app = new Application({
+
+});

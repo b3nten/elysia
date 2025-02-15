@@ -17,7 +17,12 @@ export const TouchEvent = createEvent<
 >("TouchEvent");
 
 export class Input {
+
+	static isInitialized = false;
+
 	static init = (args: { workers?: Worker[] } = {}) => {
+		if (Input.isInitialized) return;
+		Input.isInitialized = true;
 		if (isWorker()) {
 			postMessage({ type: MESSAGE_TYPES.REGISTER_LISTENER });
 			self.addEventListener("message", (e) => {

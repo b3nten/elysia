@@ -1,10 +1,15 @@
 import { Input } from "../.dist/input/mod"
 import { registerWorkers } from "../.dist/core/worker";
+import "../.dist/core/application";
 
-Input.init()
+const USE_WORKER = false;
 
-registerWorkers(
-	new Worker(new URL('./worker.ts', import.meta.url), {
-		type: "module"
-	})
-);
+if(USE_WORKER) {
+	registerWorkers(
+		new Worker(new URL('./worker.ts', import.meta.url), {
+			type: "module"
+		})
+	);
+} else {
+	import("./worker.ts")
+}

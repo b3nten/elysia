@@ -11,7 +11,8 @@
     "outDir": ".dist",
     "removeComments": true,
     "types": ["./defines.d.ts"],
-    "allowUnusedLabels": true
+    "allowUnusedLabels": true,
+    "allowUnreachableCode": true,
   },
-    "include": ["src/**/*", "./defines.d.ts"],
+    "include": ["src/**/*.ts", "./defines.d.ts"],
 }

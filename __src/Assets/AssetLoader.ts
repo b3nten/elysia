@@ -129,7 +129,7 @@ export class AssetLoader<A extends Record<string, Asset<any>>> {
 	 * Retrieves an asset instance by its key.
 	 * @template T The type of the asset to retrieve.
 	 * @param {T | string} a The key of the asset.
-	 * @returns {A[T] | T | undefined} The asset instance or undefined if not found.
+	 * @returns {[T] | T | undefined} The asset instance or undefined if not found.
 	 */
 	get<T extends keyof A>(a: T): A[T];
 	get<T extends Asset<any>>(a: string): T | undefined;

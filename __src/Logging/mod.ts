@@ -5,13 +5,6 @@
  * The module includes support for both basic console logging and fancy formatted console output with
  * colors and gradients.
  *
- * Key features:
- * - Multiple severity levels (debug, info, success, warn, error, critical)
- * - Customizable log writers
- * - Support for colored and styled output
- * - Log filtering capabilities
- * - Performance timestamps
- *
  * @example Basic Usage
  * ```ts
  * const logger = createLogger({ name: "MyApp" });

@@ -1,6 +1,7 @@
 import type { Destructible } from "./lifecycle.ts";
 import type { Renderer } from "../renderer/interface.ts";
 import { Input } from "../input/mod.ts";
+import {elysiaLogger} from "./logger.ts";
 
 interface ApplicationArgs {
 	/** A renderer that satisfies the Renderer interface */
@@ -17,7 +18,12 @@ interface ApplicationArgs {
 }
 
 export class Application implements Destructible {
+
+	static instance: Application;
+
 	static {
+		// initialize Input.
+		// This ensures it's listening for the worker's Input system to register.
 		Input.init();
 	}
 
@@ -26,9 +32,18 @@ export class Application implements Destructible {
 	autoUpdate: boolean;
 
 	constructor(args: ApplicationArgs) {
+		if(Application.instance) {
+			elysiaLogger.error("An instance of Application already exists.");
+			throw Error("An instance of Application already exists.");
+		}
+
+		Application.instance = this;
+
 		this.renderer = args.renderer;
 		this.canvas = args.canvas;
 		this.autoUpdate = args.autoUpdate ?? false;
+
+		ELYSIA_DEV: elysiaLogger.success("Application initialized.");
 	}
 
 	destructor() {
@@ -41,17 +56,19 @@ export class Application implements Destructible {
 		}
 	}
 
-	loadScene = () => {};
+	loadScene = () => {
+		
+	};
 
 	update = () => {
-		// if(ELYSIA_DEV) {
-		// 	try {
-		//
-		// 	} catch (e) {
-		// 		console.error(e);
-		// 	}
-		// } else {
-		//
-		// }
+		ELYSIA_DEV: try {
+
+		} catch (e) {
+
+		}
+
+		ELYSIA_PROD: {
+
+		}
 	};
 }
