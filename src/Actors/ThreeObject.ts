@@ -29,9 +29,11 @@ export class ThreeObject<
 		super[s_OnEnterScene]();
 		if (this.destroyed) return;
 		this.scene.object3d.add(this.object3d);
+		this.onTransformUpdate();
 	}
 
 	override onTransformUpdate() {
+		this.updateWorldMatrix(true);
 		this.worldMatrix.decompose(
 			this.object3d.position,
 			this.object3d.quaternion,
