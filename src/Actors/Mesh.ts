@@ -142,7 +142,7 @@ export class Mesh extends Actor {
 				box.union(batchedMesh.getBoundingBoxAt(mesh.instanceId, temp) ?? temp);
 			}
 		}
-		this[s_BoundingBox].copy(box);
+		this[s_BoundingBox].copy(box).applyMatrix4(this.worldMatrix);
 		return this[s_BoundingBox];
 	}
 
