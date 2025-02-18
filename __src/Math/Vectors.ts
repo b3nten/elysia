@@ -27,3 +27,27 @@ export function isVector3Like(obj: any): obj is Vector3Like {
 export function isVector4Like(obj: any): obj is Vector4Like {
 	return hasKeys(obj, "x", "y", "z", "w");
 }
+
+class Vector2 {
+
+}
+
+class Vector3 {
+
+}
+
+class Vector4 {
+
+}
+
+class Euler {
+
+}
+
+class Quaternion {
+
+}
+
+class Matrix4 {
+
+}

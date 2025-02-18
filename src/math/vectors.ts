@@ -1,4 +1,6 @@
 import {hasKeys} from "../core/asserts.ts";
+import * as Three from "three";
+import {Actor} from "../core/actor.ts";
 
 /**
  * A type that represents a 2D, 3D, or 4D vector.
@@ -61,4 +63,74 @@ export function isQuaternionLike(obj: any): obj is QuaternionLike {
  */
 export function isEulerLike(obj: any): obj is EulerLike {
 	return hasKeys(obj, "x", "y", "z");
+}
+
+export class Vector3 extends Three.Vector3 implements Vector3Like {
+	_x: number;
+	_y: number;
+	_z: number;
+
+	constructor(x?: number, y?: number, z?: number) {
+		super(x, y, z);
+
+		this._x = x ?? 0;
+		this._y = y ?? 0;
+		this._z = z ?? 0;
+
+		Object.defineProperties(this, {
+			x: {
+				get() {
+					return this._x;
+				},
+				set(value) {
+					this._x = value;
+					this.onTransformChange?.();
+				},
+			},
+			y: {
+				get() {
+					return this._y;
+				},
+				set(value) {
+					this._y = value;
+					this.onTransformChange?.();
+				},
+			},
+			z: {
+				get() {
+					return this._z;
+				},
+				set(value) {
+					this._z = value;
+					this.onTransformChange?.();
+				},
+			},
+		});
+	}
+
+	onChange?(): void;
+}
+
+/** @internal patches Three.Quaternion to flag parent actor as dirty */
+export class Quaternion extends Three.Quaternion implements QuaternionLike {
+	actor?: Actor;
+	getEuler(order: Three.EulerOrder = "XYZ") {
+		return this._euler.setFromQuaternion(this, order);
+	}
+	protected _euler = new Three.Euler();
+	// @ts-ignore
+	override _onChangeCallback() {
+		this.onChange?.();
+	}
+	onChange?(): void;
+}
+
+export class Matrix4 extends Three.Matrix4 {
+
+}
+
+export class BoundingBox extends Three.Box3 {
+	reset() {
+		this.makeEmpty();
+	}
 }

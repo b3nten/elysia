@@ -1,7 +1,8 @@
 import type { Destructible } from "./lifecycle.ts";
 import type { Renderer } from "../renderer/interface.ts";
 import { Input } from "../input/mod.ts";
-import {elysiaLogger} from "./logger.ts";
+import { elysiaLogger } from "./logger.ts";
+import type { Scene } from "./scene.ts";
 
 interface ApplicationArgs {
 	/** A renderer that satisfies the Renderer interface */
@@ -19,7 +20,14 @@ interface ApplicationArgs {
 
 export class Application implements Destructible {
 
-	static instance: Application;
+	static get instance() {
+		ELYSIA_DEV: if (!Application._instance) {
+			throw Error(
+				"Attempted to access Application instance before it was initialized."
+			);
+		}
+		return Application._instance;
+	}
 
 	static {
 		// initialize Input.
@@ -30,6 +38,7 @@ export class Application implements Destructible {
 	renderer: Renderer;
 	canvas: HTMLCanvasElement;
 	autoUpdate: boolean;
+	scene: Scene
 
 	constructor(args: ApplicationArgs) {
 		if(Application.instance) {
@@ -37,7 +46,7 @@ export class Application implements Destructible {
 			throw Error("An instance of Application already exists.");
 		}
 
-		Application.instance = this;
+		Application._instance = this;
 
 		this.renderer = args.renderer;
 		this.canvas = args.canvas;
@@ -51,7 +60,7 @@ export class Application implements Destructible {
 			try {
 				d.destructor();
 			} catch (e) {
-				console.error(e);
+				elysiaLogger.error(e);
 			}
 		}
 	}
@@ -71,4 +80,10 @@ export class Application implements Destructible {
 
 		}
 	};
+
+	protected static _instance: Application;
 }
+
+export let getScene = () => Application.instance.scene;
+export let getApp = () => Application.instance;
+export let getRenderer = () => Application.instance.renderer;

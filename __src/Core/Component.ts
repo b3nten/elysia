@@ -2,6 +2,7 @@ import type { Actor } from "./Actor.ts";
 import type { Behavior } from "./Behavior.ts";
 import type { ThreeObject } from "../Actors/ThreeObject.ts";
 import { s_IsBehavior, s_IsActor } from "../Internal/mod.ts";
+import {AutoInitMap} from "../../src/containers/autoinitmap";
 
 /**
  * A Component is an Actor or Behavior that satisfies the ActorLifecycle interface.

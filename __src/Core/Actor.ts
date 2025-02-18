@@ -397,14 +397,7 @@ export class Actor extends ComponentLifecycle implements IDestroyable {
 	 * rare cases you might want to call this manually.
 	 */
 	public markTransformDirty() {
-		if (!this[s_TransformDirty]) {
-			this[s_TransformDirty] = true;
-			for (const component of this.components) {
-				(component as Actor).markTransformDirty?.();
-			}
-		}
-		// mark matrix dirty as true, will be set to false when the world matrix is accessed/updated
-		this[s_MatrixDirty] = true;
+
 	}
 
 	/**
