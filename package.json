@@ -1,7 +1,7 @@
 {
   "name": "elysiatech",
   "type": "module",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "scripts": {
     "dev": "cd playground && vite",
     "build": "tsc --rewriteRelativeImportExtensions --project tsconfig.json"
