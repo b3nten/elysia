@@ -40,6 +40,7 @@
 
 export { Asset } from "./Asset.ts";
 export { AssetLoader } from "./AssetLoader.ts";
+export { ErrorEvent, LoadedEvent, BeginLoadEvent, ProgressEvent } from "./Events.ts"
 export { ArrayBufferAsset } from "./ArrayBufferAsset.ts";
 export { AudioAsset } from "./AudioAsset.ts";
 export { ImageAsset } from "./ImageAsset.ts";

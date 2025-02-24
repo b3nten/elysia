@@ -64,8 +64,8 @@ export class AssetLoader<A extends Record<string, Asset<any>>> {
 	 * Initiates the loading process for all assets.
 	 * @returns {Promise<void> | undefined} A promise that resolves when all assets are loaded, or undefined if already loading/loaded.
 	 */
-	load(): Promise<void> | undefined {
-		if (this.#loaded || this.#loading) return;
+	load(): Promise<this> {
+		if (this.#loaded || this.#loading) return this.#promise;
 		this.#loading = true;
 		ELYSIA_LOGGER.debug("Loading assets", this.#assets);
 
@@ -80,12 +80,13 @@ export class AssetLoader<A extends Record<string, Asset<any>>> {
 			return asset.load();
 		});
 
-		return Promise.all(promises)
+		return this.#promise = Promise.all(promises)
 			.then(() => {
 				this.#loaded = true;
 				this.#loading = false;
 				this.#progress = 1;
 				this.#eventDispatcher.dispatchEvent(LoadedEvent, null);
+				return this;
 			})
 			.catch((e) => {
 				ELYSIA_LOGGER.error("Error loading asset:", e);
@@ -146,4 +147,5 @@ export class AssetLoader<A extends Record<string, Asset<any>>> {
 	#loading = false;
 	#error: Error | null = null;
 	#assets: A;
+	#promise: Promise<this> | undefined;
 }
