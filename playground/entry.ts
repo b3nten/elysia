@@ -1,5 +1,24 @@
+import { Application } from "../.dist/core/application";
+
 document.body.style.width = "100%";
 document.body.style.height = "100vh";
 document.body.style.margin = "0";
 
-import("./game.ts");
+const USE_WORKER = true;
+
+let canvas = document.createElement("canvas");
+canvas.style.width = "100vw"
+canvas.style.height = "100vh"
+canvas.id = "mainCanvas";
+document.body.appendChild(canvas);
+
+if(USE_WORKER) {
+	Application.startMainThread({
+		canvas,
+		workers: [new Worker(new URL("./worker.ts", import.meta.url), {
+			type: "module"
+		})]
+	})
+} else {
+	import("./worker.ts")
+}

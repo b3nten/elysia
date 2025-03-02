@@ -9,3 +9,5 @@ export type Serializable =
 	| undefined
 	| Serializable[]
 	| { [key: string]: Serializable };
+
+export type Constructor<T, Args extends any[] = any> = new (...args: Args) => T;

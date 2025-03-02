@@ -1,5 +1,5 @@
 import type { Asset } from "./asset.ts";
-import type { Constructor } from "../../__src/Shared/Utilities.ts";
+import type { Constructor } from "../util/types.ts";
 import { elysiaLogger } from "../core/logger.ts";
 import {Future} from "../util/future.ts";
 import {EventDispatcher} from "../events/dispatcher.ts";

@@ -1,7 +1,6 @@
 import {type IComponent, TagSystem} from "./IComponent.ts";
-import type { Destructible } from "./lifecycle.ts";
-import type {Constructor} from "../../__src/Shared/Utilities.ts";
-import {elysiaLogger} from "./logger.ts";
+import type { IDestructible } from "./lifecycle.ts";
+import type { Constructor } from "../util/types.ts";
 
 export const SCENE_INIT_AND_RUN = Symbol.for("Elysia::Scene::InitAndRun");
 export const SCENE_UPDATE = Symbol.for("Elysia::Scene::Update");
@@ -11,7 +10,7 @@ type UnwrapComponent<
 	T extends IComponent | Constructor<IComponent>
 > = T extends Constructor<IComponent> ? InstanceType<T> : T;
 
-export class Scene implements Destructible {
+export class Scene implements IDestructible {
 
 	readonly components = new Set<IComponent>
 

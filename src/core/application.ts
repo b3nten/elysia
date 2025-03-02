@@ -1,8 +1,10 @@
-import type { Destructible } from "./lifecycle.ts";
+import type { IDestructible } from "./lifecycle.ts";
 import type { Renderer } from "../renderer/interface.ts";
 import { Input } from "../input/mod.ts";
 import { elysiaLogger } from "./logger.ts";
 import type { Scene } from "./scene.ts";
+import {CanvasObserver} from "./canvas.ts";
+import {isWorker} from "./asserts.ts";
 
 interface ApplicationArgs {
 	/** A renderer that satisfies the Renderer interface */
@@ -18,7 +20,7 @@ interface ApplicationArgs {
 	autoUpdate?: boolean;
 }
 
-export class Application implements Destructible {
+export class Application implements IDestructible {
 
 	static get instance() {
 		ELYSIA_DEV: if (!Application._instance) {
@@ -29,19 +31,45 @@ export class Application implements Destructible {
 		return Application._instance;
 	}
 
-	static {
-		// initialize Input.
-		// This ensures it's listening for the worker's Input system to register.
-		Input.init();
+	static get scene() {
+		return Application.instance.scene;
+	}
+
+	static get renderer() {
+		return Application.instance.renderer;
+	}
+
+	// return destructor
+	static startMainThread = (
+		args: {
+			canvas: HTMLCanvasElement | string;
+			workers: Worker[];
+		}
+	): Function => {
+		let canvasObserver = new CanvasObserver(
+			"mainCanvas",
+			typeof args.canvas === "string"
+				? document.getElementById(args.canvas) as HTMLCanvasElement
+				: args.canvas
+		);
+
+		args.workers.forEach((w) => (
+			canvasObserver.addWorker(w),
+			Input.addWorker(w)
+			// Audio.addWorker(w),
+		));
+
+		return () => {
+			canvasObserver.destructor();
+		}
 	}
 
 	renderer: Renderer;
-	canvas: HTMLCanvasElement;
 	autoUpdate: boolean;
 	scene: Scene
 
 	constructor(args: ApplicationArgs) {
-		if(Application.instance) {
+		if(Application._instance) {
 			elysiaLogger.error("An instance of Application already exists.");
 			throw Error("An instance of Application already exists.");
 		}
@@ -49,8 +77,14 @@ export class Application implements Destructible {
 		Application._instance = this;
 
 		this.renderer = args.renderer;
-		this.canvas = args.canvas;
+		this._canvas = args.canvas;
 		this.autoUpdate = args.autoUpdate ?? false;
+
+		this._canvasObserver = new CanvasObserver("mainCanvas", this._canvas);
+		this._canvasObserver.onResize(() => {
+			this.renderer?.onCanvasResize(this._canvas.width, this._canvas.height)
+			ELYSIA_DEV: elysiaLogger.debug("Canvas resized", this._canvasObserver.width, this._canvasObserver.height);
+		});
 
 		ELYSIA_DEV: elysiaLogger.success("Application initialized.");
 	}
@@ -65,8 +99,13 @@ export class Application implements Destructible {
 		}
 	}
 
-	loadScene = () => {
-		
+	loadScene = async () => {
+		await this._canvasObserver.sync();
+
+		// load scene
+
+		// this.renderer.onSceneLoaded(this.scene);
+		// this.renderer.onResize(this._canvasObserver.onResize);
 	};
 
 	update = () => {
@@ -82,8 +121,6 @@ export class Application implements Destructible {
 	};
 
 	protected static _instance: Application;
+	protected _canvas: HTMLCanvasElement;
+	protected _canvasObserver: CanvasObserver;
 }
-
-export let getScene = () => Application.instance.scene;
-export let getApp = () => Application.instance;
-export let getRenderer = () => Application.instance.renderer;

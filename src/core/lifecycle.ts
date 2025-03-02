@@ -1,4 +1,4 @@
-export interface Destructible {
+export interface IDestructible {
 	destructor(): void;
 }
 

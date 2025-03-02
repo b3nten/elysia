@@ -4,6 +4,7 @@ import * as esbuild from "esbuild"
 let args = process.argv.slice(2)
 
 export let build = async (args: { defines: Record<string, any>, drop: string[] }) => {
+	let exclude = ["three"]
 	await esbuild.build({
 		entryPoints: ["src/**/*.ts"],
 		bundle: true,
@@ -18,6 +19,10 @@ export let build = async (args: { defines: Record<string, any>, drop: string[] }
 			name: 'resolve-ext',
 			setup(build) {
 				build.onResolve({ filter: /.*/ }, args => {
+					if(exclude.includes(args.path)) return {
+						path: args.path,
+						external: true
+					}
 					if (args.importer)
 						return { path: args.path.replace(".ts", "") + '.js', external: true }
 					else return { path: args.path, external: true }

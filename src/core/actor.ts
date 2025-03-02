@@ -1,8 +1,7 @@
 import { type IComponent, TagSystem } from "./IComponent.ts";
-import type { Constructor } from "../../__src/Shared/Utilities.ts";
+import type { Constructor } from "../util/types.ts";
 import { Vector3, Quaternion, Matrix4, BoundingBox } from "../math/vectors.ts";
-import type { Destructible } from "./lifecycle.ts";
-import { elysiaLogger } from "./logger.ts";
+import type { IDestructible } from "./lifecycle.ts";
 
 type UnwrapComponent<
 	T extends IComponent | Constructor<IComponent>
@@ -14,7 +13,7 @@ export const ACTOR_WORLD_MATRIX_DIRTY = Symbol.for("Elysia::Actor::WorldMatrixDi
 export const ACTOR_LOCAL_MATRIX_DIRTY = Symbol.for("Elysia::Actor::LocalMatrixDirty");
 export const ACTOR_BOUNDING_BOX = Symbol.for("Elysia::Actor::BoundingBox");
 
-export class Actor implements IComponent, Destructible {
+export class Actor implements IComponent, IDestructible {
 
 	readonly position = new Vector3();
 	readonly rotation = new Quaternion();
