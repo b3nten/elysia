@@ -1,4 +1,4 @@
-import {hasKeys} from "../core/asserts.ts";
+import {hasKeys} from "../util/asserts.ts";
 import * as Three from "three";
 import {Actor} from "../core/actor.ts";
 
@@ -66,9 +66,9 @@ export function isEulerLike(obj: any): obj is EulerLike {
 }
 
 export class Vector3 extends Three.Vector3 implements Vector3Like {
-	_x: number;
-	_y: number;
-	_z: number;
+	protected _x: number;
+	protected _y: number;
+	protected _z: number;
 
 	constructor(x?: number, y?: number, z?: number) {
 		super(x, y, z);
@@ -84,7 +84,7 @@ export class Vector3 extends Three.Vector3 implements Vector3Like {
 				},
 				set(value) {
 					this._x = value;
-					this.onTransformChange?.();
+					this.onChange?.();
 				},
 			},
 			y: {
@@ -93,7 +93,7 @@ export class Vector3 extends Three.Vector3 implements Vector3Like {
 				},
 				set(value) {
 					this._y = value;
-					this.onTransformChange?.();
+					this.onChange?.();
 				},
 			},
 			z: {
@@ -102,7 +102,7 @@ export class Vector3 extends Three.Vector3 implements Vector3Like {
 				},
 				set(value) {
 					this._z = value;
-					this.onTransformChange?.();
+					this.onChange?.();
 				},
 			},
 		});
@@ -130,6 +130,12 @@ export class Matrix4 extends Three.Matrix4 {
 }
 
 export class BoundingBox extends Three.Box3 {
+	reset() {
+		this.makeEmpty();
+	}
+}
+
+export class BoundingSphere extends Three.Sphere {
 	reset() {
 		this.makeEmpty();
 	}

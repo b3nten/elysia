@@ -1,3 +1,5 @@
+import type {Constructor} from "./types.ts";
+
 export let isWorker = (): boolean => {
 	return (
 		// @ts-ignore - worker only
@@ -16,4 +18,8 @@ export function hasKeys<K extends string | number | symbol>(
 
 export function isObject(value: any): value is Object {
 	return typeof value === "object" && value !== null;
+}
+
+export function UNSAFE_isCtor<T>(value: any): value is Constructor<T> {
+	return typeof value === "function";
 }

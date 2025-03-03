@@ -1,10 +1,11 @@
 import * as events from "./events.ts";
-import { isWorker } from "../core/asserts.ts";
-import { createWorker, workerMain, type WorkerProxy } from "../core/worker.ts";
+import { isWorker } from "../util/asserts.ts";
+import { createWorker, workerMain, type WorkerProxy } from "../util/worker.ts";
 import type { KeyCode, MouseCode } from "./codes.ts";
 import { createEvent } from "../events/event.ts";
 import { EventDispatcher } from "../events/dispatcher.ts";
-import {elysiaLogger} from "../core/logger.ts";
+
+import {elysiaLogger} from "../core/internal.ts";
 
 export const MouseEvent = createEvent<
 	events.MouseUpEvent | events.MouseDownEvent | events.MouseMoveEvent

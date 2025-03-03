@@ -1,152 +1,194 @@
-import { type IComponent, TagSystem } from "./IComponent.ts";
-import type { Constructor } from "../util/types.ts";
-import { Vector3, Quaternion, Matrix4, BoundingBox } from "../math/vectors.ts";
-import type { IDestructible } from "./lifecycle.ts";
+import { type IObject, ObjectState } from "./lifecycle.ts";
+import { ELYSIA_INTERNAL } from "./internal.ts";
+import type { Constructor, ReadonlySet } from "../util/types.ts";
+import { Application } from "./application.ts";
+import {BoundingBox, BoundingSphere, Matrix4, Quaternion, Vector3} from "../math/vectors.ts";
+import type { IComponent } from "./component.ts";
+import { UNSAFE_isCtor } from "../util/asserts.ts";
 
-type UnwrapComponent<
-	T extends IComponent | Constructor<IComponent>
-> = T extends Constructor<IComponent> ? InstanceType<T> : T;
+export class Actor implements IObject {
+    get active() {
+        return this[ELYSIA_INTERNAL].state === ObjectState.Active;
+    }
 
-export const ACTOR_WORLD_MATRIX = Symbol.for("Elysia::Actor::WorldMatrix");
-export const ACTOR_LOCAL_MATRIX = Symbol.for("Elysia::Actor::LocalMatrix");
-export const ACTOR_WORLD_MATRIX_DIRTY = Symbol.for("Elysia::Actor::WorldMatrixDirty");
-export const ACTOR_LOCAL_MATRIX_DIRTY = Symbol.for("Elysia::Actor::LocalMatrixDirty");
-export const ACTOR_BOUNDING_BOX = Symbol.for("Elysia::Actor::BoundingBox");
+    get destroyed() {
+        return this[ELYSIA_INTERNAL].state === ObjectState.Destroyed;
+    }
 
-export class Actor implements IComponent, IDestructible {
+    get valid() {
+        return this[ELYSIA_INTERNAL].state !== ObjectState.Destroyed;
+    }
 
-	readonly position = new Vector3();
-	readonly rotation = new Quaternion();
-	readonly scale = new Vector3(1, 1, 1);
+    get parent() {
+        return this[ELYSIA_INTERNAL].parent;
+    }
 
-	readonly components = new Set<IComponent>();
+    get components(): ReadonlySet<IComponent> {
+        return this[ELYSIA_INTERNAL].components;
+    }
 
-	parent?: Actor;
+    get children(): ReadonlySet<Actor> {
+        return this[ELYSIA_INTERNAL].children;
+    }
 
-	get isStatic() {
-		return this._isStatic;
-	}
+    get position() {
+        return this[ELYSIA_INTERNAL].position;
+    }
 
-	set isStatic(value: boolean) {
-		this._isStatic = value;
-	}
+    get rotation() {
+        return this[ELYSIA_INTERNAL].rotation;
+    }
 
-	addTags(component: IComponent, ...tags: any[]) {
-		this._tags.addComponentWithTags(component, ...tags);
-	}
+    get scale() {
+        return this[ELYSIA_INTERNAL].scale;
+    }
 
-	removeTags(component: IComponent, ...tags: any[]) {
-		this._tags.removeTagsFromComponent(component, ...tags);
-	}
+    get matrixWorld() {
+        if(this[ELYSIA_INTERNAL].transformIsDirty) {
+            this.updateMatrices();
+        }
+        return this[ELYSIA_INTERNAL].worldMatrix;
+    }
 
-	getComponentsWithTag(tag: any) {
-		return this._tags.getComponentsWithTag(tag);
-	}
+    get matrix() {
+        if(this[ELYSIA_INTERNAL].transformIsDirty) {
+            this[ELYSIA_INTERNAL].localMatrix.compose(this.position, this.rotation, this.scale);
+        }
+        return this[ELYSIA_INTERNAL].localMatrix;
+    }
 
-	getComponentsWithTags(out: Set<IComponent>, ...tags: any[]) {
-		return this._tags.getComponentsWithTags(out, ...tags);
-	}
+    get boundingBox() {
+        return this[ELYSIA_INTERNAL].boundingBox;
+    }
 
-	addComponent<
-		T extends IComponent | Constructor<IComponent, Args>,
-		Args extends any[]
-	>(component: T, ...args: Args): UnwrapComponent<T> {
-		let c: IComponent = typeof component === "function" ? new component(...args) : component;
-		// instantiate component with lifecycle hooks
-		// set the component constructor as a tag on this actor
-		return c as UnwrapComponent<T>;
-	}
+    get boundingSphere() {
+        return this[ELYSIA_INTERNAL].boundingSphere;
+    }
 
-	removeComponent(component: IComponent) {
-		// need to do something...
-		// remove the component from the actor
-		// remove the component constructor as a tag on this actor
-	}
+    markTransformAsDirty = () => {
+        this[ELYSIA_INTERNAL].transformIsDirty = true;
+    }
 
-	get worldMatrix(): Matrix4 {
-		if(this[ACTOR_WORLD_MATRIX_DIRTY]) {
-			this.updateWorldMatrix();
-		}
-		return this[ACTOR_WORLD_MATRIX];
-	}
+    updateMatrices() {
+        this[ELYSIA_INTERNAL].localMatrix.compose(this.position, this.rotation, this.scale);
+        if(this.parent) {
+            this.parent.updateMatrices();
+            this[ELYSIA_INTERNAL].worldMatrix.multiplyMatrices(this.parent.matrixWorld, this.matrix);
+        } else {
+            this[ELYSIA_INTERNAL].worldMatrix.copy(this.matrix);
+        }
+        this[ELYSIA_INTERNAL].transformIsDirty = false;
+    }
 
-	get localMatrix(): Matrix4 {
-		if(this[ACTOR_LOCAL_MATRIX_DIRTY]) {
-			this.updateLocalMatrix();
-		}
-		return this[ACTOR_LOCAL_MATRIX];
-	}
+    calculateBoundingBox() {
+        return this[ELYSIA_INTERNAL].boundingBox;
+    }
 
-	constructor() {
-		this.position.onChange = () => {
-			this.markTransformDirty();
-		}
-		this.rotation.onChange = () => {
-			this.markTransformDirty();
-		}
-	}
+    calculateBoundingSphere() {
+        return this[ELYSIA_INTERNAL].boundingSphere;
+    }
 
-	destructor() {
-		ELYSIA_DEV: {
-			if(this._isDestroyed)
-				throw Error(
-					"Attempting to destroy an actor that has already been destroyed."
-				);
-		}
-		if(this._isDestroyed) return;
-		this._isDestroyed = true;
-	}
+    addComponent<
+        T extends IComponent | Constructor<IComponent>, Args extends any[] = any[]
+    >(component: T, ...args: Args) {
+        let ctor: Constructor<IComponent> = UNSAFE_isCtor(component)
+                ? component
+                : component.constructor as Constructor<IComponent>;
 
-	onStart?(): void;
-	onPhysicsUpdate?(): void;
-	onPreUpdate?(): void;
-	onUpdate?(): void;
-	onPostUpdate?(): void;
-	onPostRender?(): void;
-	onEnd?(): void;
+        ELYSIA_DEV: {
+            if (this[ELYSIA_INTERNAL].components.has(ctor)) {
+                throw new Error(`Component of type ${ctor.name} already exists on actor.`);
+            }
+        }
 
-	updateLocalMatrix() {
-		this[ACTOR_LOCAL_MATRIX].compose(this.position, this.rotation, this.scale);
-		this[ACTOR_LOCAL_MATRIX_DIRTY] = false;
-	}
+        ELYSIA_PROD: {
+            if (this[ELYSIA_INTERNAL].components.has(ctor)) {
+                return;
+            }
+        }
 
-	updateWorldMatrix() {
-		this.updateLocalMatrix();
-		if (this.parent) {
-			this[ACTOR_WORLD_MATRIX].multiplyMatrices(
-				this.parent.worldMatrix,
-				this[ACTOR_LOCAL_MATRIX],
-			);
-		} else {
-			this[ACTOR_WORLD_MATRIX].copy(this[ACTOR_LOCAL_MATRIX]);
-		}
-		this[ACTOR_WORLD_MATRIX_DIRTY] = false;
-		this[ACTOR_LOCAL_MATRIX_DIRTY] = false;
-	}
+        let instance: IComponent = typeof component === "function" ? new component(...args) : component;
+        this[ELYSIA_INTERNAL].components.set(ctor, instance);
 
-	markTransformDirty() {
-		this[ACTOR_LOCAL_MATRIX_DIRTY] = true;
-		this[ACTOR_WORLD_MATRIX_DIRTY] = true;
-		// todo: iterate children and mark all as dirty.
-	}
+        // todo: lifecycle hooks
 
-	getBoundingBox(): BoundingBox {
-		this[ACTOR_BOUNDING_BOX].reset();
-		// for (const component of this.components) {
-		// 	if (!isActor(component)) continue;
-		// 	box.union(component.getBoundingBox());
-		// }
-		return this[ACTOR_BOUNDING_BOX];
-	}
+        return instance;
+    }
 
-	protected _isStatic = false;
-	protected _isActive = false;
-	protected _isDestroyed = false;
-	protected _tags = new TagSystem;
+    getComponent<T extends IComponent>(ctor: Constructor<T>): T | null {
+        return this[ELYSIA_INTERNAL].components.get(ctor) as T ?? null;
+    }
 
-	[ACTOR_WORLD_MATRIX_DIRTY] = true;
-	[ACTOR_LOCAL_MATRIX_DIRTY] = true;
-	[ACTOR_WORLD_MATRIX] = new Matrix4;
-	[ACTOR_LOCAL_MATRIX] = new Matrix4;
-	[ACTOR_BOUNDING_BOX] = new BoundingBox;
+    removeComponent<T extends IComponent>(component: T): T {
+        // todo: lifecycle hooks
+        this[ELYSIA_INTERNAL].components.delete(component.constructor as Constructor<IComponent>);
+        return component;
+    }
+
+    addChild<T extends Actor | Constructor<Actor>, Args extends any[] = any[]>(child: T, ...args: Args) {
+        let instance: Actor = typeof child === "function" ? new child(...args) : child;
+
+        this[ELYSIA_INTERNAL].children.add(instance);
+
+        instance[ELYSIA_INTERNAL].parent = this;
+
+        // todo: lifecycle hooks
+
+        return instance;
+    }
+
+    removeChild<T extends Actor>(child: T): T {
+        // todo: lifecycle hooks
+        this[ELYSIA_INTERNAL].children.delete(child);
+        child[ELYSIA_INTERNAL].parent = null;
+        return child;
+    }
+
+    constructor() {
+        this[ELYSIA_INTERNAL].position.onChange = this.markTransformAsDirty
+        this[ELYSIA_INTERNAL].rotation.onChange = this.markTransformAsDirty
+        this[ELYSIA_INTERNAL].scale.onChange = this.markTransformAsDirty
+    }
+
+    destructor() {
+        // todo: lifecycle hooks
+        this[ELYSIA_INTERNAL].state = ObjectState.Destroyed;
+        this[ELYSIA_INTERNAL].parent = null;
+        this[ELYSIA_INTERNAL].children.clear();
+        this[ELYSIA_INTERNAL].components.clear();
+        this[ELYSIA_INTERNAL].localMatrix.identity();
+        this[ELYSIA_INTERNAL].worldMatrix.identity();
+        this[ELYSIA_INTERNAL].boundingBox.reset();
+        this[ELYSIA_INTERNAL].boundingSphere.reset();
+        this[ELYSIA_INTERNAL].position.onChange = null;
+        this[ELYSIA_INTERNAL].rotation.onChange = null;
+        this[ELYSIA_INTERNAL].scale.onChange = null;
+    }
+
+    protected get app() {
+        return Application.instance;
+    }
+
+    protected get scene() {
+        return Application.scene;
+    }
+
+    protected get renderer() {
+        return Application.renderer;
+    }
+
+    [ELYSIA_INTERNAL] = {
+        state: ObjectState.Inactive,
+        parent: null as Actor | null,
+        children: new Set<Actor>,
+        components: new Map<Constructor<IComponent>, IComponent>,
+        position: new Vector3,
+        rotation: new Quaternion,
+        scale: new Vector3,
+        localMatrix: new Matrix4,
+        worldMatrix: new Matrix4,
+        transformIsDirty: true,
+        boundingBox: new BoundingBox,
+        boundingSphere: new BoundingSphere
+    }
 }

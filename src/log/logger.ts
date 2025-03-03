@@ -3,7 +3,7 @@ import { LogLevel } from "./levels.ts";
 import type { Writer } from "./writer.ts";
 import { BasicConsoleWriter } from "./basicConsoleWriter.ts";
 import { FancyConsoleWriter } from "./fancyConsoleWriter.ts";
-import {isWorker} from "../core/asserts.ts";
+import {isWorker} from "../util/asserts.ts";
 
 export { LogLevel } from "./levels.ts";
 export { Logger, type LogConfig, createLogger };

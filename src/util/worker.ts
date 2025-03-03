@@ -93,5 +93,5 @@ export let createWorker = <MessageMap = any>(
 	return createWorkerProxy(w, cache, "") as unknown as WorkerProxy
 }
 
-export let workerMain = createWorker(self)
+export let workerMain = createWorker(self as unknown as Worker)
 

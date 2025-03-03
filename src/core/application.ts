@@ -1,10 +1,10 @@
 import type { IDestructible } from "./lifecycle.ts";
 import type { Renderer } from "../renderer/interface.ts";
 import { Input } from "../input/mod.ts";
-import { elysiaLogger } from "./logger.ts";
 import type { Scene } from "./scene.ts";
-import {CanvasObserver} from "./canvas.ts";
-import {isWorker} from "./asserts.ts";
+import {CanvasObserver} from "../util/canvas.ts";
+import {isWorker} from "../util/asserts.ts";
+import {elysiaLogger} from "./internal.ts";
 
 interface ApplicationArgs {
 	/** A renderer that satisfies the Renderer interface */
@@ -83,7 +83,6 @@ export class Application implements IDestructible {
 		this._canvasObserver = new CanvasObserver("mainCanvas", this._canvas);
 		this._canvasObserver.onResize(() => {
 			this.renderer?.onCanvasResize(this._canvas.width, this._canvas.height)
-			ELYSIA_DEV: elysiaLogger.debug("Canvas resized", this._canvasObserver.width, this._canvasObserver.height);
 		});
 
 		ELYSIA_DEV: elysiaLogger.success("Application initialized.");

@@ -1,9 +1,9 @@
 import type { Asset } from "./asset.ts";
 import type { Constructor } from "../util/types.ts";
-import { elysiaLogger } from "../core/logger.ts";
 import {Future} from "../util/future.ts";
 import {EventDispatcher} from "../events/dispatcher.ts";
 import {createEvent} from "../events/mod.ts";
+import {elysiaLogger} from "../core/internal.ts";
 
 export const AssetLoaderProgressEvent = createEvent<number>("Elysia::AssetLoaderProgressEvent");
 export const AssetLoaderErrorEvent = createEvent<Error>("Elysia::AssetLoaderErrorEvent");
