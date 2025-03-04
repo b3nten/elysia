@@ -9,10 +9,11 @@ import {
 import type { Renderer } from "../renderer/mod.ts";
 import { Input } from "../input/mod.ts";
 import type { Scene } from "./scene.ts";
-import {CanvasObserver} from "../util/canvas.ts";
-import {ELYSIA_INTERNAL, elysiaLogger} from "./internal.ts";
-import {Clock} from "./clock.ts";
-import type {Constructor} from "../util/types.ts";
+import { CanvasObserver } from "../util/canvas.ts";
+import { ELYSIA_INTERNAL, elysiaLogger } from "./internal.ts";
+import { Clock } from "./clock.ts";
+import type { Constructor } from "../util/types.ts";
+
 
 interface ApplicationArgs {
 	/** A renderer that satisfies the Renderer interface */
@@ -44,7 +45,7 @@ export class Application implements IDestructible {
 	}
 
 	static get renderer() {
-		return Application.instance.renderer;
+		return Application.instance._renderer;
 	}
 
 	// return destructor
@@ -72,11 +73,18 @@ export class Application implements IDestructible {
 		}
 	}
 
-	renderer: Renderer;
 	autoUpdate: boolean;
 
 	get scene() {
 		return this._scene;
+	}
+
+	get renderer() {
+		return this._renderer;
+	}
+
+	get canvas() {
+		return this._canvasObserver;
 	}
 
 	get paused() {
@@ -100,20 +108,23 @@ export class Application implements IDestructible {
 
 		Application._instance = this;
 
-		this.renderer = args.renderer;
+		this._renderer = args.renderer;
 		this._canvas = args.canvas;
 		this.autoUpdate = args.autoUpdate ?? false;
 
 		this._canvasObserver = new CanvasObserver("mainCanvas", this._canvas);
 		this._canvasObserver.onResize(() => {
-			this._sizeHasChanged = true;
+			console.log("resize", this._started);
+			if(this._started) {
+				this._sizeHasChanged = true;
+			}
 		});
 
 		ELYSIA_DEV: elysiaLogger.success("Application initialized.");
 	}
 
 	destructor() {
-		for (let d of [this.renderer]) {
+		for (let d of [this._renderer]) {
 			try {
 				d.destructor();
 			} catch (e) {
@@ -136,13 +147,14 @@ export class Application implements IDestructible {
 
 		await this._sceneLoadPromise;
 
-		this.renderer?.onSceneLoaded(this.scene);
-		this.renderer?.onResize(this._canvasObserver.width, this._canvasObserver.height);
+		this._renderer?.onSceneLoaded(this.scene);
 
 		this.scene[ELYSIA_INTERNAL].root[ELYSIA_INTERNAL].parent = this.scene[ELYSIA_INTERNAL].root;
 		this.scene[ELYSIA_INTERNAL].root[ELYSIA_INTERNAL].state = ObjectState.Active;
 
 		startActor(this.scene[ELYSIA_INTERNAL].root);
+
+		this._started = true;
 
 		if(this.autoUpdate) {
 			this.update();
@@ -157,18 +169,22 @@ export class Application implements IDestructible {
 				elysiaLogger.error(e);
 				this._hasErrored = true;
 			}
-			if(this.autoUpdate && !this._hasErrored)
+			if(this.autoUpdate && !this._hasErrored) {
 				requestAnimationFrame(this.update);
+			}
 		}
 
 		ELYSIA_PROD: {
-			if(this.autoUpdate)
+			if (this.autoUpdate) {
 				requestAnimationFrame(this.update);
+			}
 			this._update();
 		}
 	};
 
 	protected static _instance: Application;
+
+	protected _renderer: Renderer;
 	protected _canvas: HTMLCanvasElement;
 	protected _canvasObserver: CanvasObserver;
 	protected _hasErrored = false;
@@ -177,6 +193,7 @@ export class Application implements IDestructible {
 	protected _paused = false;
 	protected _scene?: Scene;
 	protected _sceneLoadPromise?: Promise<void>
+	protected _started = false;
 
 	protected _update = () => {
 		this._clock.capture();
@@ -184,7 +201,7 @@ export class Application implements IDestructible {
 		if(this._paused) return;
 
 		if(this._sizeHasChanged) {
-			this.renderer?.onResize(this._canvasObserver.width, this._canvasObserver.height);
+			this._renderer?.onResize(this._canvasObserver.width, this._canvasObserver.height);
 		}
 
 		let root = this.scene[ELYSIA_INTERNAL].root;
@@ -194,7 +211,7 @@ export class Application implements IDestructible {
 		mainUpdateActor(root, this._clock.delta, this._clock.elapsed);
 
 		// update renderer
-		this.renderer?.onRender(this._clock.delta, this._clock.elapsed);
+		this._renderer?.onRender(this._clock.delta, this._clock.elapsed);
 
 		postUpdateActor(root, this._clock.delta, this._clock.elapsed);
 

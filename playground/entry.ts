@@ -9,6 +9,9 @@ const USE_WORKER = true;
 let canvas = document.createElement("canvas");
 canvas.style.width = "100vw"
 canvas.style.height = "100vh"
+canvas.style.display = "block"
+canvas.style.position = "relative"
+canvas.style.margin = "0"
 canvas.id = "mainCanvas";
 document.body.appendChild(canvas);
 

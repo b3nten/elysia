@@ -65,8 +65,10 @@ export let preUpdateActor = (actor: Actor & IObject, delta: number, elapsed: num
 	ELYSIA_DEV: ASSERT_INTERNAL(actor);
 
 	if(actor[ELYSIA_INTERNAL].state === ObjectState.Active) {
-		if(resize)
+		if(resize) {
 			actor.onResize?.(delta, elapsed);
+		}
+
 
 		if(actor[ELYSIA_INTERNAL].transformIsDirty)
 			callTransformChanged(actor);
@@ -85,8 +87,10 @@ export let preUpdateComponent = (component: IObject, delta: number, elapsed: num
 	ELYSIA_DEV: ASSERT_INTERNAL(component);
 
 	if(component[ELYSIA_INTERNAL].state === ObjectState.Active) {
-		if(resize)
+		if(resize) {
 			component.onResize?.(delta, elapsed);
+		}
+
 		component.onBeforeUpdate?.(delta, elapsed);
 	}
 }

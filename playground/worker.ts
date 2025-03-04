@@ -13,6 +13,9 @@ class TestComponent extends Component {
     onStart() {
         console.log("Component started")
     }
+    onResize(width: number, height: number) {
+        console.log("Component resized", width, height)
+    }
     onShutdown() {
         console.log("Component shutdown")
     }

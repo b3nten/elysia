@@ -57,6 +57,10 @@ export class CanvasObserver implements IDestructible {
         }
     }
 
+    destructor = () => {
+        for(let d of this.#cleanup) d();
+    }
+
     #eventDispatcher = new EventDispatcher;
     #workers: WorkerProxy[] = [];
     #id: string;
@@ -71,10 +75,17 @@ export class CanvasObserver implements IDestructible {
         this.#x = bounds.width;
         this.#y = bounds.height;
 
+        let hasSent = false;
+
         this.#observer = new ResizeObserver((entries) => {
             const cr = entries[0].contentRect;
             this.#x = cr.width;
             this.#y = cr.height;
+
+            if(!hasSent) {
+                hasSent = true;
+                return;
+            }
 
             this.#eventDispatcher.dispatchEvent(CanvasResizeEvent, {
                 x: this.width,
@@ -109,9 +120,5 @@ export class CanvasObserver implements IDestructible {
                 });
             })
         );
-    }
-
-    destructor = () => {
-        for(let d of this.#cleanup) d();
     }
 }
