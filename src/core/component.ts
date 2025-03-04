@@ -1,4 +1,4 @@
-import { type IObject, ObjectState } from "./lifecycle.ts";
+import {destroyComponent, type IObject, ObjectState} from "./lifecycle.ts";
 import type { Actor } from "./actor.ts";
 import { Application } from "./application.ts";
 import { ELYSIA_INTERNAL } from "./internal.ts";
@@ -41,6 +41,10 @@ export class Component implements IComponent {
 		}
 	}
 
+	destructor() {
+		destroyComponent(this);
+	}
+
 	protected get app() {
 		return Application.instance;
 	}
@@ -58,6 +62,6 @@ export class Component implements IComponent {
 		state: ObjectState.Inactive,
 		// Can use this class's constructor as the instance constructor
 		// unlike objects that are constructed via {} or new Object
-		noCtor: false,
+		ctor: this.constructor
 	}
 }

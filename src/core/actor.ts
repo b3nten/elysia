@@ -5,7 +5,7 @@ import {
     shutdownComponent,
     startActor,
     destroyActor,
-    shutdownActor
+    shutdownActor, reparentActor, reparentComponent, startComponent
 } from "./lifecycle.ts";
 import { ELYSIA_INTERNAL } from "./internal.ts";
 import type { Constructor, ReadonlySet, ReadonlyMap } from "../util/types.ts";
@@ -15,11 +15,13 @@ import {  type IComponent } from "./component.ts";
 import { UNSAFE_isCtor } from "../util/asserts.ts";
 
 export class Actor implements IObject {
+    static isElysiaActor = true;
+
     static IsActor(a: any): a is Actor & IComponent {
-        return a.isActor;
+        return a.IsActor;
     }
 
-    get isActor() {
+    get isElysiaActor() {
         return true;
     }
 
@@ -129,9 +131,8 @@ export class Actor implements IObject {
         let instance: IComponent = typeof component === "function" ? new component(...args) : component;
 
         setupIComponent(instance, this);
-
-        this[ELYSIA_INTERNAL].components.set(ctor, instance);
-        this.scene[ELYSIA_INTERNAL].componentsByType.get(ctor).add(instance);
+        reparentComponent(instance, this);
+        startComponent(instance);
 
         return instance;
     }
@@ -140,29 +141,45 @@ export class Actor implements IObject {
         return this[ELYSIA_INTERNAL].components.get(ctor) as T ?? null;
     }
 
-    removeComponent<T extends IComponent>(component: T): T {
-        shutdownComponent(component);
-        component[ELYSIA_INTERNAL].parent = null;
-        let ctor = component[ELYSIA_INTERNAL].noCtor ? component : component.constructor as Constructor<IComponent>;
-        this[ELYSIA_INTERNAL].components.delete(ctor);
-        this.scene[ELYSIA_INTERNAL].componentsByType.get(ctor).delete(component);
-        return component;
+    removeComponent<T extends IComponent>(ctor: T): T | null {
+
+        if(typeof ctor !== "function") {
+            if(ctor.constructor !== EMPTY_CONSTRUCTOR) {
+                ctor = ctor.constructor as unknown as any;
+            }
+        }
+
+        let instance = this[ELYSIA_INTERNAL].components.get(ctor) as T;
+
+        if(!instance) {
+            return null;
+        }
+
+        shutdownComponent(instance);
+        reparentComponent(instance, null);
+
+        return instance;
     }
 
     addChild<T extends Actor | Constructor<Actor>, Args extends any[] = any[]>(child: T, ...args: Args) {
         let instance: Actor = typeof child === "function" ? new child(...args) : child;
-        this[ELYSIA_INTERNAL].children.add(instance);
-        instance[ELYSIA_INTERNAL].parent = this;
-        startActor(instance)
-        this.scene[ELYSIA_INTERNAL].actorsByType.get(instance.constructor as Constructor<Actor>).add(instance);
+        reparentActor(instance, this);
+        startActor(instance);
         return instance;
     }
 
     removeChild<T extends Actor>(child: T): T {
         shutdownActor(child);
-        this[ELYSIA_INTERNAL].children.delete(child);
-        this.scene[ELYSIA_INTERNAL].actorsByType.get(child.constructor as Constructor<Actor>).delete(child);
+        reparentActor(child, null);
         return child;
+    }
+
+    add(p?: Actor) {
+        if(p) {
+            p.addChild(this);
+        } else {
+            this.scene.add(this);
+        }
     }
 
     remove() {
@@ -178,7 +195,7 @@ export class Actor implements IObject {
     }
 
     destructor() {
-        destroyActor(this);
+        destroyActor(this, false);
     }
 
     protected get app() {

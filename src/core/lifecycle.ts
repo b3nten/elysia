@@ -1,6 +1,8 @@
 import { Actor } from "./actor.ts";
 import {ASSERT_INTERNAL, ELYSIA_INTERNAL} from "./internal.ts";
-import {Component} from "./component.ts";
+import {Component, type IComponent} from "./component.ts";
+import type {Constructor} from "../util/types.ts";
+import {Application} from "./application.ts";
 
 export interface IObjectBase extends Object {}
 
@@ -30,14 +32,8 @@ export let setupIComponent = (component: IObject, parent: Actor) => {
 		component[ELYSIA_INTERNAL] = {
 			parent,
 			state: ObjectState.Inactive,
-			noCtor: true,
+			ctor: component,
 		}
-	}
-
-	component[ELYSIA_INTERNAL].parent = parent;
-
-	if(parent[ELYSIA_INTERNAL].state === ObjectState.Active) {
-		startComponent(component);
 	}
 }
 
@@ -138,6 +134,62 @@ export let postUpdateComponent = (component: IObject, delta: number, elapsed: nu
 	}
 }
 
+export let resizeActor = (actor: Actor & IObject, width: number, height: number) => {
+	ELYSIA_DEV: ASSERT_INTERNAL(actor);
+	actor.onResize?.(width, height);
+	if(!actor.destroyed) {
+		for(let component of actor.components.values()) {
+			resizeComponent(component, width, height);
+		}
+		for(let child of actor.children) {
+			resizeActor(child, width, height);
+		}
+	}
+}
+
+export let resizeComponent = (component: IObject, width: number, height: number) => {
+	ELYSIA_DEV: ASSERT_INTERNAL(component);
+	if(component[ELYSIA_INTERNAL].state !== ObjectState.Destroyed) {
+		component.onResize?.(width, height);
+	}
+}
+
+export let reparentActor = (actor: Actor & IObject, parent: Actor | null) => {
+	ELYSIA_DEV: ASSERT_INTERNAL(actor);
+
+	if(actor[ELYSIA_INTERNAL].parent) {
+		actor[ELYSIA_INTERNAL].parent[ELYSIA_INTERNAL].children.delete(actor)
+	}
+
+	if(parent) {
+		parent[ELYSIA_INTERNAL].children.add(actor);
+		actor[ELYSIA_INTERNAL].parent = parent;
+		Application.scene[ELYSIA_INTERNAL].actorsByType.get(actor.constructor as Constructor<Actor>).add(actor);
+	} else {
+		Application.scene[ELYSIA_INTERNAL].actorsByType.get(actor.constructor as Constructor<Actor>).delete(actor);
+		actor[ELYSIA_INTERNAL].parent = null;
+	}
+}
+
+export let reparentComponent = (component: IComponent, parent: Actor | null) => {
+	ELYSIA_DEV: ASSERT_INTERNAL(component);
+
+	let ctor = component[ELYSIA_INTERNAL].ctor;
+
+	if(component[ELYSIA_INTERNAL].parent) {
+		component[ELYSIA_INTERNAL].parent[ELYSIA_INTERNAL].components.delete(ctor);
+	}
+
+	if(parent) {
+		parent[ELYSIA_INTERNAL].components.set(ctor, component);
+		component[ELYSIA_INTERNAL].parent = parent;
+		Application.scene[ELYSIA_INTERNAL].componentsByType.get(ctor).add(component);
+	} else {
+		Application.scene[ELYSIA_INTERNAL].componentsByType.get(ctor).delete(component);
+		component[ELYSIA_INTERNAL].parent = null;
+	}
+}
+
 export let shutdownActor = (actor: Actor & IObject) => {
 	ELYSIA_DEV: ASSERT_INTERNAL(actor);
 
@@ -162,7 +214,7 @@ export let shutdownComponent = (component: IObject) => {
 	}
 }
 
-export let destroyActor = (actor: Actor & IObject) => {
+export let destroyActor = (actor: Actor & IObject, callDestructor = true) => {
 	ELYSIA_DEV: ASSERT_INTERNAL(actor);
 
 	if(actor[ELYSIA_INTERNAL].state !== ObjectState.Destroyed) {
@@ -175,12 +227,7 @@ export let destroyActor = (actor: Actor & IObject) => {
 		}
 
 		shutdownActor(actor);
-
-		if(actor.parent) {
-			actor.parent[ELYSIA_INTERNAL].children.delete(actor);
-		}
-
-		actor.destructor?.();
+		reparentActor(actor, null);
 
 		actor[ELYSIA_INTERNAL].state = ObjectState.Destroyed;
 		actor[ELYSIA_INTERNAL].parent = null;
@@ -201,29 +248,8 @@ export let destroyComponent = (component: IObject) => {
 
 	if(component[ELYSIA_INTERNAL].state !== ObjectState.Destroyed) {
 		shutdownComponent(component);
-		component.destructor?.();
+		reparentComponent(component, null);
 		component[ELYSIA_INTERNAL].state = ObjectState.Destroyed;
-		component[ELYSIA_INTERNAL].parent = null;
-	}
-}
-
-export let resizeActor = (actor: Actor & IObject, width: number, height: number) => {
-	ELYSIA_DEV: ASSERT_INTERNAL(actor);
-	actor.onResize?.(width, height);
-	if(!actor.destroyed) {
-		for(let component of actor.components.values()) {
-			resizeComponent(component, width, height);
-		}
-		for(let child of actor.children) {
-			resizeActor(child, width, height);
-		}
-	}
-}
-
-export let resizeComponent = (component: IObject, width: number, height: number) => {
-	ELYSIA_DEV: ASSERT_INTERNAL(component);
-	if(component[ELYSIA_INTERNAL].state !== ObjectState.Destroyed) {
-		component.onResize?.(width, height);
 	}
 }
 
@@ -243,5 +269,3 @@ export let callTransformChanged = (entity: IObject) => {
 		entity.onTransformChanged?.();
 	}
 }
-
-const EMPTY_CONSTRUCTOR = ({}).constructor;

@@ -1,6 +1,6 @@
 import { Application } from "../.dist/core/application"
 import { Scene } from "../.dist/core/scene";
-import {Actor} from "../.dist/core/actor";
+import { Actor } from "../.dist/core/actor";
 import { Component, type IComponent } from "../.dist/core/component";
 
 const app = new Application({
@@ -13,7 +13,6 @@ class TestComponent extends Component {
     onStart() {
         console.log("Component started")
     }
-
     onShutdown() {
         console.log("Component shutdown")
     }
@@ -29,23 +28,16 @@ let foo: IComponent = {
 }
 
 class TestActor extends Actor {
-    constructor() {
-        super()
-
-        this.addComponent(TestComponent)
+    onStart() {
+        console.log("Actor started")
+        let t = this.addComponent(TestComponent)
         this.addComponent(foo)
 
         setTimeout(() => {
             this.removeComponent(foo)
-        }, 50)
-
-        setTimeout(() => {
-            this.addComponent(foo)
-        }, 100)
-    }
-
-    onStart() {
-        console.log("Actor started")
+            t.destructor();
+            this.addComponent(t)
+        }, 2000)
     }
 
     onShutdown() {
@@ -54,11 +46,6 @@ class TestActor extends Actor {
 }
 
 class TestScene extends Scene {
-    constructor() {
-        super();
-        console.log("Scene created")
-    }
-
     override onLoad() {
         console.log("Scene loaded")
         this.add(TestActor)
