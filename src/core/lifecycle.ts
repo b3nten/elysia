@@ -61,7 +61,14 @@ export let startComponent = (component: IObject) => {
 	}
 }
 
-export let preUpdateActor = (actor: Actor & IObject, delta: number, elapsed: number, resize: boolean) => {
+export let preUpdateActor = (
+	actor: Actor & IObject,
+	delta: number,
+	elapsed: number,
+	resize: boolean,
+	width: number,
+	height: number
+) => {
 	ELYSIA_DEV: ASSERT_INTERNAL(actor);
 
 	if(actor[ELYSIA_INTERNAL].state === ObjectState.Active) {
@@ -76,19 +83,26 @@ export let preUpdateActor = (actor: Actor & IObject, delta: number, elapsed: num
 		actor.onBeforeUpdate?.(delta, elapsed);
 
 		for(let component of actor.components.values())
-			preUpdateComponent(component, delta, elapsed, resize);
+			preUpdateComponent(component, delta, elapsed, resize, width, height);
 
 		for(let child of actor.children)
-			preUpdateActor(child, delta, elapsed, resize);
+			preUpdateActor(child, delta, elapsed, resize, width, height);
 	}
 }
 
-export let preUpdateComponent = (component: IObject, delta: number, elapsed: number, resize: boolean) => {
+export let preUpdateComponent = (
+	component: IObject,
+	delta: number,
+	elapsed: number,
+	resize: boolean,
+	width: number,
+	height: number
+) => {
 	ELYSIA_DEV: ASSERT_INTERNAL(component);
 
 	if(component[ELYSIA_INTERNAL].state === ObjectState.Active) {
 		if(resize) {
-			component.onResize?.(delta, elapsed);
+			component.onResize?.(width, height);
 		}
 
 		component.onBeforeUpdate?.(delta, elapsed);
