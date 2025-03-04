@@ -6,6 +6,15 @@ import { ELYSIA_INTERNAL } from "./internal.ts";
 export interface IComponent extends IObject {}
 
 export class Component implements IComponent {
+
+	static IsComponent(a: any): a is Component & IComponent {
+		return a.isComponent;
+	}
+
+	get isComponent() {
+		return true;
+	}
+
 	get inactive() {
 		return this[ELYSIA_INTERNAL].state === ObjectState.Inactive
 	}
@@ -26,6 +35,12 @@ export class Component implements IComponent {
 		return this[ELYSIA_INTERNAL].parent;
 	}
 
+	remove() {
+		if(this.parent) {
+			this.parent.removeComponent(this);
+		}
+	}
+
 	protected get app() {
 		return Application.instance;
 	}
@@ -38,13 +53,11 @@ export class Component implements IComponent {
 		return Application.renderer;
 	}
 
-	destructor() {
-		this[ELYSIA_INTERNAL].state = ObjectState.Destroyed;
-		this[ELYSIA_INTERNAL].parent = null;
-	}
-
 	[ELYSIA_INTERNAL] = {
 		parent: null as Actor | null,
 		state: ObjectState.Inactive,
+		// Can use this class's constructor as the instance constructor
+		// unlike objects that are constructed via {} or new Object
+		noCtor: false,
 	}
 }

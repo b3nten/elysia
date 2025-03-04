@@ -1,12 +1,28 @@
-import { type IObject, ObjectState } from "./lifecycle.ts";
+import {
+    setupIComponent,
+    type IObject,
+    ObjectState,
+    shutdownComponent,
+    startActor,
+    destroyActor,
+    shutdownActor
+} from "./lifecycle.ts";
 import { ELYSIA_INTERNAL } from "./internal.ts";
-import type { Constructor, ReadonlySet } from "../util/types.ts";
+import type { Constructor, ReadonlySet, ReadonlyMap } from "../util/types.ts";
 import { Application } from "./application.ts";
-import {BoundingBox, BoundingSphere, Matrix4, Quaternion, Vector3} from "../math/vectors.ts";
-import type { IComponent } from "./component.ts";
+import { BoundingBox, BoundingSphere, Matrix4, Quaternion, Vector3 } from "../math/vectors.ts";
+import {  type IComponent } from "./component.ts";
 import { UNSAFE_isCtor } from "../util/asserts.ts";
 
 export class Actor implements IObject {
+    static IsActor(a: any): a is Actor & IComponent {
+        return a.isActor;
+    }
+
+    get isActor() {
+        return true;
+    }
+
     get active() {
         return this[ELYSIA_INTERNAL].state === ObjectState.Active;
     }
@@ -23,7 +39,7 @@ export class Actor implements IObject {
         return this[ELYSIA_INTERNAL].parent;
     }
 
-    get components(): ReadonlySet<IComponent> {
+    get components(): ReadonlyMap<Constructor<IComponent> | IComponent, IComponent> {
         return this[ELYSIA_INTERNAL].components;
     }
 
@@ -93,11 +109,14 @@ export class Actor implements IObject {
     >(component: T, ...args: Args) {
         let ctor: Constructor<IComponent> = UNSAFE_isCtor(component)
                 ? component
-                : component.constructor as Constructor<IComponent>;
+                : component.constructor === EMPTY_CONSTRUCTOR
+                    ? component as Constructor<IComponent>
+                    : component.constructor as Constructor<IComponent>
+
 
         ELYSIA_DEV: {
             if (this[ELYSIA_INTERNAL].components.has(ctor)) {
-                throw new Error(`Component of type ${ctor.name} already exists on actor.`);
+                throw new Error(`Component of type ${String(ctor)} already exists on actor.`);
             }
         }
 
@@ -108,9 +127,11 @@ export class Actor implements IObject {
         }
 
         let instance: IComponent = typeof component === "function" ? new component(...args) : component;
-        this[ELYSIA_INTERNAL].components.set(ctor, instance);
 
-        // todo: lifecycle hooks
+        setupIComponent(instance, this);
+
+        this[ELYSIA_INTERNAL].components.set(ctor, instance);
+        this.scene[ELYSIA_INTERNAL].componentsByType.get(ctor).add(instance);
 
         return instance;
     }
@@ -120,28 +141,34 @@ export class Actor implements IObject {
     }
 
     removeComponent<T extends IComponent>(component: T): T {
-        // todo: lifecycle hooks
-        this[ELYSIA_INTERNAL].components.delete(component.constructor as Constructor<IComponent>);
+        shutdownComponent(component);
+        component[ELYSIA_INTERNAL].parent = null;
+        let ctor = component[ELYSIA_INTERNAL].noCtor ? component : component.constructor as Constructor<IComponent>;
+        this[ELYSIA_INTERNAL].components.delete(ctor);
+        this.scene[ELYSIA_INTERNAL].componentsByType.get(ctor).delete(component);
         return component;
     }
 
     addChild<T extends Actor | Constructor<Actor>, Args extends any[] = any[]>(child: T, ...args: Args) {
         let instance: Actor = typeof child === "function" ? new child(...args) : child;
-
         this[ELYSIA_INTERNAL].children.add(instance);
-
         instance[ELYSIA_INTERNAL].parent = this;
-
-        // todo: lifecycle hooks
-
+        startActor(instance)
+        this.scene[ELYSIA_INTERNAL].actorsByType.get(instance.constructor as Constructor<Actor>).add(instance);
         return instance;
     }
 
     removeChild<T extends Actor>(child: T): T {
-        // todo: lifecycle hooks
+        shutdownActor(child);
         this[ELYSIA_INTERNAL].children.delete(child);
-        child[ELYSIA_INTERNAL].parent = null;
+        this.scene[ELYSIA_INTERNAL].actorsByType.get(child.constructor as Constructor<Actor>).delete(child);
         return child;
+    }
+
+    remove() {
+        if(this.parent) {
+            this.parent.removeChild(this);
+        }
     }
 
     constructor() {
@@ -151,18 +178,7 @@ export class Actor implements IObject {
     }
 
     destructor() {
-        // todo: lifecycle hooks
-        this[ELYSIA_INTERNAL].state = ObjectState.Destroyed;
-        this[ELYSIA_INTERNAL].parent = null;
-        this[ELYSIA_INTERNAL].children.clear();
-        this[ELYSIA_INTERNAL].components.clear();
-        this[ELYSIA_INTERNAL].localMatrix.identity();
-        this[ELYSIA_INTERNAL].worldMatrix.identity();
-        this[ELYSIA_INTERNAL].boundingBox.reset();
-        this[ELYSIA_INTERNAL].boundingSphere.reset();
-        this[ELYSIA_INTERNAL].position.onChange = null;
-        this[ELYSIA_INTERNAL].rotation.onChange = null;
-        this[ELYSIA_INTERNAL].scale.onChange = null;
+        destroyActor(this);
     }
 
     protected get app() {
@@ -181,14 +197,16 @@ export class Actor implements IObject {
         state: ObjectState.Inactive,
         parent: null as Actor | null,
         children: new Set<Actor>,
-        components: new Map<Constructor<IComponent>, IComponent>,
+        components: new Map<Constructor<IComponent> | IComponent, IComponent>,
         position: new Vector3,
         rotation: new Quaternion,
         scale: new Vector3,
         localMatrix: new Matrix4,
         worldMatrix: new Matrix4,
-        transformIsDirty: true,
+        transformIsDirty: false,
         boundingBox: new BoundingBox,
         boundingSphere: new BoundingSphere
     }
 }
+
+const EMPTY_CONSTRUCTOR = ({}).constructor;

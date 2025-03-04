@@ -1,10 +1,18 @@
-import type { IDestructible } from "./lifecycle.ts";
-import type { Renderer } from "../renderer/interface.ts";
+import {
+	type IDestructible,
+	mainUpdateActor,
+	ObjectState,
+	postUpdateActor,
+	preUpdateActor,
+	startActor
+} from "./lifecycle.ts";
+import type { Renderer } from "../renderer/mod.ts";
 import { Input } from "../input/mod.ts";
 import type { Scene } from "./scene.ts";
 import {CanvasObserver} from "../util/canvas.ts";
-import {isWorker} from "../util/asserts.ts";
-import {elysiaLogger} from "./internal.ts";
+import {ELYSIA_INTERNAL, elysiaLogger} from "./internal.ts";
+import {Clock} from "./clock.ts";
+import type {Constructor} from "../util/types.ts";
 
 interface ApplicationArgs {
 	/** A renderer that satisfies the Renderer interface */
@@ -66,7 +74,23 @@ export class Application implements IDestructible {
 
 	renderer: Renderer;
 	autoUpdate: boolean;
-	scene: Scene
+
+	get scene() {
+		return this._scene;
+	}
+
+	get paused() {
+		return this._paused;
+	}
+
+	set paused(value: boolean) {
+		if(value && !this._paused) {
+			// pause actors
+		} else if (!value && this._paused) {
+			// play actors
+		}
+		this._paused = value;
+	}
 
 	constructor(args: ApplicationArgs) {
 		if(Application._instance) {
@@ -82,7 +106,7 @@ export class Application implements IDestructible {
 
 		this._canvasObserver = new CanvasObserver("mainCanvas", this._canvas);
 		this._canvasObserver.onResize(() => {
-			this.renderer?.onCanvasResize(this._canvas.width, this._canvas.height)
+			this._sizeHasChanged = true;
 		});
 
 		ELYSIA_DEV: elysiaLogger.success("Application initialized.");
@@ -98,28 +122,82 @@ export class Application implements IDestructible {
 		}
 	}
 
-	loadScene = async () => {
+	loadScene = async (scene: Constructor<Scene>) => {
 		await this._canvasObserver.sync();
 
-		// load scene
+		if(this._scene) {
+			await this._sceneLoadPromise;
+			this._scene.destructor();
+		}
 
-		// this.renderer.onSceneLoaded(this.scene);
-		// this.renderer.onResize(this._canvasObserver.onResize);
+		this._scene = new scene();
+
+		this._sceneLoadPromise = this._scene[ELYSIA_INTERNAL].callLoad();
+
+		await this._sceneLoadPromise;
+
+		this.renderer?.onSceneLoaded(this.scene);
+		this.renderer?.onResize(this._canvasObserver.width, this._canvasObserver.height);
+
+		this.scene[ELYSIA_INTERNAL].root[ELYSIA_INTERNAL].parent = this.scene[ELYSIA_INTERNAL].root;
+		this.scene[ELYSIA_INTERNAL].root[ELYSIA_INTERNAL].state = ObjectState.Active;
+
+		startActor(this.scene[ELYSIA_INTERNAL].root);
+
+		if(this.autoUpdate) {
+			this.update();
+		}
 	};
 
 	update = () => {
-		ELYSIA_DEV: try {
-
-		} catch (e) {
-
+		ELYSIA_DEV: {
+			try {
+				this._update();
+			} catch(e) {
+				elysiaLogger.error(e);
+				this._hasErrored = true;
+			}
+			if(this.autoUpdate && !this._hasErrored)
+				requestAnimationFrame(this.update);
 		}
 
 		ELYSIA_PROD: {
-
+			if(this.autoUpdate)
+				requestAnimationFrame(this.update);
+			this._update();
 		}
 	};
 
 	protected static _instance: Application;
 	protected _canvas: HTMLCanvasElement;
 	protected _canvasObserver: CanvasObserver;
+	protected _hasErrored = false;
+	protected _sizeHasChanged = false;
+	protected _clock = new Clock;
+	protected _paused = false;
+	protected _scene?: Scene;
+	protected _sceneLoadPromise?: Promise<void>
+
+	protected _update = () => {
+		this._clock.capture();
+
+		if(this._paused) return;
+
+		if(this._sizeHasChanged) {
+			this.renderer?.onResize(this._canvasObserver.width, this._canvasObserver.height);
+		}
+
+		let root = this.scene[ELYSIA_INTERNAL].root;
+
+		preUpdateActor(root, this._clock.delta, this._clock.elapsed, this._sizeHasChanged);
+
+		mainUpdateActor(root, this._clock.delta, this._clock.elapsed);
+
+		// update renderer
+		this.renderer?.onRender(this._clock.delta, this._clock.elapsed);
+
+		postUpdateActor(root, this._clock.delta, this._clock.elapsed);
+
+		this._sizeHasChanged = false;
+	}
 }

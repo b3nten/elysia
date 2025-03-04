@@ -23,9 +23,9 @@ export class Input {
 		return this.keyMap.has(key);
 	};
 
-	static eventHandler = new EventDispatcher();
-	static on = this.eventHandler.addEventListener;
-	static off = this.eventHandler.removeEventListener;
+	static eventHandler = new EventDispatcher;
+	static on = this.eventHandler.addEventListener.bind(this.eventHandler);
+	static off = this.eventHandler.removeEventListener.bind(this.eventHandler);
 
 	static addWorker = (worker: Worker) => {
 		if(isWorker())
@@ -75,10 +75,10 @@ export class Input {
 	};
 
 	protected static listenWorker = () => {
-		workerMain.onKeyEvent.$subscribe(this.onKeyEvent);
-		workerMain.onMouseEvent.$subscribe(this.onMouseEvent);
-		workerMain.onWheelEvent.$subscribe(this.onWheelEvent);
-		workerMain.onTouchEvent.$subscribe(this.onTouchEvent);
+		workerMain.input.onKeyEvent.$subscribe(this.onKeyEvent);
+		workerMain.input.onMouseEvent.$subscribe(this.onMouseEvent);
+		workerMain.input.onWheelEvent.$subscribe(this.onWheelEvent);
+		workerMain.input.onTouchEvent.$subscribe(this.onTouchEvent);
 	};
 
 	protected static onKeyEvent = (
