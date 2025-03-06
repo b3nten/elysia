@@ -1,7 +1,7 @@
 import { Application } from "../.dist/core/application"
 import { Scene } from "../.dist/core/scene";
 import { Actor } from "../.dist/core/actor";
-import { Component, type IComponent } from "../.dist/core/component";
+import { Component } from "../.dist/core/component";
 
 const app = new Application({
     autoUpdate: true,
@@ -10,7 +10,7 @@ const app = new Application({
 })
 
 class TestComponent extends Component {
-    onStart() {
+    onStartup() {
         console.log("Component started")
     }
     onResize(width: number, height: number) {
@@ -18,15 +18,6 @@ class TestComponent extends Component {
     }
     onShutdown() {
         console.log("Component shutdown")
-    }
-}
-
-let foo: IComponent = {
-    onStart() {
-        console.log("foo started")
-    },
-    onShutdown() {
-        console.log("foo shutdown")
     }
 }
 
@@ -38,12 +29,11 @@ class ChildActor extends Actor {
 }
 
 class TestActor extends Actor {
-    onStart() {
+    onStartup() {
         console.log("Actor started");
 
         this.addComponent(TestComponent);
-        this.addComponent(ChildActor);
-        this.addComponent(foo);
+        this.addChild(ChildActor)
     }
 
     onUpdate() {

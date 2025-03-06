@@ -1,13 +1,11 @@
 import { destroyComponent, type IObject, ObjectState } from "./lifecycle.ts";
 import type { Actor } from "./actor.ts";
 import { Application } from "./application.ts";
-import {ELYSIA_INTERNAL, ElysiaInternalIObject} from "./internal.ts";
+import { ELYSIA_INTERNAL, ElysiaIObjectInternalProperties } from "./internal.ts";
 
-export interface IComponent extends IObject {}
+export class Component implements IObject {
 
-export class Component implements IComponent {
-
-	static IsComponent(a: any): a is Component & IComponent {
+	static IsComponent(a: any): a is Component {
 		return a.isComponent;
 	}
 
@@ -73,6 +71,6 @@ export class Component implements IComponent {
 		return Application.renderer;
 	}
 
-	[ELYSIA_INTERNAL] = new ElysiaInternalIObject(this.constructor)
+	[ELYSIA_INTERNAL] = new ElysiaIObjectInternalProperties(this.constructor)
 }
 

@@ -1,25 +1,25 @@
-import {createLogger, LogLevel} from "../log/logger.ts";
-import {Actor} from "./actor.ts";
-import {ObjectState} from "./lifecycle.ts";
+import { createLogger, LogLevel } from "../log/logger.ts";
+import { Actor } from "./actor.ts";
+import { ObjectState } from "./lifecycle.ts";
 
-export const ELYSIA_INTERNAL = Symbol.for("elysia-internal");
-
-export function ASSERT_INTERNAL<T extends Object>(obj: T): asserts obj is { [ELYSIA_INTERNAL]: any } & T {
-    if(!(ELYSIA_INTERNAL in obj)) {
-        throw new Error("Object does not have ELYSIA_INTERNAL property");
-    }
-}
-
-/**
- * @internal
- * Used internally for logging engine stuff.
- */
 export let elysiaLogger = createLogger({
     name: "Elysia",
     level: LogLevel.Debug
 })
 
-export class ElysiaInternalIObject {
+export let SET_ELYSIA_LOGLVL = (level: LogLevel) => {
+    elysiaLogger.level = level;
+}
+
+export const ELYSIA_INTERNAL = Symbol.for("elysia-internal");
+
+export function ELYSIA_ASSERT_INTERNAL<T extends Object>(obj: T): asserts obj is { [ELYSIA_INTERNAL]: any } & T {
+    if(!(ELYSIA_INTERNAL in obj)) {
+        throw new Error("Object does not have ELYSIA_INTERNAL property");
+    }
+}
+
+export class ElysiaIObjectInternalProperties {
     tags = new Set;
     state = ObjectState.Inactive;
     parent: Actor | null = null;

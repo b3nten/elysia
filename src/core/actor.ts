@@ -1,5 +1,4 @@
 import {
-    setupIComponent,
     type IObject,
     ObjectState,
     shutdownComponent,
@@ -10,17 +9,17 @@ import {
     reparentComponent,
     startComponent
 } from "./lifecycle.ts";
-import {ELYSIA_INTERNAL, ElysiaInternalIObject} from "./internal.ts";
+import { ELYSIA_INTERNAL, ElysiaIObjectInternalProperties } from "./internal.ts";
 import type { Constructor, ReadonlySet, ReadonlyMap } from "../util/types.ts";
 import { Application } from "./application.ts";
 import { BoundingBox, BoundingSphere, Matrix4, Quaternion, Vector3 } from "../math/vectors.ts";
-import {  type IComponent } from "./component.ts";
+import { Component } from "./component.ts";
 import { UNSAFE_isCtor } from "../util/asserts.ts";
 import { AutoInitMap } from "../containers/autoinitmap.ts";
 
-export class ActorInternalProperties extends ElysiaInternalIObject {
+export class ElysiaActorInternalProperties extends ElysiaIObjectInternalProperties {
     children = new Set<Actor>;
-    components = new Map<Constructor<IComponent> | IComponent, IComponent>;
+    components = new Map<Constructor<Component>, Component>;
     position = new Vector3;
     rotation = new Quaternion;
     scale = new Vector3;
@@ -35,7 +34,7 @@ export class ActorInternalProperties extends ElysiaInternalIObject {
 export class Actor implements IObject {
     static isElysiaActor = true;
 
-    static IsActor(a: any): a is Actor & IComponent {
+    static IsActor(a: any): a is Actor & IObject {
         return a.IsActor;
     }
 
@@ -59,7 +58,7 @@ export class Actor implements IObject {
         return this[ELYSIA_INTERNAL].parent;
     }
 
-    get components(): ReadonlyMap<Constructor<IComponent> | IComponent, IComponent> {
+    get components(): ReadonlyMap<Constructor<Component>, Component> {
         return this[ELYSIA_INTERNAL].components;
     }
 
@@ -125,14 +124,11 @@ export class Actor implements IObject {
     }
 
     addComponent<
-        T extends IComponent | Constructor<IComponent>, Args extends any[] = any[]
-    >(component: T, ...args: Args): InstanceType<T> {
-        let ctor: Constructor<IComponent> = UNSAFE_isCtor(component)
-                ? component
-                : component.constructor === EMPTY_CONSTRUCTOR
-                    ? component as Constructor<IComponent>
-                    : component.constructor as Constructor<IComponent>
-
+        T extends Component | Constructor<Component>, Args extends any[] = any[]
+    >(component: T, ...args: Args): T extends Constructor<Component> ? InstanceType<T> : T {
+        let ctor: Constructor<Component> = UNSAFE_isCtor(component)
+            ? component
+            : component.constructor as Constructor<Component>;
 
         ELYSIA_DEV: {
             if (this[ELYSIA_INTERNAL].components.has(ctor)) {
@@ -146,9 +142,8 @@ export class Actor implements IObject {
             }
         }
 
-        let instance: IComponent = typeof component === "function" ? new component(...args) : component;
+        let instance: Component = typeof component === "function" ? new component(...args) : component;
 
-        setupIComponent(instance, this);
         reparentComponent(instance, this);
         startComponent(instance);
 
@@ -165,21 +160,17 @@ export class Actor implements IObject {
             (child as IObject).onSiblingAdded?.(instance);
         }
 
-        return instance as InstanceType<T>;
+        return instance as T extends Constructor<Component> ? InstanceType<T> : T;
     }
 
-    getComponent<T extends IComponent>(ctor: Constructor<T>): T | null {
+    getComponent<T extends Component>(ctor: Constructor<T>): T | null {
         return this[ELYSIA_INTERNAL].components.get(ctor) as T ?? null;
     }
 
-    removeComponent<T extends IComponent>(ctor: T): T | null {
-        if(typeof ctor !== "function") {
-            if(ctor.constructor !== EMPTY_CONSTRUCTOR) {
-                ctor = ctor.constructor as unknown as any;
-            }
-        }
-
-        let instance = this[ELYSIA_INTERNAL].components.get(ctor) as T;
+    removeComponent<T extends Constructor<Component> | Component>(ctor: T): T | null {
+        let instance = this[ELYSIA_INTERNAL].components.get(
+            UNSAFE_isCtor(ctor) ? ctor : ctor.constructor as Constructor<Component>
+        );
 
         if(!instance) {
             return null;
@@ -200,7 +191,7 @@ export class Actor implements IObject {
             (child as IObject).onSiblingRemoved?.(instance);
         }
 
-        return instance;
+        return instance as T;
     }
 
     addChild<T extends Actor | Constructor<Actor>, Args extends any[] = any[]>(child: T, ...args: Args) {
@@ -292,7 +283,5 @@ export class Actor implements IObject {
         return Application.renderer;
     }
 
-    [ELYSIA_INTERNAL] = new ActorInternalProperties(this.constructor)
+    [ELYSIA_INTERNAL] = new ElysiaActorInternalProperties(this.constructor)
 }
-
-const EMPTY_CONSTRUCTOR = ({}).constructor;

@@ -4,15 +4,15 @@ import { Actor } from "./actor.ts";
 import type {Constructor} from "../util/types.ts";
 import { AutoInitMap } from "../containers/autoinitmap.ts";
 import type { ReadonlySet } from "../util/types.ts";
-import type {IComponent} from "./component.ts";
 import { type IDestructible, type IObject, ObjectState } from "./lifecycle.ts";
 import {Application} from "./application.ts";
+import type { Component } from "./component.ts";
 
 export class Scene implements IDestructible {
     [ELYSIA_INTERNAL] = {
         root: null as unknown as Actor,
         actorsByType: new AutoInitMap<Constructor<Actor>, Set<Actor>>(() => new Set),
-        componentsByType: new AutoInitMap<unknown, Set<IComponent>>(() => new Set),
+        componentsByType: new AutoInitMap<unknown, Set<Component>>(() => new Set),
         callLoad: async () => {
             if(this.onLoad) {
                 await this.onLoad();
@@ -34,7 +34,7 @@ export class Scene implements IDestructible {
         return this[ELYSIA_INTERNAL].actorsByType.get(ctor) as unknown as ReadonlySet<T>;
     }
 
-    getComponents<T extends IComponent>(ctorOrInstance: unknown): ReadonlySet<T> {
+    getComponents<T extends Component>(ctorOrInstance: unknown): ReadonlySet<T> {
         return this[ELYSIA_INTERNAL].componentsByType.get(ctorOrInstance) as unknown as ReadonlySet<T>;
     }
 
