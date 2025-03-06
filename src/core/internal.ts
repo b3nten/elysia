@@ -1,4 +1,6 @@
 import {createLogger, LogLevel} from "../log/logger.ts";
+import {Actor} from "./actor.ts";
+import {ObjectState} from "./lifecycle.ts";
 
 export const ELYSIA_INTERNAL = Symbol.for("elysia-internal");
 
@@ -16,3 +18,17 @@ export let elysiaLogger = createLogger({
     name: "Elysia",
     level: LogLevel.Debug
 })
+
+export class ElysiaInternalIObject {
+    tags = new Set;
+    state = ObjectState.Inactive;
+    parent: Actor | null = null;
+    ctor: any;
+    constructor(
+        ctor: any,
+        parent: Actor | null = null
+    ) {
+        this.parent = parent;
+        this.ctor = ctor;
+    }
+}

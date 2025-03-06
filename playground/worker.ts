@@ -30,17 +30,26 @@ let foo: IComponent = {
     }
 }
 
+class ChildActor extends Actor {
+    constructor() {
+        super()
+        this.addTag("foo")
+    }
+}
+
 class TestActor extends Actor {
     onStart() {
-        console.log("Actor started")
-        let t = this.addComponent(TestComponent)
-        this.addComponent(foo)
+        console.log("Actor started");
 
-        setTimeout(() => {
-            this.removeComponent(foo)
-            t.destructor();
-            this.addComponent(t)
-        }, 2000)
+        this.addComponent(TestComponent);
+        this.addComponent(ChildActor);
+        this.addComponent(foo);
+    }
+
+    onUpdate() {
+        console.log(
+            this.getViaTag("foo")
+        )
     }
 
     onShutdown() {
@@ -48,10 +57,19 @@ class TestActor extends Actor {
     }
 }
 
+class TagTestActor extends Actor {
+    onUpdate() {
+        this.scene.getByTag("foo")?.forEach((actor) => {
+            console.log("scene: Actor with tag foo found", actor)
+        })
+    }
+}
+
 class TestScene extends Scene {
     override onLoad() {
         console.log("Scene loaded")
         this.add(TestActor)
+        this.add(TagTestActor)
     }
 }
 

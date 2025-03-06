@@ -1,8 +1,8 @@
 import { Actor } from "./actor.ts";
-import {ASSERT_INTERNAL, ELYSIA_INTERNAL} from "./internal.ts";
-import {Component, type IComponent} from "./component.ts";
-import type {Constructor} from "../util/types.ts";
-import {Application} from "./application.ts";
+import {ASSERT_INTERNAL, ELYSIA_INTERNAL, ElysiaInternalIObject} from "./internal.ts";
+import { type IComponent } from "./component.ts";
+import type { Constructor } from "../util/types.ts";
+import { Application } from "./application.ts";
 
 export interface IObjectBase extends Object {}
 
@@ -18,6 +18,8 @@ export interface IObject extends IObjectBase, IDestructible {
 	onShutdown?(): void;
 	onParent?(parent: IObject): void;
 	onResize?(width: number, height: number): void;
+	onSiblingAdded?(sibling: IObject): void;
+	onSiblingRemoved?(sibling: IObject): void;
 	onTransformChanged?(): void;
 }
 
@@ -27,13 +29,14 @@ export enum ObjectState {
 	Destroyed,
 }
 
+const DEFAULT_CONSTRUCTOR = ({}).constructor;
+
 export let setupIComponent = (component: IObject, parent: Actor) => {
 	if(!(ELYSIA_INTERNAL in component)) {
-		component[ELYSIA_INTERNAL] = {
-			parent,
-			state: ObjectState.Inactive,
-			ctor: component,
-		}
+		component[ELYSIA_INTERNAL] = new ElysiaInternalIObject(
+			component.constructor === DEFAULT_CONSTRUCTOR ? component : component.constructor,
+			parent
+		);
 	}
 }
 

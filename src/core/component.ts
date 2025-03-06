@@ -1,7 +1,7 @@
-import {destroyComponent, type IObject, ObjectState} from "./lifecycle.ts";
+import { destroyComponent, type IObject, ObjectState } from "./lifecycle.ts";
 import type { Actor } from "./actor.ts";
 import { Application } from "./application.ts";
-import { ELYSIA_INTERNAL } from "./internal.ts";
+import {ELYSIA_INTERNAL, ElysiaInternalIObject} from "./internal.ts";
 
 export interface IComponent extends IObject {}
 
@@ -41,6 +41,22 @@ export class Component implements IComponent {
 		}
 	}
 
+	addTag(tag: any) {
+		this[ELYSIA_INTERNAL].tags.add(tag);
+		if(this.parent) {
+			this.parent[ELYSIA_INTERNAL].childrenByTag.get(tag).add(this);
+			this.scene[ELYSIA_INTERNAL].tags.get(tag).add(this);
+		}
+	}
+
+	removeTag(tag: any) {
+		this[ELYSIA_INTERNAL].tags.delete(tag);
+		if(this.parent) {
+			this.parent[ELYSIA_INTERNAL].childrenByTag.get(tag).delete(this);
+			this.scene[ELYSIA_INTERNAL].tags.get(tag).delete(this);
+		}
+	}
+
 	destructor() {
 		destroyComponent(this);
 	}
@@ -57,11 +73,6 @@ export class Component implements IComponent {
 		return Application.renderer;
 	}
 
-	[ELYSIA_INTERNAL] = {
-		parent: null as Actor | null,
-		state: ObjectState.Inactive,
-		// Can use this class's constructor as the instance constructor
-		// unlike objects that are constructed via {} or new Object
-		ctor: this.constructor
-	}
+	[ELYSIA_INTERNAL] = new ElysiaInternalIObject(this.constructor)
 }
+

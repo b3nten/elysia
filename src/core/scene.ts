@@ -5,11 +5,12 @@ import type {Constructor} from "../util/types.ts";
 import { AutoInitMap } from "../containers/autoinitmap.ts";
 import type { ReadonlySet } from "../util/types.ts";
 import type {IComponent} from "./component.ts";
-import {type IDestructible, ObjectState} from "./lifecycle.ts";
+import { type IDestructible, type IObject, ObjectState } from "./lifecycle.ts";
+import {Application} from "./application.ts";
 
 export class Scene implements IDestructible {
     [ELYSIA_INTERNAL] = {
-        root: new Actor,
+        root: null as unknown as Actor,
         actorsByType: new AutoInitMap<Constructor<Actor>, Set<Actor>>(() => new Set),
         componentsByType: new AutoInitMap<unknown, Set<IComponent>>(() => new Set),
         callLoad: async () => {
@@ -18,15 +19,16 @@ export class Scene implements IDestructible {
             }
         },
         state: ObjectState.Inactive,
+        tags: new AutoInitMap<any, Set<IObject>>(() => new Set)
     }
 
     get root () {
         return this[ELYSIA_INTERNAL].root;
     }
 
-    add: Actor["addChild"] = this[ELYSIA_INTERNAL].root.addChild.bind(this[ELYSIA_INTERNAL].root);
+    add: Actor["addChild"];
 
-    remove: Actor["removeChild"] = this[ELYSIA_INTERNAL].root.removeChild.bind(this[ELYSIA_INTERNAL].root);
+    remove: Actor["removeChild"];
 
     getActors<T extends Actor>(ctor: Constructor<T>): ReadonlySet<T> {
         return this[ELYSIA_INTERNAL].actorsByType.get(ctor) as unknown as ReadonlySet<T>;
@@ -36,7 +38,20 @@ export class Scene implements IDestructible {
         return this[ELYSIA_INTERNAL].componentsByType.get(ctorOrInstance) as unknown as ReadonlySet<T>;
     }
 
-    protected onLoad?(): void | Promise<void>;
+    getByTag(tag: any): ReadonlySet<IObject> {
+        return this[ELYSIA_INTERNAL].tags.get(tag) as unknown as ReadonlySet<IObject>;
+    }
+
+    constructor() {
+        /* The order here matters. Everything needs scene initialized first.
+           Scene.root needs to be created before it's methods are accessed.
+           Ideally we could create this in a better way,
+           but we want to support initialization via constructors. */
+        Application.instance[ELYSIA_INTERNAL].scene = this;
+        this[ELYSIA_INTERNAL].root = new Actor;
+        this.add = this[ELYSIA_INTERNAL].root.addChild.bind(this[ELYSIA_INTERNAL].root);
+        this.remove = this[ELYSIA_INTERNAL].root.removeChild.bind(this[ELYSIA_INTERNAL].root)
+    }
 
     destructor() {
         if(this[ELYSIA_INTERNAL].state === ObjectState.Destroyed) {
@@ -47,4 +62,6 @@ export class Scene implements IDestructible {
         this[ELYSIA_INTERNAL].actorsByType.clear();
         this[ELYSIA_INTERNAL].componentsByType.clear();
     }
+
+    protected onLoad?(): void | Promise<void>;
 }

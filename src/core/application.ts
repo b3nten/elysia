@@ -53,7 +53,7 @@ export class Application implements IDestructible {
 	}
 
 	static get scene() {
-		return Application.instance.scene;
+		return Application._instance.scene;
 	}
 
 	static get renderer() {
@@ -193,7 +193,8 @@ export class Application implements IDestructible {
 
 			await this._canvasObserver.sync();
 
-			this._scene = new scene();
+			// auto initializes value
+			new scene();
 
 			this._sceneLoadPromise = this._scene[ELYSIA_INTERNAL].callLoad();
 
@@ -243,6 +244,12 @@ export class Application implements IDestructible {
 	};
 
 	protected static _instance: Application;
+
+	[ELYSIA_INTERNAL] = {
+		set scene(scene: Scene) {
+			Application._instance._scene = scene;
+		}
+	}
 
 	protected _renderer: Renderer;
 	protected _canvas: HTMLCanvasElement;

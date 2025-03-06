@@ -5,14 +5,32 @@ import {
     shutdownComponent,
     startActor,
     destroyActor,
-    shutdownActor, reparentActor, reparentComponent, startComponent
+    shutdownActor,
+    reparentActor,
+    reparentComponent,
+    startComponent
 } from "./lifecycle.ts";
-import { ELYSIA_INTERNAL } from "./internal.ts";
+import {ELYSIA_INTERNAL, ElysiaInternalIObject} from "./internal.ts";
 import type { Constructor, ReadonlySet, ReadonlyMap } from "../util/types.ts";
 import { Application } from "./application.ts";
 import { BoundingBox, BoundingSphere, Matrix4, Quaternion, Vector3 } from "../math/vectors.ts";
 import {  type IComponent } from "./component.ts";
 import { UNSAFE_isCtor } from "../util/asserts.ts";
+import { AutoInitMap } from "../containers/autoinitmap.ts";
+
+export class ActorInternalProperties extends ElysiaInternalIObject {
+    children = new Set<Actor>;
+    components = new Map<Constructor<IComponent> | IComponent, IComponent>;
+    position = new Vector3;
+    rotation = new Quaternion;
+    scale = new Vector3;
+    localMatrix = new Matrix4;
+    worldMatrix = new Matrix4;
+    transformIsDirty = false;
+    boundingBox = new BoundingBox;
+    boundingSphere = new BoundingSphere;
+    childrenByTag = new AutoInitMap<any, Set<IObject>>(() => new Set);
+}
 
 export class Actor implements IObject {
     static isElysiaActor = true;
@@ -108,7 +126,7 @@ export class Actor implements IObject {
 
     addComponent<
         T extends IComponent | Constructor<IComponent>, Args extends any[] = any[]
-    >(component: T, ...args: Args) {
+    >(component: T, ...args: Args): InstanceType<T> {
         let ctor: Constructor<IComponent> = UNSAFE_isCtor(component)
                 ? component
                 : component.constructor === EMPTY_CONSTRUCTOR
@@ -134,7 +152,20 @@ export class Actor implements IObject {
         reparentComponent(instance, this);
         startComponent(instance);
 
-        return instance;
+        for(let tag of instance[ELYSIA_INTERNAL].tags) {
+            this[ELYSIA_INTERNAL].childrenByTag.get(tag).add(instance);
+            this.scene[ELYSIA_INTERNAL].tags.get(tag).add(instance);
+        }
+
+        for(let component of this.components.values()) {
+            (component as IObject).onSiblingAdded?.(instance);
+        }
+
+        for(let child of this.children.values()) {
+            (child as IObject).onSiblingAdded?.(instance);
+        }
+
+        return instance as InstanceType<T>;
     }
 
     getComponent<T extends IComponent>(ctor: Constructor<T>): T | null {
@@ -142,7 +173,6 @@ export class Actor implements IObject {
     }
 
     removeComponent<T extends IComponent>(ctor: T): T | null {
-
         if(typeof ctor !== "function") {
             if(ctor.constructor !== EMPTY_CONSTRUCTOR) {
                 ctor = ctor.constructor as unknown as any;
@@ -158,6 +188,18 @@ export class Actor implements IObject {
         shutdownComponent(instance);
         reparentComponent(instance, null);
 
+        for(let tag of instance[ELYSIA_INTERNAL].tags) {
+            this[ELYSIA_INTERNAL].childrenByTag.get(tag).delete(instance);
+            this.scene[ELYSIA_INTERNAL].tags.get(tag).delete(instance);
+        }
+
+        for(let component of this.components.values()) {
+            (component as IObject).onSiblingRemoved?.(instance);
+        }
+        for(let child of this.children.values()) {
+            (child as IObject).onSiblingRemoved?.(instance);
+        }
+
         return instance;
     }
 
@@ -165,10 +207,32 @@ export class Actor implements IObject {
         let instance: Actor = typeof child === "function" ? new child(...args) : child;
         reparentActor(instance, this);
         startActor(instance);
+
+        for(let tag of instance[ELYSIA_INTERNAL].tags) {
+            this[ELYSIA_INTERNAL].childrenByTag.get(tag).add(instance);
+            this.scene[ELYSIA_INTERNAL].tags.get(tag).add(instance);
+        }
+
+        for(let component of this.components.values()) {
+            (component as IObject).onSiblingAdded?.(instance);
+        }
+        for(let child of this.children.values()) {
+            (child as IObject).onSiblingAdded?.(instance);
+        }
         return instance;
     }
 
     removeChild<T extends Actor>(child: T): T {
+        for(let component of this.components.values()) {
+            (component as IObject).onSiblingRemoved?.(child);
+        }
+        for(let child of this.children.values()) {
+            (child as IObject).onSiblingRemoved?.(child);
+        }
+        for(let tag of child[ELYSIA_INTERNAL].tags) {
+            this[ELYSIA_INTERNAL].childrenByTag.get(tag).delete(child);
+            this.scene[ELYSIA_INTERNAL].tags.get(tag).delete(child);
+        }
         shutdownActor(child);
         reparentActor(child, null);
         return child;
@@ -186,6 +250,24 @@ export class Actor implements IObject {
         if(this.parent) {
             this.parent.removeChild(this);
         }
+    }
+
+    addTag(tag: any) {
+        this[ELYSIA_INTERNAL].tags.add(tag);
+        if(this.parent) {
+            this.parent[ELYSIA_INTERNAL].childrenByTag.get(tag).add(this);
+        }
+    }
+
+    removeTag(tag: any) {
+        this[ELYSIA_INTERNAL].tags.delete(tag);
+        if(this.parent) {
+            this.parent[ELYSIA_INTERNAL].childrenByTag.get(tag).delete(this);
+        }
+    }
+
+    getViaTag(tag: any): ReadonlySet<Actor> {
+        return this[ELYSIA_INTERNAL].childrenByTag.get(tag) as unknown as ReadonlySet<Actor>;
     }
 
     constructor() {
@@ -210,20 +292,7 @@ export class Actor implements IObject {
         return Application.renderer;
     }
 
-    [ELYSIA_INTERNAL] = {
-        state: ObjectState.Inactive,
-        parent: null as Actor | null,
-        children: new Set<Actor>,
-        components: new Map<Constructor<IComponent> | IComponent, IComponent>,
-        position: new Vector3,
-        rotation: new Quaternion,
-        scale: new Vector3,
-        localMatrix: new Matrix4,
-        worldMatrix: new Matrix4,
-        transformIsDirty: false,
-        boundingBox: new BoundingBox,
-        boundingSphere: new BoundingSphere
-    }
+    [ELYSIA_INTERNAL] = new ActorInternalProperties(this.constructor)
 }
 
 const EMPTY_CONSTRUCTOR = ({}).constructor;
