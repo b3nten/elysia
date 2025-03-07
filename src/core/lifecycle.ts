@@ -6,9 +6,15 @@ import {
 import type { Constructor } from "../util/types.ts";
 import { Application } from "./application.ts";
 import type { Component } from "./component.ts";
+import type { BoundingBox, BoundingSphere } from "../math/vectors.ts";
 
 export interface IDestructible {
 	destructor?(): void;
+}
+
+export interface IBounded {
+	getBoundingBox(): BoundingBox;
+	getBoundingSphere(): BoundingSphere;
 }
 
 export enum ObjectState {
@@ -62,9 +68,9 @@ export let preUpdateActor = (actor: Actor & IObject, delta: number, elapsed: num
 			actor.onResize?.(delta, elapsed);
 		}
 
-
-		if(actor[ELYSIA_INTERNAL].transformIsDirty)
+		if(actor[ELYSIA_INTERNAL].transformIsDirty) {
 			callTransformChanged(actor);
+		}
 
 		actor.onBeforeUpdate?.(delta, elapsed);
 
@@ -232,7 +238,7 @@ export let destroyActor = (actor: Actor & IObject, callDestructor = true) => {
 		actor[ELYSIA_INTERNAL].components.clear();
 		actor[ELYSIA_INTERNAL].localMatrix.identity();
 		actor[ELYSIA_INTERNAL].worldMatrix.identity();
-		actor[ELYSIA_INTERNAL].boundingBox.reset();
+		actor[ELYSIA_INTERNAL].getBoundingBox.reset();
 		actor[ELYSIA_INTERNAL].boundingSphere.reset();
 		actor[ELYSIA_INTERNAL].position.onChange = null;
 		actor[ELYSIA_INTERNAL].rotation.onChange = null;

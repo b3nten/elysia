@@ -22,6 +22,10 @@ export class Scene implements IDestructible {
         tags: new AutoInitMap<any, Set<IObject>>(() => new Set)
     }
 
+    readonly userData = new Map<unknown, unknown>;
+
+    // readonly batchedMeshPool = new BatchedMeshPool;
+
     get root () {
         return this[ELYSIA_INTERNAL].root;
     }

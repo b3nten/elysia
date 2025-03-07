@@ -7,7 +7,7 @@ import {
     shutdownActor,
     reparentActor,
     reparentComponent,
-    startComponent
+    startComponent, type IBounded
 } from "./lifecycle.ts";
 import { ELYSIA_INTERNAL, ElysiaIObjectInternalProperties } from "./internal.ts";
 import type { Constructor, ReadonlySet, ReadonlyMap } from "../util/types.ts";
@@ -31,7 +31,7 @@ export class ElysiaActorInternalProperties extends ElysiaIObjectInternalProperti
     childrenByTag = new AutoInitMap<any, Set<IObject>>(() => new Set);
 }
 
-export class Actor implements IObject {
+export class Actor implements IObject, IBounded {
     static isElysiaActor = true;
 
     static IsActor(a: any): a is Actor & IObject {
@@ -92,16 +92,27 @@ export class Actor implements IObject {
         return this[ELYSIA_INTERNAL].localMatrix;
     }
 
-    get boundingBox() {
+    getBoundingBox() {
         return this[ELYSIA_INTERNAL].boundingBox;
     }
 
-    get boundingSphere() {
+    getBoundingSphere() {
+        return this[ELYSIA_INTERNAL].boundingSphere;
+    }
+
+    calculateBoundingBox() {
+        return this[ELYSIA_INTERNAL].boundingBox;
+    }
+
+    calculateBoundingSphere() {
         return this[ELYSIA_INTERNAL].boundingSphere;
     }
 
     markTransformAsDirty = () => {
         this[ELYSIA_INTERNAL].transformIsDirty = true;
+        for(let child of this.children) {
+            child.markTransformAsDirty();
+        }
     }
 
     updateMatrices() {
@@ -113,14 +124,6 @@ export class Actor implements IObject {
             this[ELYSIA_INTERNAL].worldMatrix.copy(this.matrix);
         }
         this[ELYSIA_INTERNAL].transformIsDirty = false;
-    }
-
-    calculateBoundingBox() {
-        return this[ELYSIA_INTERNAL].boundingBox;
-    }
-
-    calculateBoundingSphere() {
-        return this[ELYSIA_INTERNAL].boundingSphere;
     }
 
     addComponent<
@@ -259,6 +262,17 @@ export class Actor implements IObject {
 
     getViaTag(tag: any): ReadonlySet<Actor> {
         return this[ELYSIA_INTERNAL].childrenByTag.get(tag) as unknown as ReadonlySet<Actor>;
+    }
+
+    // Calls a method on all components and children
+    callEvent(event: string, ...args: any[]) {
+        for(let component of this.components.values()) {
+            component[event]?.(...args);
+        }
+        for(let child of this.children.values()) {
+            child[event]?.(...args);
+            child.callEvent(event, ...args);
+        }
     }
 
     constructor() {

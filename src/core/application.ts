@@ -6,7 +6,7 @@ import {
 	preUpdateActor,
 	startActor
 } from "./lifecycle.ts";
-import type { Renderer } from "../renderer/mod.ts";
+import type { IRenderer } from "../renderer/mod.ts";
 import { Input } from "../input/mod.ts";
 import type { Scene } from "./scene.ts";
 import { CanvasObserver } from "../util/canvas.ts";
@@ -20,7 +20,7 @@ import { createEvent } from "../events/mod.ts";
 
 interface ApplicationArgs {
 	/** A renderer that satisfies the Renderer interface */
-	renderer: Renderer;
+	renderer: IRenderer;
 	/** The canvas element to render to. */
 	canvas: HTMLCanvasElement;
 	/**
@@ -251,7 +251,7 @@ export class Application implements IDestructible {
 		}
 	}
 
-	protected _renderer: Renderer;
+	protected _renderer: IRenderer;
 	protected _canvas: HTMLCanvasElement;
 	protected _canvasObserver: CanvasObserver;
 	protected _hasErrored = false;

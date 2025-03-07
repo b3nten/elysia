@@ -12,6 +12,8 @@ export type Serializable =
 
 export type Constructor<T, Args extends any[] = any> = new (...args: Args) => T;
 
+export type AbstractConstructor<T> = abstract new (...args: any[]) => T;
+
 export type ReadonlySet<T> = {
 	readonly size: number;
 	has(value: T): boolean;

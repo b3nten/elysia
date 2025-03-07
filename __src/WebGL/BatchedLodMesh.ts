@@ -575,9 +575,9 @@ class BatchedLodMesh extends Mesh {
 			: geometryInfo.vertexCount;
 
 		// store the bounding boxes
-		geometryInfo.boundingBox = null;
+		geometryInfo.getBoundingBox = null;
 		if (geometry.boundingBox !== null) {
-			geometryInfo.boundingBox = geometry.boundingBox.clone();
+			geometryInfo.getBoundingBox = geometry.boundingBox.clone();
 		}
 
 		geometryInfo.boundingSphere = null;
@@ -738,7 +738,7 @@ class BatchedLodMesh extends Mesh {
 				box.expandByPoint(_vector.fromBufferAttribute(position, iv));
 			}
 
-			geometryInfo.boundingBox = box;
+			geometryInfo.getBoundingBox = box;
 		}
 
 		target.copy(geometryInfo.boundingBox);

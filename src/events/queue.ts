@@ -9,11 +9,25 @@ import { AutoInitMap } from "../containers/autoinitmap.ts";
  * ```
  */
 export class EventQueue {
+	protected static instance = new EventQueue;
+
+	static push = EventQueue.instance.push;
+
+	static iterator = EventQueue.instance.iterator;
+
+	static dispatchQueue = EventQueue.instance.dispatchQueue;
+
+	static dispatchAndClear = EventQueue.instance.dispatchAndClear;
+
+	static clear = EventQueue.instance.clear;
+
+	static subscribe = EventQueue.instance.subscribe;
+
 	/**
 	 * Push an event to the queue.
 	 * @param event
 	 */
-	push(event: EventType<any>) {
+	push = (event: EventType<any>) => {
 		if (this.hasFlushed) {
 			this.nextQueue.push(event);
 			return;
@@ -22,16 +36,9 @@ export class EventQueue {
 	}
 
 	/**
-	 * Iterate over the queue.
-	 */
-	public iterator(): IterableIterator<EventType<any>> {
-		return this.queue[Symbol.iterator]();
-	}
-
-	/**
 	 * Dispatch all events in the queue.
 	 */
-	public dispatchQueue() {
+	dispatchQueue = () => {
 		this.hasFlushed = true;
 		for (let event of this.queue) {
 			let listeners = this.listeners.get(event);
@@ -52,7 +59,7 @@ export class EventQueue {
 	/**
 	 * Dispatch all events in the queue and clear it.
 	 */
-	public dispatchAndClear() {
+	dispatchAndClear = () => {
 		this.dispatchQueue();
 		this.clear();
 	}
@@ -60,7 +67,7 @@ export class EventQueue {
 	/**
 	 * Clear the queue.
 	 */
-	public clear() {
+	clear = () => {
 		const temp = this.queue;
 		temp.length = 0;
 		this.queue = this.nextQueue;
@@ -73,10 +80,10 @@ export class EventQueue {
 	 * @param type
 	 * @param listener
 	 */
-	public subscribe<T extends EventType<any>>(
+	subscribe = <T extends EventType<any>>(
 		type: T,
 		listener: (value: T["__type"]) => void,
-	): () => void {
+	): () => void => {
 		this.listeners.get(type).add(listener);
 		return () => void this.unsubscribe(type, listener);
 	}
@@ -86,11 +93,18 @@ export class EventQueue {
 	 * @param type
 	 * @param listener
 	 */
-	public unsubscribe<T extends EventType<any>>(
+	unsubscribe = <T extends EventType<any>>(
 		type: T,
 		listener: (value: T["__type"]) => void,
-	): void {
+	): void => {
 		this.listeners.get(type).delete(listener);
+	}
+
+	/**
+	 * Iterate over the queue.
+	 */
+	iterator = () => {
+		return this.queue[Symbol.iterator]();
 	}
 
 	protected readonly listeners = new AutoInitMap<
@@ -102,5 +116,5 @@ export class EventQueue {
 
 	protected nextQueue: EventType<any>[] = [];
 
-	private hasFlushed = false;
+	protected hasFlushed = false;
 }

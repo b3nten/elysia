@@ -24,8 +24,10 @@ export class Input {
 	};
 
 	static eventHandler = new EventDispatcher;
-	static on = this.eventHandler.addEventListener.bind(this.eventHandler);
-	static off = this.eventHandler.removeEventListener.bind(this.eventHandler);
+
+	static on: EventDispatcher["addEventListener"] = this.eventHandler.addEventListener.bind(this.eventHandler);
+
+	static off: EventDispatcher["removeEventListener"] = this.eventHandler.removeEventListener.bind(this.eventHandler);
 
 	static addWorker = (worker: Worker) => {
 		if(isWorker())
@@ -37,6 +39,7 @@ export class Input {
 	protected static workers = new Set<WorkerProxy>();
 
 	protected static keyMap = new Set<KeyCode | MouseCode>();
+
 	protected static listenMain = () => {
 		elysiaLogger.debug("Listening for input events on main thread.");
 		for (let eventType of ["keydown", "keyup"]) {

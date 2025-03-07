@@ -9,7 +9,15 @@ import type { EventType } from "./event.ts";
  * ```
  */
 export class EventDispatcher {
-	static global = new EventDispatcher();
+	static instance = new EventDispatcher;
+
+	static addEventListener = EventDispatcher.instance.addEventListener;
+
+	static removeEventListener = EventDispatcher.instance.removeEventListener;
+
+	static dispatchEvent = EventDispatcher.instance.dispatchEvent;
+
+	static clear = this.instance.clear;
 
 	/**
 	 * Add an event listener.
@@ -23,8 +31,6 @@ export class EventDispatcher {
 		this.listeners.get(type).add(listener);
 		return () => this.removeEventListener(type, listener);
 	};
-
-	static addEventListener = EventDispatcher.global.addEventListener;
 
 	/**
 	 * Remove an event listener.
@@ -46,8 +52,6 @@ export class EventDispatcher {
 			this.listeners.get(type).delete(listener);
 		}
 	};
-
-	static removeEventListener = EventDispatcher.global.removeEventListener;
 
 	/**
 	 * Dispatch an event.
@@ -76,12 +80,8 @@ export class EventDispatcher {
 		}
 	};
 
-	static dispatchEvent = EventDispatcher.global.dispatchEvent;
-
 	/** Clear all listeners. */
 	clear = () => this.listeners.clear();
-
-	static clear = this.global.clear;
 
 	protected listeners = new AutoInitMap<EventType<any>, Set<Function>>(
 		() => new Set(),

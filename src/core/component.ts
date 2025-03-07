@@ -33,6 +33,17 @@ export class Component implements IObject {
 		return this[ELYSIA_INTERNAL].parent;
 	}
 
+	onStartup?(): void;
+	onBeforeUpdate?(delta: number, elapsed: number): void;
+	onUpdate?(delta: number, elapsed: number): void;
+	onAfterUpdate?(delta: number, elapsed: number): void;
+	onShutdown?(): void;
+	onParent?(parent: IObject): void;
+	onResize?(width: number, height: number): void;
+	onSiblingAdded?(sibling: IObject): void;
+	onSiblingRemoved?(sibling: IObject): void;
+	onTransformChanged?(): void;
+
 	remove() {
 		if(this.parent) {
 			this.parent.removeComponent(this);
