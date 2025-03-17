@@ -39,6 +39,7 @@ export const EBeforeRender = createEvent<void>("elysiatech:Application:beforeRen
 export const EAfterRender = createEvent<void>("elysiatech:Application:afterRender");
 export const ECanvasResize = createEvent<{ x: number, y: number }>("elysiatech:Application:canvasResize");
 export const ESceneLoaded = createEvent<void>("elysiatech:Application:sceneLoaded");
+export const ESceneStarted = createEvent<void>("elysiatech:Application:sceneStarted");
 export const ESceneLoadError = createEvent<void>("elysiatech:Application:sceneLoadError");
 
 export class Application implements IDestructible {
@@ -204,14 +205,14 @@ export class Application implements IDestructible {
 
 			this._renderer?.onSceneLoaded(this.scene);
 
-			this.scene[ELYSIA_INTERNAL].root[ELYSIA_INTERNAL].parent = this.scene[ELYSIA_INTERNAL].root;
-			this.scene[ELYSIA_INTERNAL].root[ELYSIA_INTERNAL].state = ObjectState.Active;
-
 			this._eventDispatcher.dispatchEvent(ESceneLoaded, undefined);
 
-			startActor(this.scene[ELYSIA_INTERNAL].root);
+			for(let a of this.scene[ELYSIA_INTERNAL].actors) {
+				startActor(a);
+			}
 
 			this._started = true;
+			this._eventDispatcher.dispatchEvent(ESceneStarted, undefined);
 
 			if(this.autoUpdate) {
 				this.update();
@@ -275,27 +276,29 @@ export class Application implements IDestructible {
 
 		// update renderer with new size
 		if(this._sizeHasChanged) {
-			this._renderer?.onResize(this._canvasObserver.width, this._canvasObserver.height);
+			this._renderer?.onCanvasResize?.(this._canvasObserver.width, this._canvasObserver.height);
 		}
-
-		let root = this.scene[ELYSIA_INTERNAL].root;
 
 		this._beforeUpdateQueue.dispatchQueue();
 		this._eventDispatcher.dispatchEvent(EBeforeUpdate, undefined);
 
-		preUpdateActor(
-			root,
-			this._clock.delta,
-			this._clock.elapsed,
-			this._sizeHasChanged,
-			this._canvasObserver.width,
-			this._canvasObserver.height
-		);
+		for(let a of this._scene![ELYSIA_INTERNAL].actors) {
+			preUpdateActor(
+				a,
+				this._clock.delta,
+				this._clock.elapsed,
+				this._sizeHasChanged,
+				this._canvasObserver.width,
+				this._canvasObserver.height
+			);
+		}
 
 		this._updateQueue.dispatchQueue();
 		this._eventDispatcher.dispatchEvent(EUpdate, undefined);
 
-		mainUpdateActor(root, this._clock.delta, this._clock.elapsed);
+		for(let a of this._scene![ELYSIA_INTERNAL].actors) {
+			mainUpdateActor(a, this._clock.delta, this._clock.elapsed);
+		}
 
 		this._beforeRenderQueue.dispatchQueue();
 		this._eventDispatcher.dispatchEvent(EBeforeRender, undefined);
@@ -305,7 +308,9 @@ export class Application implements IDestructible {
 		this._afterRenderQueue.dispatchQueue();
 		this._eventDispatcher.dispatchEvent(EAfterRender, undefined);
 
-		postUpdateActor(root, this._clock.delta, this._clock.elapsed);
+		for(let a of this._scene![ELYSIA_INTERNAL].actors) {
+			postUpdateActor(a, this._clock.delta, this._clock.elapsed);
+		}
 
 		this._afterUpdateQueue.dispatchQueue();
 		this._eventDispatcher.dispatchEvent(EAfterUpdate, undefined);

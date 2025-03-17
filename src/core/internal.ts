@@ -1,6 +1,7 @@
 import { createLogger, LogLevel } from "../log/logger.ts";
 import { Actor } from "./actor.ts";
 import { ObjectState } from "./lifecycle.ts";
+import {type Matrix4, Quaternion, Vector3} from "../math/vectors.ts";
 
 export let elysiaLogger = createLogger({
     name: "Elysia",
@@ -26,9 +27,34 @@ export class ElysiaIObjectInternalProperties {
     ctor: any;
     constructor(
         ctor: any,
-        parent: Actor | null = null
+        parent: Actor = ParentContext.get()
     ) {
         this.parent = parent;
         this.ctor = ctor;
     }
+}
+
+export class ParentContext {
+    static get() {
+        let p = this._parent;
+        return p;
+    }
+
+    static set(parent: Actor | null) {
+        this._parent = parent;
+    }
+
+    static reset() {
+        this._parent = null;
+    }
+
+    static _parent: Actor | null = null;
+}
+
+export let posFromMatrix = (matrix: Matrix4) => {
+    let pos = new Vector3;
+    let scale = new Vector3;
+    let quat = new Quaternion;
+    matrix.decompose(pos, quat, scale);
+    return pos;
 }

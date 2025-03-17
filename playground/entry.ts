@@ -4,7 +4,7 @@ document.body.style.width = "100%";
 document.body.style.height = "100vh";
 document.body.style.margin = "0";
 
-const USE_WORKER = true;
+const USE_WORKER = false;
 
 let canvas = document.createElement("canvas");
 canvas.style.width = "100vw"

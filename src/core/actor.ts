@@ -9,7 +9,7 @@ import {
     reparentComponent,
     startComponent, type IBounded
 } from "./lifecycle.ts";
-import { ELYSIA_INTERNAL, ElysiaIObjectInternalProperties } from "./internal.ts";
+import { ELYSIA_INTERNAL, ElysiaIObjectInternalProperties, ParentContext, posFromMatrix } from "./internal.ts";
 import type { Constructor, ReadonlySet, ReadonlyMap } from "../util/types.ts";
 import { Application } from "./application.ts";
 import { BoundingBox, BoundingSphere, Matrix4, Quaternion, Vector3 } from "../math/vectors.ts";
@@ -17,25 +17,11 @@ import { Component } from "./component.ts";
 import { UNSAFE_isCtor } from "../util/asserts.ts";
 import { AutoInitMap } from "../containers/autoinitmap.ts";
 
-export class ElysiaActorInternalProperties extends ElysiaIObjectInternalProperties {
-    children = new Set<Actor>;
-    components = new Map<Constructor<Component>, Component>;
-    position = new Vector3;
-    rotation = new Quaternion;
-    scale = new Vector3;
-    localMatrix = new Matrix4;
-    worldMatrix = new Matrix4;
-    transformIsDirty = false;
-    boundingBox = new BoundingBox;
-    boundingSphere = new BoundingSphere;
-    childrenByTag = new AutoInitMap<any, Set<IObject>>(() => new Set);
-}
-
 export class Actor implements IObject, IBounded {
     static isElysiaActor = true;
 
     static IsActor(a: any): a is Actor & IObject {
-        return a.IsActor;
+        return !!a.isElysiaActor;
     }
 
     get isElysiaActor() {
@@ -54,7 +40,7 @@ export class Actor implements IObject, IBounded {
         return this[ELYSIA_INTERNAL].state !== ObjectState.Destroyed;
     }
 
-    get parent() {
+    get parent(): Actor | null {
         return this[ELYSIA_INTERNAL].parent;
     }
 
@@ -118,11 +104,11 @@ export class Actor implements IObject, IBounded {
     updateMatrices() {
         this[ELYSIA_INTERNAL].localMatrix.compose(this.position, this.rotation, this.scale);
         if(this.parent) {
-            this.parent.updateMatrices();
             this[ELYSIA_INTERNAL].worldMatrix.multiplyMatrices(this.parent.matrixWorld, this.matrix);
         } else {
             this[ELYSIA_INTERNAL].worldMatrix.copy(this.matrix);
         }
+
         this[ELYSIA_INTERNAL].transformIsDirty = false;
     }
 
@@ -145,7 +131,9 @@ export class Actor implements IObject, IBounded {
             }
         }
 
+        ParentContext.set(this);
         let instance: Component = typeof component === "function" ? new component(...args) : component;
+        ParentContext.reset();
 
         reparentComponent(instance, this);
         startComponent(instance);
@@ -198,7 +186,9 @@ export class Actor implements IObject, IBounded {
     }
 
     addChild<T extends Actor | Constructor<Actor>, Args extends any[] = any[]>(child: T, ...args: Args) {
+        ParentContext.set(this);
         let instance: Actor = typeof child === "function" ? new child(...args) : child;
+        ParentContext.reset();
         reparentActor(instance, this);
         startActor(instance);
 
@@ -236,7 +226,7 @@ export class Actor implements IObject, IBounded {
         if(p) {
             p.addChild(this);
         } else {
-            this.scene.add(this);
+            this.scene.addActor(this);
         }
     }
 
@@ -298,4 +288,18 @@ export class Actor implements IObject, IBounded {
     }
 
     [ELYSIA_INTERNAL] = new ElysiaActorInternalProperties(this.constructor)
+}
+
+export class ElysiaActorInternalProperties extends ElysiaIObjectInternalProperties {
+    children = new Set<Actor>;
+    components = new Map<Constructor<Component>, Component>;
+    position = new Vector3;
+    rotation = new Quaternion;
+    scale = new Vector3;
+    localMatrix = new Matrix4;
+    worldMatrix = new Matrix4;
+    transformIsDirty = true;
+    boundingBox = new BoundingBox;
+    boundingSphere = new BoundingSphere;
+    childrenByTag = new AutoInitMap<any, Set<IObject>>(() => new Set);
 }

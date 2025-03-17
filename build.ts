@@ -19,7 +19,7 @@ export let build = async (args: { defines: Record<string, any>, drop: string[] }
 			name: 'resolve-ext',
 			setup(build) {
 				build.onResolve({ filter: /.*/ }, args => {
-					if(exclude.includes(args.path)) return {
+					if(exclude.includes(args.path) || args.path.startsWith("three")) return {
 						path: args.path,
 						external: true
 					}

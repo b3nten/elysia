@@ -37,6 +37,7 @@ export class CThreeObject<T extends Three.Object3D = Three.Object3D> extends Com
     }
 
     override onTransformChanged() {
+        this.parent.updateMatrices();
         this.parent.matrixWorld.decompose(
             this.object3d.position,
             this.object3d.quaternion,

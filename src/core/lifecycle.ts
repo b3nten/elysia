@@ -238,7 +238,7 @@ export let destroyActor = (actor: Actor & IObject, callDestructor = true) => {
 		actor[ELYSIA_INTERNAL].components.clear();
 		actor[ELYSIA_INTERNAL].localMatrix.identity();
 		actor[ELYSIA_INTERNAL].worldMatrix.identity();
-		actor[ELYSIA_INTERNAL].getBoundingBox.reset();
+		actor[ELYSIA_INTERNAL].boundingBox.reset();
 		actor[ELYSIA_INTERNAL].boundingSphere.reset();
 		actor[ELYSIA_INTERNAL].position.onChange = null;
 		actor[ELYSIA_INTERNAL].rotation.onChange = null;

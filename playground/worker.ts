@@ -1,65 +1,42 @@
 import { Application } from "../.dist/core/application"
 import { Scene } from "../.dist/core/scene";
 import { Actor } from "../.dist/core/actor";
-import { Component } from "../.dist/core/component";
+import { ThreeRenderer } from "../.dist/three/renderer";
+import { CThreeObject, CThreePerspectiveCamera } from "../.dist/three/components";
+import * as Three from "three";
+import {ThreeScene} from "../.dist/three/scene";
 
 const app = new Application({
     autoUpdate: true,
-    renderer: undefined,
-    canvas: undefined,
+    renderer: new ThreeRenderer,
+    canvas: document.getElementById("mainCanvas") as HTMLCanvasElement,
 })
 
-class TestComponent extends Component {
-    onStartup() {
-        console.log("Component started")
-    }
-    onResize(width: number, height: number) {
-        console.log("Component resized", width, height)
-    }
-    onShutdown() {
-        console.log("Component shutdown")
-    }
-}
-
-class ChildActor extends Actor {
-    constructor() {
-        super()
-        this.addTag("foo")
-    }
-}
-
-class TestActor extends Actor {
-    onStartup() {
-        console.log("Actor started");
-
-        this.addComponent(TestComponent);
-        this.addChild(ChildActor)
-    }
-
-    onUpdate() {
-        console.log(
-            this.getViaTag("foo")
-        )
-    }
-
-    onShutdown() {
-        console.log("Actor shutdown")
-    }
-}
-
-class TagTestActor extends Actor {
-    onUpdate() {
-        this.scene.getByTag("foo")?.forEach((actor) => {
-            console.log("scene: Actor with tag foo found", actor)
-        })
-    }
-}
-
-class TestScene extends Scene {
+class TestScene extends ThreeScene {
     override onLoad() {
-        console.log("Scene loaded")
-        this.add(TestActor)
-        this.add(TagTestActor)
+        // camera
+        let cameraActor = this.addActor(Actor);
+        let cam = cameraActor.addComponent(CThreePerspectiveCamera);
+        cam.fov = 75;
+        cam.aspect = window.innerWidth / window.innerHeight;
+        cam.near = 0.1;
+        cam.far = 1000;
+        cameraActor.NAME = "camera";
+        cameraActor.position.z = 5;
+
+        // // cube
+        // let cube = this.add(Actor);
+        // cube.addComponent(
+        //     CThreeObject,
+        //     new Three.Mesh(
+        //         new Three.BoxGeometry(1, 1, 1),
+        //         new Three.MeshBasicMaterial({ color: "pink" })
+        //     )
+        // )
+        //
+        // this.threeRoot.add(
+        //     new Three.AmbientLight(0xffffff, 0.5),
+        // )
     }
 }
 
