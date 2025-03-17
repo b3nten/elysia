@@ -1,7 +1,7 @@
 {
   "name": "elysiatech",
   "type": "module",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "scripts": {
     "dev": "cd playground && vite",
     "build": "tsc --rewriteRelativeImportExtensions --project tsconfig.json"
@@ -17,62 +17,63 @@
     "postprocessing": "^6.36.6",
     "three": "^0.172.0"
   },
+  "files": [".dist"],
   "exports": {
     ".": {
-      "import": "./src/mod.js",
-      "types": "./src/mod.d.ts"
+      "import": "./.dist/mod.js",
+      "types": "./.dist/mod.d.ts"
     },
     "./actors": {
-      "import": "./src/Actors/mod.js",
-      "types": "./src/Actors/mod.d.ts"
+      "import": "./.dist/Actors/mod.js",
+      "types": "./.dist/Actors/mod.d.ts"
     },
     "./assets": {
-      "import": "./src/Assets/mod.js",
-      "types": "./src/Assets/mod.d.ts"
+      "import": "./.dist/Assets/mod.js",
+      "types": "./.dist/Assets/mod.d.ts"
     },
     "./audio": {
-      "import": "./src/Audio/mod.js",
-      "types": "./src/Audio/mod.d.ts"
+      "import": "./.dist/Audio/mod.js",
+      "types": "./.dist/Audio/mod.d.ts"
     },
     "./behaviors": {
-      "import": "./src/Behaviors/mod.js",
-      "types": "./src/Behaviors/mod.d.ts"
+      "import": "./.dist/Behaviors/mod.js",
+      "types": "./.dist/Behaviors/mod.d.ts"
     },
     "./containers": {
-      "import": "./src/Containers/mod.js",
-      "types": "./src/Containers/mod.d.ts"
+      "import": "./.dist/Containers/mod.js",
+      "types": "./.dist/Containers/mod.d.ts"
     },
     "./core": {
-      "import": "./src/Core/mod.js",
-      "types": "./src/Core/mod.d.ts"
+      "import": "./.dist/Core/mod.js",
+      "types": "./.dist/Core/mod.d.ts"
     },
     "./events": {
-      "import": "./src/Events/mod.js",
-      "types": "./src/Events/mod.d.ts"
+      "import": "./.dist/Events/mod.js",
+      "types": "./.dist/Events/mod.d.ts"
     },
     "./input": {
-      "import": "./src/Input/mod.js",
-      "types": "./src/Input/mod.d.ts"
+      "import": "./.dist/Input/mod.js",
+      "types": "./.dist/Input/mod.d.ts"
     },
     "./logging": {
-      "import": "./src/Logging/mod.js",
-      "types": "./src/Logging/mod.d.ts"
+      "import": "./.dist/Logging/mod.js",
+      "types": "./.dist/Logging/mod.d.ts"
     },
     "./math": {
-      "import": "./src/Math/mod.js",
-      "types": "./src/Math/mod.d.ts"
+      "import": "./.dist/Math/mod.js",
+      "types": "./.dist/Math/mod.d.ts"
     },
     "./rendering": {
-      "import": "./src/Rendering/mod.js",
-      "types": "./src/Rendering/mod.d.ts"
+      "import": "./.dist/Rendering/mod.js",
+      "types": "./.dist/Rendering/mod.d.ts"
     },
     "./webgl": {
-      "import": "./src/WebGL/mod.js",
-      "types": "./src/WebGL/mod.d.ts"
+      "import": "./.dist/WebGL/mod.js",
+      "types": "./.dist/WebGL/mod.d.ts"
     },
     "./shared/*": {
-      "import": "./src/Shared/*",
-      "types": "./src/Shared/*"
+      "import": "./.dist/Shared/*",
+      "types": "./.dist/Shared/*"
     }
   },
   "packageManager": "pnpm@9.15.2+sha512.93e57b0126f0df74ce6bff29680394c0ba54ec47246b9cf321f0121d8d9bb03f750a705f24edc3c1180853afd7c2c3b94196d0a3d53d3e069d9e2793ef11f321"
