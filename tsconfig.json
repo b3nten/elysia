@@ -6,7 +6,7 @@
     "target": "ES2023",
     "module": "ESNext",
     "declaration": true,
-    "outDir": "dist",
+    "outDir": ".dist",
     "removeComments": true
   },
   "include": ["src/*"]
