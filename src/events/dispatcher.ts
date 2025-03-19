@@ -1,6 +1,8 @@
 import { AutoInitMap } from "../containers/autoinitmap.ts";
 import type { EventType } from "./event.ts";
 
+type RemoveEventListener = () => void;
+
 /**
  * @description LOL
  * @example
@@ -27,7 +29,7 @@ export class EventDispatcher {
 	addEventListener = <T extends EventType<any>>(
 		type: T,
 		listener: (value: T extends EventType<infer U> ? U : never) => void,
-	): (() => void) => {
+	): RemoveEventListener => {
 		this.listeners.get(type).add(listener);
 		return () => this.removeEventListener(type, listener);
 	};

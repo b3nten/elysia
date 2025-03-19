@@ -1,8 +1,8 @@
 import { Component } from "../core/component.ts";
 import * as Three from "three"
 import { BoundingBox, BoundingSphere } from "../math/vectors.ts";
-import type { IBounded } from "../core/lifecycle.ts";
 import { ThreeScene } from "./scene.ts";
+import type {IBounded} from "../core/interfaces.ts";
 
 export class CThreeObject<T extends Three.Object3D = Three.Object3D> extends Component implements IBounded {
     constructor(

@@ -1,22 +1,12 @@
-import {
-	type IDestructible,
-	mainUpdateActor,
-	ObjectState,
-	postUpdateActor,
-	preUpdateActor,
-	startActor
-} from "./lifecycle.ts";
 import type { IRenderer } from "../renderer/mod.ts";
 import { Input } from "../input/mod.ts";
 import type { Scene } from "./scene.ts";
 import { CanvasObserver } from "../util/canvas.ts";
-import { ELYSIA_INTERNAL, elysiaLogger } from "./internal.ts";
 import { Clock } from "./clock.ts";
 import type { Constructor } from "../util/types.ts";
 import { EventQueue } from "../events/queue.ts";
 import { EventDispatcher } from "../events/dispatcher.ts";
 import { createEvent } from "../events/mod.ts";
-
 
 interface ApplicationArgs {
 	/** A renderer that satisfies the Renderer interface */
@@ -42,7 +32,7 @@ export const ESceneLoaded = createEvent<void>("elysiatech:Application:sceneLoade
 export const ESceneStarted = createEvent<void>("elysiatech:Application:sceneStarted");
 export const ESceneLoadError = createEvent<void>("elysiatech:Application:sceneLoadError");
 
-export class Application implements IDestructible {
+export class Application {
 
 	static get instance() {
 		ELYSIA_DEV: if (!Application._instance) {

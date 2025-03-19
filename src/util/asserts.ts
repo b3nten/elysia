@@ -20,6 +20,6 @@ export function isObject(value: any): value is Object {
 	return typeof value === "object" && value !== null;
 }
 
-export function UNSAFE_isCtor<T>(value: any): value is Constructor<T> {
+export function isConstructor<T>(value: any): value is Constructor<T> {
 	return typeof value === "function";
 }

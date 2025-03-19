@@ -1,4 +1,4 @@
-import type { IDestructible } from "../core/lifecycle.ts";
+import type {IDestructible} from "../core/interfaces.ts";
 
 export interface IRenderer extends IDestructible {
 	onCanvasResize(width: number, height: number): void;

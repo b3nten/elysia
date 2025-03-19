@@ -1,7 +1,7 @@
 import { EventDispatcher, createEvent } from "../events/mod.ts";
 import { createWorker, workerMain, type WorkerProxy } from "./worker.ts";
-import type { IDestructible } from "../core/lifecycle.ts";
 import { isWorker } from "./asserts.ts";
+import type {IDestructible} from "../core/interfaces.ts";
 
 export const CanvasResizeEvent = createEvent<{ x: number, y: number }>("elysiatech:CanvasObserver:resize");
 

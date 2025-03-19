@@ -1,4 +1,4 @@
-import { UNSAFE_isCtor } from "./asserts.ts";
+import { isConstructor } from "./asserts.ts";
 import type { Constructor, AbstractConstructor } from "./types.ts";
 
 type InjectResult<T> = T extends abstract new () => infer R ? R : never;
@@ -68,7 +68,7 @@ export class Container {
             if (typeof instance === "function") {
                 let token = DI_REGISTRY.get(instance as Constructor<unknown>);
                 if (token) {
-                    if (UNSAFE_isCtor(instance)) {
+                    if (isConstructor(instance)) {
                         this._ctors.set(token, instance);
                     }
                     else {
@@ -92,7 +92,7 @@ export class Container {
                         `No registered interface found for constructor: ${token.toString()}. You probably forgot to use the @injectable decorator.`,
                     );
                 }
-                if (UNSAFE_isCtor(i)) {
+                if (isConstructor(i)) {
                     this._ctors.set(DI_REGISTRY.get(token)!, i);
                 }
                 else {

@@ -5,7 +5,7 @@ import type { KeyCode, MouseCode } from "./codes.ts";
 import { createEvent } from "../events/event.ts";
 import { EventDispatcher } from "../events/dispatcher.ts";
 
-import {elysiaLogger} from "../core/internal.ts";
+import {elysiaLogger} from "../core/log.ts";
 
 export const MouseEvent = createEvent<
 	events.MouseUpEvent | events.MouseDownEvent | events.MouseMoveEvent
