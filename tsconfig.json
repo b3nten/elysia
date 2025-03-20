@@ -13,6 +13,7 @@
     "types": ["./defines.d.ts"],
     "allowUnusedLabels": true,
     "allowUnreachableCode": true,
+    "noEmitOnError": false,
   },
     "include": ["src/**/*.ts", "./defines.d.ts"],
 }

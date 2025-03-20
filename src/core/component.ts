@@ -1,33 +1,42 @@
-import { type Actor  } from "./actor.ts";
+import type { Actor } from "./actor.ts";
 import { Application } from "./application.ts";
 import { throwDevException } from "../util/exceptions.ts";
-import {Destructible} from "../util/destructible.ts";
+import { Destructible } from "../util/destructible.ts";
+import type { IConstructable } from "./new.ts";
 
 enum ComponentState {
-	Inactive,
-	Active,
-	Destroyed
+	Inactive = 0,
+	Active = 1,
+	Destroyed = 2,
 }
 
-export class Component {
-	static isComponentType(a: any): a is Component { return true; }
+export class Component implements IConstructable {
+	static isComponentType(a: any): a is Component {
+		return true;
+	}
 
 	readonly isComponent = true;
 
 	/**
 	 * Gets the parent actor.
 	 */
-	get parent(): Actor | null { return this._parent; }
+	get parent(): Actor | null {
+		return this._parent;
+	}
 
 	/**
 	 * Gets whether the component is active.
 	 */
-	get active() { return this._componentState === ComponentState.Active; }
+	get active() {
+		return this._componentState === ComponentState.Active;
+	}
 
 	/**
 	 * Gets whether the component is destroyed.
 	 */
-	get destroyed() { return this._componentState === ComponentState.Destroyed; }
+	get destroyed() {
+		return this._componentState === ComponentState.Destroyed;
+	}
 
 	/**
 	 * Gets whether the component is either active or inactive.
@@ -37,7 +46,7 @@ export class Component {
 	}
 
 	destroy() {
-		if(this.destroyed) return;
+		if (this.destroyed) return;
 		Destructible.destroy(this);
 	}
 
@@ -45,19 +54,25 @@ export class Component {
 	 * Gets the application instance.
 	 * @protected
 	 */
-	protected get app() { return Application.instance; }
+	protected get app() {
+		return Application.instance;
+	}
 
 	/**
 	 * Gets the current scene.
 	 * @protected
 	 */
-	protected get scene() { return Application.scene; }
+	protected get scene() {
+		return Application.scene;
+	}
 
 	/**
 	 * Gets the current renderer.
 	 * @protected
 	 */
-	protected get renderer() { return Application.renderer; }
+	protected get renderer() {
+		return Application.renderer;
+	}
 
 	protected constructor() {}
 
@@ -144,14 +159,15 @@ export class Component {
 
 	/** @internal */
 	private _callStartup(): void {
-		if(this.destroyed || this._componentState !== ComponentState.Inactive) return;
+		if (this.destroyed || this._componentState !== ComponentState.Inactive)
+			return;
 		this._componentState = ComponentState.Active;
 		ELYSIA_DEV: try {
 			this.onStartup?.();
-		} catch(e) {
+		} catch (e) {
 			throwDevException(
 				`Error in onStartup callback for ${this.constructor.name}`,
-				e
+				e,
 			);
 		}
 		ELYSIA_PROD: this.onStartup?.();
@@ -159,25 +175,25 @@ export class Component {
 
 	/** @internal */
 	private _callBeforeUpdate(delta: number, elapsed: number): void {
-		if(this.destroyed || !this.active) return;
-		if(this._parentTransformChanged) {
+		if (this.destroyed || !this.active) return;
+		if (this._parentTransformChanged) {
 			this._parentTransformChanged = false;
 			ELYSIA_DEV: try {
 				this.onParentTransformChanged?.();
-			} catch(e) {
+			} catch (e) {
 				throwDevException(
 					`Error in onParentTransformChanged callback for ${this.constructor.name}`,
-					e
-				)
+					e,
+				);
 			}
 			ELYSIA_PROD: this.onParentTransformChanged?.();
 		}
 		ELYSIA_DEV: try {
 			this.onBeforeUpdate?.(delta, elapsed);
-		} catch(e) {
+		} catch (e) {
 			throwDevException(
 				`Error in onBeforeUpdate callback for ${this.constructor.name}`,
-				e
+				e,
 			);
 		}
 		ELYSIA_PROD: this.onBeforeUpdate?.(delta, elapsed);
@@ -185,13 +201,13 @@ export class Component {
 
 	/** @internal */
 	private _callUpdate(delta: number, elapsed: number): void {
-		if(this.destroyed || !this.active) return;
+		if (this.destroyed || !this.active) return;
 		ELYSIA_DEV: try {
 			this.onUpdate?.(delta, elapsed);
-		} catch(e) {
+		} catch (e) {
 			throwDevException(
 				`Error in onUpdate callback for ${this.constructor.name}`,
-				e
+				e,
 			);
 		}
 		ELYSIA_PROD: this.onUpdate?.(delta, elapsed);
@@ -199,13 +215,13 @@ export class Component {
 
 	/** @internal */
 	private _callAfterUpdate(delta: number, elapsed: number): void {
-		if(this.destroyed) return;
+		if (this.destroyed) return;
 		ELYSIA_DEV: try {
 			this.onAfterUpdate?.(delta, elapsed);
-		} catch(e) {
+		} catch (e) {
 			throwDevException(
 				`Error in onAfterUpdate callback for ${this.constructor.name}`,
-				e
+				e,
 			);
 		}
 		ELYSIA_PROD: this.onAfterUpdate?.(delta, elapsed);
@@ -213,13 +229,13 @@ export class Component {
 
 	/** @internal */
 	private _callShutdown(): void {
-		if(this.destroyed) return;
+		if (this.destroyed) return;
 		ELYSIA_DEV: try {
 			this.onShutdown?.();
-		} catch(e) {
+		} catch (e) {
 			throwDevException(
 				`Error in onShutdown callback for ${this.constructor.name}`,
-				e
+				e,
 			);
 		}
 		ELYSIA_PROD: this.onShutdown?.();
@@ -227,13 +243,13 @@ export class Component {
 
 	/** @internal */
 	private _callCanvasResize(width: number, height: number): void {
-		if(this.destroyed || !this.active) return;
+		if (this.destroyed || !this.active) return;
 		ELYSIA_DEV: try {
 			this.onCanvasResize?.(width, height);
-		} catch(e) {
+		} catch (e) {
 			throwDevException(
 				`Error in onCanvasResize callback for ${this.constructor.name}`,
-				e
+				e,
 			);
 		}
 		ELYSIA_PROD: this.onCanvasResize?.(width, height);
@@ -241,42 +257,42 @@ export class Component {
 
 	/** @internal */
 	private _callSiblingAdded(sibling: Actor | Component): void {
-		if(this.destroyed || !this.active) return;
+		if (this.destroyed || !this.active) return;
 		ELYSIA_DEV: try {
 			this.onSiblingAdded?.(sibling);
-		} catch(e) {
+		} catch (e) {
 			throwDevException(
 				`Error in onSiblingAdded callback for ${this.constructor.name}`,
-				e
-			)
+				e,
+			);
 		}
 		ELYSIA_PROD: this.onSiblingAdded?.(sibling);
 	}
 
 	/** @internal */
 	private _callSiblingRemoved(sibling: Actor | Component): void {
-		if(this.destroyed || !this.active) return;
+		if (this.destroyed || !this.active) return;
 		ELYSIA_DEV: try {
 			this.onSiblingRemoved?.(sibling);
-		} catch(e) {
+		} catch (e) {
 			throwDevException(
 				`Error in onSiblingRemoved callback for ${this.constructor.name}`,
-				e
-			)
+				e,
+			);
 		}
 		ELYSIA_PROD: this.onSiblingRemoved?.(sibling);
 	}
 
 	/** @internal */
 	private _callParentTransformChanged(): void {
-		if(this._componentState !== ComponentState.Active) return;
+		if (this._componentState !== ComponentState.Active) return;
 		ELYSIA_DEV: try {
 			this.onParentTransformChanged?.();
-		} catch(e) {
+		} catch (e) {
 			throwDevException(
 				`Error in onParentTransformChanged callback for ${this.constructor.name}`,
-				e
-			)
+				e,
+			);
 		}
 		ELYSIA_PROD: this.onParentTransformChanged?.();
 	}

@@ -1,4 +1,4 @@
-import type {Constructor} from "./types.ts";
+import type { Constructor } from "./types.ts";
 
 export let isWorker = (): boolean => {
 	return (

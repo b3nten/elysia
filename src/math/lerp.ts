@@ -1,12 +1,9 @@
-import type {
-	VectorLike,
-} from "./vectors.ts";
+import type { VectorLike } from "./vectors.ts";
 
 /**
  * Linearly interpolates between two numbers.
  */
-export let lerp = (a: number, b: number, t: number): number =>
-	a + (b - a) * t;
+export let lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 
 /**
  * Smoothly interpolates between two numbers.
@@ -29,7 +26,6 @@ export let lerpSmooth = (
 	delta: number,
 	halflife: number,
 ): number => {
-
 	if (typeof start === "number") {
 		return lerp(
 			start,
@@ -69,4 +65,4 @@ export let lerpSmooth = (
 			-Math.expm1(-(Math.LN2 * delta) / (halflife + 1e-5)),
 		);
 	}
-}
+};

@@ -1,27 +1,34 @@
 import type { Asset } from "./asset.ts";
 import type { Constructor } from "../util/types.ts";
-import {Future} from "../util/future.ts";
-import {EventDispatcher} from "../events/dispatcher.ts";
-import {createEvent} from "../events/mod.ts";
-import {elysiaLogger} from "../core/log.ts";
+import { Future } from "../util/future.ts";
+import { EventDispatcher } from "../events/dispatcher.ts";
+import { createEvent } from "../events/mod.ts";
+import { elysiaLogger } from "../core/log.ts";
 
-export const AssetLoaderProgressEvent = createEvent<number>("Elysia::AssetLoaderProgressEvent");
-export const AssetLoaderErrorEvent = createEvent<Error>("Elysia::AssetLoaderErrorEvent");
-export const AssetLoaderLoadedEvent = createEvent<AssetLoader<any>>("Elysia::AssetLoaderLoadedEvent");
+export const AssetLoaderProgressEvent = createEvent<number>(
+	"Elysia::AssetLoaderProgressEvent",
+);
+export const AssetLoaderErrorEvent = createEvent<Error>(
+	"Elysia::AssetLoaderErrorEvent",
+);
+export const AssetLoaderLoadedEvent = createEvent<AssetLoader<any>>(
+	"Elysia::AssetLoaderLoadedEvent",
+);
 
-export class AssetLoader<A extends Record<string, Asset<any>>> implements Promise<A> {
-
+export class AssetLoader<A extends Record<string, Asset<any>>>
+	implements Promise<A>
+{
 	state: "idle" | "loading" | "loaded" | "error" = "idle";
 
-	promise = new Future<A>;
+	promise = new Future<A>();
 
 	progress = 0;
 
-	protected emitter = new EventDispatcher
+	protected emitter = new EventDispatcher();
 
-	addEventListener = this.emitter.addEventListener.bind(this.emitter)
+	addEventListener = this.emitter.addEventListener.bind(this.emitter);
 
-	removeEventListener = this.emitter.removeEventListener.bind(this.emitter)
+	removeEventListener = this.emitter.removeEventListener.bind(this.emitter);
 
 	constructor(public assets: A) {}
 
@@ -30,27 +37,32 @@ export class AssetLoader<A extends Record<string, Asset<any>>> implements Promis
 	 * @returns {Promise<void> | undefined} A promise that resolves when all assets are loaded, or undefined if already loading/loaded.
 	 */
 	async load() {
-		if (["loaded", "loading", "error"].some(x => this.state === x)) {
+		if (["loaded", "loading", "error"].some((x) => this.state === x)) {
 			return this;
 		}
 
-		DEV: elysiaLogger.debug('Loading assets:', this)
+		DEV: elysiaLogger.debug("Loading assets:", this);
 
 		// load asset
 		this.state = "loading";
 
-		let promises: Promise<unknown>[] = []
+		let promises: Promise<unknown>[] = [];
 		let settled = 0;
 
 		for (const asset of Object.values(this.assets)) {
-			promises.push(asset.load().then((a) => {
-				this.progress = ++settled / promises.length;
-				this.emitter.dispatchEvent(AssetLoaderProgressEvent, this.progress);
-			}).catch((e) => {
-				this.state = "error";
-				this.emitter.dispatchEvent(AssetLoaderErrorEvent, e);
-				this.promise.reject(e);
-			}))
+			promises.push(
+				asset
+					.load()
+					.then((a) => {
+						this.progress = ++settled / promises.length;
+						this.emitter.dispatchEvent(AssetLoaderProgressEvent, this.progress);
+					})
+					.catch((e) => {
+						this.state = "error";
+						this.emitter.dispatchEvent(AssetLoaderErrorEvent, e);
+						this.promise.reject(e);
+					}),
+			);
 		}
 
 		try {
@@ -61,11 +73,14 @@ export class AssetLoader<A extends Record<string, Asset<any>>> implements Promis
 			this.promise.resolve(this.assets);
 		} catch {
 			this.state = "error";
-			this.emitter.dispatchEvent(AssetLoaderErrorEvent, new Error("Failed to load assets"));
+			this.emitter.dispatchEvent(
+				AssetLoaderErrorEvent,
+				new Error("Failed to load assets"),
+			);
 			this.promise.reject();
 		}
 
-		return this.promise
+		return this.promise;
 	}
 
 	unwrap<T extends keyof A>(type: T): NonNullable<A[T]["data"]>;
@@ -73,9 +88,7 @@ export class AssetLoader<A extends Record<string, Asset<any>>> implements Promis
 		type: T,
 		key: string,
 	): NonNullable<InstanceType<T>["data"]>;
-	unwrap<T>(type: T, key?: string) {
-
-	}
+	unwrap<T>(type: T, key?: string) {}
 
 	/**
 	 * Retrieves an asset instance by its key.
@@ -92,14 +105,14 @@ export class AssetLoader<A extends Record<string, Asset<any>>> implements Promis
 	// biome-ignore lint/suspicious/noThenProperty: <explanation>
 	then<TResult1 = A, TResult2 = never>(
 		onfulfilled?: ((value: A) => TResult1 | PromiseLike<TResult1>) | null,
-		onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
+		onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
 	): Promise<TResult1 | TResult2> {
-		if(this.state === "idle") this.load();
+		if (this.state === "idle") this.load();
 		return this.promise.then(onfulfilled, onrejected);
 	}
 
 	catch<TResult = never>(
-		onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null
+		onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null,
 	): Promise<A | TResult> {
 		return this.promise.catch(onrejected) as Promise<A | TResult>;
 	}

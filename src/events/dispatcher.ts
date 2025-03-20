@@ -11,7 +11,7 @@ type RemoveEventListener = () => void;
  * ```
  */
 export class EventDispatcher {
-	static instance = new EventDispatcher;
+	static instance = new EventDispatcher();
 
 	static addEventListener = EventDispatcher.instance.addEventListener;
 

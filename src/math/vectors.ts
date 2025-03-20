@@ -1,6 +1,6 @@
-import {hasKeys} from "../util/asserts.ts";
+import { hasKeys } from "../util/asserts.ts";
 import * as Three from "three";
-import {Actor} from "../core/actor.ts";
+import type { Actor } from "../core/actor.ts";
 
 /**
  * A type that represents a 2D, 3D, or 4D vector.
@@ -46,7 +46,7 @@ export function isVector3Like(obj: any): obj is Vector3Like {
  * @param obj
  */
 export function isVector4Like(obj: any): obj is Vector4Like {
-	return hasKeys(obj, "x", "y", "z", "w")
+	return hasKeys(obj, "x", "y", "z", "w");
 }
 
 /**
@@ -125,9 +125,7 @@ export class Quaternion extends Three.Quaternion implements QuaternionLike {
 	onChange?(): void;
 }
 
-export class Matrix4 extends Three.Matrix4 {
-
-}
+export class Matrix4 extends Three.Matrix4 {}
 
 export class BoundingBox extends Three.Box3 {
 	reset() {

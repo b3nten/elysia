@@ -44,9 +44,7 @@ function isWindows(): boolean {
 }
 
 function hasTTY(): boolean {
-	return toBoolean(
-		globalThis.process?.stdout?.isTTY,
-	);
+	return toBoolean(globalThis.process?.stdout?.isTTY);
 }
 
 function isColorSupported(): boolean {

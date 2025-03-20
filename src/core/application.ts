@@ -1,18 +1,32 @@
 import type { IRenderer } from "../renderer/mod.ts";
 import { Input } from "../input/mod.ts";
-import type { Scene } from "./scene.ts";
+import type { ISceneInternals, Scene } from "./scene.ts";
 import { CanvasObserver } from "../util/canvas.ts";
 import { Clock } from "./clock.ts";
-import type { Constructor } from "../util/types.ts";
 import { EventQueue } from "../events/queue.ts";
 import { EventDispatcher } from "../events/dispatcher.ts";
-import { createEvent } from "../events/mod.ts";
+import { throwDevException } from "../util/exceptions.ts";
+import { elysiaLogger } from "./log.ts";
+import { Destructible } from "../util/destructible.ts";
+import { makeNew } from "./new.ts";
+import type { IActorInternals } from "./actor.ts";
+import {
+	EAfterRender,
+	EAfterUpdate,
+	EBeforeRender,
+	EBeforeUpdate,
+	ECanvasResize,
+	ESceneLoaded,
+	ESceneLoadError,
+	ESceneStarted,
+	EUpdate,
+} from "./events.ts";
 
 interface ApplicationArgs {
 	/** A renderer that satisfies the Renderer interface */
 	renderer: IRenderer;
 	/** The canvas element to render to. */
-	canvas: HTMLCanvasElement;
+	canvas?: HTMLCanvasElement;
 	/**
 	 *  If the application should automatically update.
 	 *  This is useful if you don't have any other logic running
@@ -22,59 +36,46 @@ interface ApplicationArgs {
 	autoUpdate?: boolean;
 }
 
-export const EBeforeUpdate = createEvent<void>("elysiatech:Application:beforeUpdate");
-export const EUpdate = createEvent<void>("elysiatech:Application:update");
-export const EAfterUpdate = createEvent<void>("elysiatech:Application:afterUpdate");
-export const EBeforeRender = createEvent<void>("elysiatech:Application:beforeRender");
-export const EAfterRender = createEvent<void>("elysiatech:Application:afterRender");
-export const ECanvasResize = createEvent<{ x: number, y: number }>("elysiatech:Application:canvasResize");
-export const ESceneLoaded = createEvent<void>("elysiatech:Application:sceneLoaded");
-export const ESceneStarted = createEvent<void>("elysiatech:Application:sceneStarted");
-export const ESceneLoadError = createEvent<void>("elysiatech:Application:sceneLoadError");
-
 export class Application {
-
 	static get instance() {
 		ELYSIA_DEV: if (!Application._instance) {
-			throw Error(
-				"Attempted to access Application instance before it was initialized."
+			throwDevException(
+				"Application instance does not exist. Make sure to create an instance of Application before accessing it.",
 			);
 		}
 		return Application._instance;
 	}
 
 	static get scene() {
-		return Application._instance.scene;
+		return Application.instance._scene;
 	}
 
 	static get renderer() {
 		return Application.instance._renderer;
 	}
 
-	// return destructor
-	static startMainThread = (
-		args: {
-			canvas: HTMLCanvasElement | string;
-			workers: Worker[];
-		}
-	): Function => {
-		let canvasObserver = new CanvasObserver(
+	static startMainThread = (args: {
+		canvas: HTMLCanvasElement | string;
+		workers: Worker[];
+	}): Function => {
+		let canvasObserver = makeNew(
+			CanvasObserver,
 			"mainCanvas",
 			typeof args.canvas === "string"
-				? document.getElementById(args.canvas) as HTMLCanvasElement
-				: args.canvas
+				? (document.getElementById(args.canvas) as HTMLCanvasElement)
+				: args.canvas,
 		);
 
-		args.workers.forEach((w) => (
-			canvasObserver.addWorker(w),
+		args.workers.forEach((w) => {
+			canvasObserver.addWorker(w)
 			Input.addWorker(w)
-			// Audio.addWorker(w),
-		));
+			// Audio.addWorker(w)
+		});
 
 		return () => {
 			canvasObserver.destructor();
-		}
-	}
+		};
+	};
 
 	autoUpdate: boolean;
 
@@ -90,29 +91,8 @@ export class Application {
 		return this._canvasObserver;
 	}
 
-	get paused() {
-		return this._paused;
-	}
-
-	set paused(value: boolean) {
-		if(value && !this._paused) {
-			// pause actors
-		} else if (!value && this._paused) {
-			// play actors
-		}
-		this._paused = value;
-	}
-
 	get clock() {
 		return this._clock;
-	}
-
-	get hasErrored() {
-		return this._hasErrored;
-	}
-
-	get sizeHasChanged() {
-		return this._sizeHasChanged;
 	}
 
 	get started() {
@@ -140,7 +120,7 @@ export class Application {
 	}
 
 	constructor(args: ApplicationArgs) {
-		if(Application._instance) {
+		if (Application._instance) {
 			elysiaLogger.error("An instance of Application already exists.");
 			throw Error("An instance of Application already exists.");
 		}
@@ -151,13 +131,13 @@ export class Application {
 		this._canvas = args.canvas;
 		this.autoUpdate = args.autoUpdate ?? false;
 
-		this._canvasObserver = new CanvasObserver("mainCanvas", this._canvas);
+		this._canvasObserver = makeNew(CanvasObserver, "mainCanvas", this._canvas);
 		this._canvasObserver.onResize(() => {
-			if(this._started) {
+			if (this._started) {
 				this._eventDispatcher.dispatchEvent(ECanvasResize, {
 					x: this._canvasObserver.width,
-					y: this._canvasObserver.height
-				})
+					y: this._canvasObserver.height,
+				});
 				this._sizeHasChanged = true;
 			}
 		});
@@ -165,46 +145,29 @@ export class Application {
 		ELYSIA_DEV: elysiaLogger.success("Application initialized.");
 	}
 
-	destructor() {
-		for (let d of [this._renderer]) {
-			try {
-				d.destructor();
-			} catch (e) {
-				elysiaLogger.error(e);
-			}
-		}
-	}
+	destructor() {}
 
-	loadScene = async (scene: Constructor<Scene>) => {
+	loadScene = async (scene: typeof Scene) => {
 		try {
-			if(this._scene) {
-				await this._sceneLoadPromise;
-				this._scene.destructor();
+			if (this._scene) {
+				Destructible.destroy(this._scene);
 			}
 
 			await this._canvasObserver.sync();
 
-			// auto initializes value
-			new scene();
-
-			this._sceneLoadPromise = this._scene[ELYSIA_INTERNAL].callLoad();
-
-			await this._sceneLoadPromise;
-
-			await this._canvasObserver.sync();
+			makeNew(scene); // implicitly sets Application._scene
 
 			this._renderer?.onSceneLoaded(this.scene);
 
 			this._eventDispatcher.dispatchEvent(ESceneLoaded, undefined);
 
-			for(let a of this.scene[ELYSIA_INTERNAL].actors) {
-				startActor(a);
-			}
-
 			this._started = true;
+
+			(<ISceneInternals>(<unknown>this._scene))._callStart();
+
 			this._eventDispatcher.dispatchEvent(ESceneStarted, undefined);
 
-			if(this.autoUpdate) {
+			if (this.autoUpdate) {
 				this.update();
 			}
 		} catch (e) {
@@ -217,11 +180,11 @@ export class Application {
 		ELYSIA_DEV: {
 			try {
 				this._update();
-			} catch(e) {
+			} catch (e) {
 				elysiaLogger.error(e);
 				this._hasErrored = true;
 			}
-			if(this.autoUpdate && !this._hasErrored) {
+			if (this.autoUpdate && !this._hasErrored) {
 				requestAnimationFrame(this.update);
 			}
 		}
@@ -234,82 +197,104 @@ export class Application {
 		}
 	};
 
-	protected static _instance: Application;
+	private static _instance: Application;
+	private readonly _renderer: IRenderer;
+	private readonly _canvas: HTMLCanvasElement;
+	private readonly _canvasObserver: CanvasObserver;
+	private _hasErrored = false;
+	private _sizeHasChanged = false;
+	private _clock = new Clock();
+	private _paused = false;
+	private _scene?: Scene;
+	private _started = false;
+	private _beforeUpdateQueue = makeNew(EventQueue);
+	private _updateQueue = makeNew(EventQueue);
+	private _afterUpdateQueue = makeNew(EventQueue);
+	private _beforeRenderQueue = makeNew(EventQueue);
+	private _afterRenderQueue = makeNew(EventQueue);
+	private _eventDispatcher = EventDispatcher;
 
-	[ELYSIA_INTERNAL] = {
-		set scene(scene: Scene) {
-			Application._instance._scene = scene;
-		}
-	}
-
-	protected _renderer: IRenderer;
-	protected _canvas: HTMLCanvasElement;
-	protected _canvasObserver: CanvasObserver;
-	protected _hasErrored = false;
-	protected _sizeHasChanged = false;
-	protected _clock = new Clock;
-	protected _paused = false;
-	protected _scene?: Scene;
-	protected _sceneLoadPromise?: Promise<void>
-	protected _started = false;
-	protected _beforeUpdateQueue = new EventQueue;
-	protected _updateQueue = new EventQueue;
-	protected _afterUpdateQueue = new EventQueue;
-	protected _beforeRenderQueue = new EventQueue;
-	protected _afterRenderQueue = new EventQueue;
-	protected _eventDispatcher = new EventDispatcher;
-
-	protected _update = () => {
+	private _update = (userDelta?: number, userElapsed?: number) => {
 		this._clock.capture();
 
-		if(this._paused) return;
+		if (this._paused) return;
 
-		// update renderer with new size
-		if(this._sizeHasChanged) {
-			this._renderer?.onCanvasResize?.(this._canvasObserver.width, this._canvasObserver.height);
+		let actors = (<ISceneInternals>(<unknown>this._scene))._children;
+
+		let time = Object.freeze({
+			delta: userDelta ?? this._clock.delta,
+			elapsed: userElapsed ?? this._clock.elapsed,
+		});
+
+		// call canvas resize events
+		if (this._sizeHasChanged) {
+			let x = this._canvasObserver.width;
+			let y = this._canvasObserver.height;
+
+			this._renderer?.onCanvasResize?.(x, y);
+
+			for (let a of actors) {
+				(<IActorInternals>(<unknown>a))._callCanvasResize(x, y);
+			}
+
+			this._eventDispatcher.dispatchEvent(ECanvasResize, { x, y });
+
+			this._sizeHasChanged = false;
 		}
 
-		this._beforeUpdateQueue.dispatchQueue();
-		this._eventDispatcher.dispatchEvent(EBeforeUpdate, undefined);
+		// @ts-expect-error
+		(<ISceneInternals><unknown>this._scene).onUpdate?.(time.delta, time.elapsed);
 
-		for(let a of this._scene![ELYSIA_INTERNAL].actors) {
-			preUpdateActor(
-				a,
-				this._clock.delta,
-				this._clock.elapsed,
-				this._sizeHasChanged,
-				this._canvasObserver.width,
-				this._canvasObserver.height
+		this._beforeUpdateQueue.dispatchQueue();
+		this._eventDispatcher.dispatchEvent(EBeforeUpdate, time);
+
+		for (let a of actors) {
+			(<IActorInternals>(<unknown>a))._callBeforeUpdate(
+				time.delta,
+				time.elapsed,
 			);
 		}
 
 		this._updateQueue.dispatchQueue();
-		this._eventDispatcher.dispatchEvent(EUpdate, undefined);
+		this._eventDispatcher.dispatchEvent(EUpdate, time);
 
-		for(let a of this._scene![ELYSIA_INTERNAL].actors) {
-			mainUpdateActor(a, this._clock.delta, this._clock.elapsed);
+		for (let a of actors) {
+			(<IActorInternals>(<unknown>a))._callUpdate(time.delta, time.elapsed);
 		}
 
 		this._beforeRenderQueue.dispatchQueue();
-		this._eventDispatcher.dispatchEvent(EBeforeRender, undefined);
+		this._eventDispatcher.dispatchEvent(EBeforeRender, time);
 
-		this._renderer?.onRender(this._clock.delta, this._clock.elapsed);
+		this._renderer?.onRender(time.delta, time.elapsed);
 
 		this._afterRenderQueue.dispatchQueue();
-		this._eventDispatcher.dispatchEvent(EAfterRender, undefined);
+		this._eventDispatcher.dispatchEvent(EAfterRender, time);
 
-		for(let a of this._scene![ELYSIA_INTERNAL].actors) {
-			postUpdateActor(a, this._clock.delta, this._clock.elapsed);
+		for (let a of actors) {
+			(<IActorInternals>(<unknown>a))._callAfterUpdate(
+				time.delta,
+				time.elapsed,
+			);
 		}
 
 		this._afterUpdateQueue.dispatchQueue();
-		this._eventDispatcher.dispatchEvent(EAfterUpdate, undefined);
+		this._eventDispatcher.dispatchEvent(EAfterUpdate, time);
 
-		[	this._beforeUpdateQueue,
+		for (let q of [
+			this._beforeUpdateQueue,
 			this._updateQueue,
 			this._afterUpdateQueue,
 			this._beforeRenderQueue,
-			this._afterRenderQueue
-		].forEach(q => q.clear());
-	}
+			this._afterRenderQueue,
+		]) {
+			q.clear();
+		}
+	};
+}
+
+export interface IApplicationInternals {
+	_scene?: Scene;
+	_renderer: IRenderer;
+	_canvasObserver: CanvasObserver;
+	_clock: Clock;
 }

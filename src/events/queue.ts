@@ -9,7 +9,7 @@ import { AutoInitMap } from "../containers/autoinitmap.ts";
  * ```
  */
 export class EventQueue {
-	protected static instance = new EventQueue;
+	protected static instance = new EventQueue();
 
 	static push = EventQueue.instance.push;
 
@@ -33,7 +33,7 @@ export class EventQueue {
 			return;
 		}
 		this.queue.push(event);
-	}
+	};
 
 	/**
 	 * Dispatch all events in the queue.
@@ -54,7 +54,7 @@ export class EventQueue {
 				}
 			}
 		}
-	}
+	};
 
 	/**
 	 * Dispatch all events in the queue and clear it.
@@ -62,7 +62,7 @@ export class EventQueue {
 	dispatchAndClear = () => {
 		this.dispatchQueue();
 		this.clear();
-	}
+	};
 
 	/**
 	 * Clear the queue.
@@ -73,7 +73,7 @@ export class EventQueue {
 		this.queue = this.nextQueue;
 		this.nextQueue = temp;
 		this.hasFlushed = false;
-	}
+	};
 
 	/**
 	 * Subscribe to an event.
@@ -83,10 +83,10 @@ export class EventQueue {
 	subscribe = <T extends EventType<any>>(
 		type: T,
 		listener: (value: T["__type"]) => void,
-	): () => void => {
+	): (() => void) => {
 		this.listeners.get(type).add(listener);
 		return () => void this.unsubscribe(type, listener);
-	}
+	};
 
 	/**
 	 * Unsubscribe from an event.
@@ -98,14 +98,14 @@ export class EventQueue {
 		listener: (value: T["__type"]) => void,
 	): void => {
 		this.listeners.get(type).delete(listener);
-	}
+	};
 
 	/**
 	 * Iterate over the queue.
 	 */
 	iterator = () => {
 		return this.queue[Symbol.iterator]();
-	}
+	};
 
 	protected readonly listeners = new AutoInitMap<
 		EventType<any>,

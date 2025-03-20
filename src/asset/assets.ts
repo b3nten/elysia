@@ -2,7 +2,10 @@ import { Asset } from "./asset.ts";
 import type { Serializable } from "../util/types.ts";
 import * as Three from "three";
 import { RGBELoader } from "three/examples/jsm/Addons.js";
-import { type GLTF, GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import {
+	type GLTF,
+	GLTFLoader,
+} from "three/examples/jsm/loaders/GLTFLoader.js";
 
 export class TextAsset extends Asset<string> {
 	constructor(private url: string) {
@@ -33,29 +36,19 @@ export class TextureAsset extends Asset<Three.Texture> {
 	}
 	override loadImpl(): Promise<Three.Texture> {
 		return new Promise<Three.Texture>((resolve, reject) => {
-			TextureAsset.TextureLoader.load(
-				this.url,
-				resolve,
-				undefined,
-				reject,
-			);
+			TextureAsset.TextureLoader.load(this.url, resolve, undefined, reject);
 		});
 	}
 }
 
 export class RGBEAsset extends Asset<Three.DataTexture> {
-	static Loader: RGBELoader = new RGBELoader;
+	static Loader: RGBELoader = new RGBELoader();
 	constructor(public url: string) {
 		super();
 	}
 	override loadImpl(): Promise<Three.DataTexture> {
 		return new Promise<Three.DataTexture>((resolve, reject) =>
-			RGBEAsset.Loader.load(
-				this.url,
-				resolve,
-				undefined,
-				reject,
-			),
+			RGBEAsset.Loader.load(this.url, resolve, undefined, reject),
 		);
 	}
 }
@@ -80,7 +73,7 @@ type GLTFAssetType = {
 };
 
 export class GLTFAsset extends Asset<GLTFAssetType> {
-	static GLTFLoader: GLTFLoader = new GLTFLoader;
+	static GLTFLoader: GLTFLoader = new GLTFLoader();
 	constructor(private url: string) {
 		super();
 	}
@@ -103,12 +96,7 @@ export class DataTextureAsset extends Asset<Three.DataTexture> {
 	}
 	override loadImpl(): Promise<Three.DataTexture> {
 		return new Promise<Three.DataTexture>((resolve, reject) =>
-			DataTextureAsset.Loader.load(
-				this.url,
-				resolve,
-				undefined,
-				reject
-			),
+			DataTextureAsset.Loader.load(this.url, resolve, undefined, reject),
 		);
 	}
 }

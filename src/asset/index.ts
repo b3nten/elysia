@@ -1,5 +1,5 @@
-export { Asset } from "./asset.ts"
-export { AssetLoader } from "./loader.ts"
+export { Asset } from "./asset.ts";
+export { AssetLoader } from "./loader.ts";
 export {
 	GLTFAsset,
 	ArrayBufferAsset,
@@ -9,4 +9,4 @@ export {
 	TextAsset,
 	DataTextureAsset,
 	TextureAsset,
-} from "./assets.ts"
+} from "./assets.ts";

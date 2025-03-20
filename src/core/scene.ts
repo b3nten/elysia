@@ -1,113 +1,105 @@
-import { Actor, type IActorInternals } from "./actor.ts";
+import type { Actor, IActorInternals } from "./actor.ts";
 import type { Constructor } from "../util/types.ts";
-import { AutoInitMap } from "../containers/autoinitmap.ts";
+import type { AutoInitMap } from "../containers/autoinitmap.ts";
 import type { ReadonlySet } from "../util/types.ts";
-import { Application } from "./application.ts";
+import { Application, type IApplicationInternals } from "./application.ts";
 import type { Component } from "./component.ts";
 import { Destructible } from "../util/destructible.ts";
+import type { IConstructable } from "./new.ts";
 
 export enum SceneState {
-    Inactive,
-    Active,
-    Ended
+	Inactive = 0,
+	Active = 1,
+	Ended = 2,
 }
 
-export class Scene {
-    readonly userData = new Map<unknown, unknown>;
+export class Scene implements IConstructable {
+	readonly userData = new Map<unknown, unknown>();
 
-    get children(): ReadonlySet<Actor> { return this._children; }
+	get children(): ReadonlySet<Actor> {
+		return this._children;
+	}
 
-    addChild<T extends Actor>(child: T) {
-        if(child.active && child.parent) {
-            child.parent.removeChild(child)
-        } else {
-            return child;
-        }
+	addChild<T extends Actor>(child: T) {
+		if (child.parent) {
+			child.parent.removeChild(child);
+		}
 
-        this._children.add(child);
-        (<IActorInternals><unknown>child)._parent = null;
+		this._children.add(child);
+		(<IActorInternals>(<unknown>child))._parent = null;
 
-        if(this._state === SceneState.Active) {
-            child._callStartup();
-        }
+		if (this._state === SceneState.Active) {
+			child._callStartup();
+		}
 
-        return child;
-    }
+		return child;
+	}
 
-    removeChild<T extends Actor>(child: T): T | null {
-        let removed = this._children.delete(child);
-        if(removed) {
-            child._callShutdown();
-            (<IActorInternals><unknown>child)._parent = null;
-        }
-        return removed ? child : null;
-    }
+	removeChild<T extends Actor>(child: T): T | null {
+		let removed = this._children.delete(child);
+		if (removed) {
+			child._callShutdown();
+			(<IActorInternals>(<unknown>child))._parent = null;
+		}
+		return removed ? child : null;
+	}
 
-    /**
-     * Used to construct Actors and Components.
-     * @param ctor
-     * @param args
-     */
-    make = <T extends Actor | Component, Args extends any[]>(ctor: Constructor<T, Args>, ...args: Args) => {
-        Destructible.modifyPrototype(ctor);
-        return new ctor(...args);
-    }
+	/**
+	 * Used to construct Actors and Components.
+	 * @param ctor
+	 * @param args
+	 */
+	make = <T extends Actor | Component, Args extends any[]>(
+		ctor: Constructor<T, Args>,
+		...args: Args
+	) => {
+		Destructible.modifyPrototype(ctor);
+		return new ctor(...args);
+	};
 
-    static make = <T extends Actor | Component, Args extends any[]>(ctor: Constructor<T, Args>, ...args: Args) => {
-        Destructible.modifyPrototype(ctor);
-        return new ctor(...args);
-    }
+	static make = <T extends Actor | Component, Args extends any[]>(
+		ctor: Constructor<T, Args>,
+		...args: Args
+	) => {
+		Destructible.modifyPrototype(ctor);
+		return new ctor(...args);
+	};
 
-    protected constructor() {
-        Application.instance._scene = this;
-    }
+	protected constructor() {
+		(<IApplicationInternals>(<unknown>Application.instance))._scene = this;
+	}
 
-    protected destructor() {}
+	protected onUpdate?(delta: number, elapsed: number): void;
 
-    private _children = new Set<Actor>;
+	protected destructor() {}
 
-    private _state = SceneState.Inactive;
+	private _children = new Set<Actor>();
 
-    private _callStart() {
-        if(this._state !== SceneState.Inactive) return;
+	private _state = SceneState.Inactive;
 
-        this._state = SceneState.Active;
+	private _callStart() {
+		if (this._state !== SceneState.Inactive) return;
 
-        for(let child of this._children) {
-            child._callStartup();
-        }
-    }
+		this._state = SceneState.Active;
+		for (let child of this._children) {
+			child._callStartup();
+		}
+	}
 
-    private _callUpdate(delta: number, elapsed: number) {
-        if(this._state !== SceneState.Active) return;
-
-        for(let child of this._children) {
-            child._callBeforeUpdate(delta, elapsed);
-        }
-
-        for(let child of this._children) {
-            child._callUpdate(delta, elapsed);
-        }
-
-        for(let child of this._children) {
-            child._callAfterUpdate(delta, elapsed);
-        }
-    }
-
-    private _callEnd() {
-        if(this._state !== SceneState.Active) return;
-        this._state = SceneState.Ended;
-        for(let child of this._children) {
-            child.destroy();
-        }
-        this.userData.clear();
-    }
+	private _callEnd() {
+		if (this._state !== SceneState.Active) return;
+		this._state = SceneState.Ended;
+		for (let child of this._children) {
+			child.destroy();
+		}
+		this.userData.clear();
+	}
 }
 
 export interface ISceneInternals {
-    _children: AutoInitMap<Actor, ReadonlySet<Actor>>;
+	_children: AutoInitMap<Actor, ReadonlySet<Actor>>;
 
-    _callStart(): void;
-    _callUpdate(delta: number, elapsed: number): void;
-    _callEnd(): void;
+	_callStart(): void;
+	_callUpdate(delta: number, elapsed: number): void;
+	_callEnd(): void;
 }

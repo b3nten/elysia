@@ -5,7 +5,7 @@ import type { KeyCode, MouseCode } from "./codes.ts";
 import { createEvent } from "../events/event.ts";
 import { EventDispatcher } from "../events/dispatcher.ts";
 
-import {elysiaLogger} from "../core/log.ts";
+import { elysiaLogger } from "../core/log.ts";
 
 export const MouseEvent = createEvent<
 	events.MouseUpEvent | events.MouseDownEvent | events.MouseMoveEvent
@@ -23,18 +23,19 @@ export class Input {
 		return this.keyMap.has(key);
 	};
 
-	static eventHandler = new EventDispatcher;
+	static eventHandler = new EventDispatcher();
 
-	static on: EventDispatcher["addEventListener"] = this.eventHandler.addEventListener.bind(this.eventHandler);
+	static on: EventDispatcher["addEventListener"] =
+		this.eventHandler.addEventListener.bind(this.eventHandler);
 
-	static off: EventDispatcher["removeEventListener"] = this.eventHandler.removeEventListener.bind(this.eventHandler);
+	static off: EventDispatcher["removeEventListener"] =
+		this.eventHandler.removeEventListener.bind(this.eventHandler);
 
 	static addWorker = (worker: Worker) => {
-		if(isWorker())
-			throw Error("Cannot add worker to Input in a worker.");
+		if (isWorker()) throw Error("Cannot add worker to Input in a worker.");
 
 		this.workers.add(createWorker(worker));
-	}
+	};
 
 	protected static workers = new Set<WorkerProxy>();
 
@@ -47,7 +48,7 @@ export class Input {
 				let event = events.makeKeyEvent(e as KeyboardEvent);
 				Input.onKeyEvent(event);
 				Input.workers.forEach((w) => {
-					w.input.onKeyEvent(event)
+					w.input.onKeyEvent(event);
 				});
 			});
 		}
@@ -56,7 +57,7 @@ export class Input {
 			window.addEventListener(eventType, (e) => {
 				let event = events.makeMouseEvent(e as MouseEvent);
 				Input.workers.forEach((w) => {
-					w.input.onMouseEvent(event)
+					w.input.onMouseEvent(event);
 				});
 				Input.onMouseEvent(event);
 			});
