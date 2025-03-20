@@ -39,7 +39,7 @@ interface ApplicationArgs {
 export class Application {
 	static get instance() {
 		ELYSIA_DEV: if (!Application._instance) {
-			DEV_EXCEPTION(
+			EXCEPTION(
 				"Application instance does not exist. Make sure to create an instance of Application before accessing it.",
 			);
 		}
@@ -89,10 +89,6 @@ export class Application {
 
 	get canvas() {
 		return this._canvasObserver;
-	}
-
-	get clock() {
-		return this._clock;
 	}
 
 	get started() {
@@ -187,7 +183,7 @@ export class Application {
 		ELYSIA_DEV: {
 			this._checkIfDestroyed();
 			try {
-				this._update();
+				this._updateImpl();
 			} catch (e) {
 				this._hasErrored = true;
 				throw Error("Application has errored. Check the console for more information.");
@@ -201,7 +197,7 @@ export class Application {
 			if (this.autoUpdate) {
 				requestAnimationFrame(this.update);
 			}
-			this._update();
+			this._updateImpl();
 		}
 	};
 
@@ -222,7 +218,7 @@ export class Application {
 	private _afterRenderQueue = makeNew(EventQueue);
 	private _eventDispatcher = EventDispatcher;
 
-	private _update = (userDelta?: number, userElapsed?: number) => {
+	private _updateImpl = (userDelta?: number, userElapsed?: number) => {
 		this._clock.capture();
 
 		if (this._paused) return;
@@ -299,7 +295,7 @@ export class Application {
 		}
 	};
 
-	_checkIfDestroyed = () => {
+	private _checkIfDestroyed = () => {
 		if (this._hasErrored) {
 			throw Error("Application has errored. Check the console for more information.");
 		}

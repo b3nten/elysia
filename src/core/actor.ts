@@ -403,15 +403,15 @@ export class Actor implements IBounded, IConstructable {
 	private _boundingBox = new BoundingBox();
 	private _boundingSphere = new BoundingSphere();
 
-	_callStartup(): void {
+	private _callStartup(): void {
 		if (this._actorState !== ActorState.Inactive) return;
 		this._actorState = ActorState.Active;
 
-		ELYSIA_DEV: devCallLifecycle(this, this.onStartup)
+		ELYSIA_DEV: DEV_CALL_LIFECYLE(this, this.onStartup)
 		ELYSIA_PROD: this.onStartup?.();
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: devCallLifecycle(
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(
 				(<IComponentInternals>(<unknown>component)),
 				(<IComponentInternals>(<unknown>component))._callStartup
 			)
@@ -419,28 +419,28 @@ export class Actor implements IBounded, IConstructable {
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: devCallLifecycle(child, child._callStartup)
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(child, child._callStartup)
 			ELYSIA_PROD: child._callStartup();
 		}
 	}
 
-	_callBeforeUpdate(delta: number, elapsed: number): void {
+	private _callBeforeUpdate(delta: number, elapsed: number): void {
 		if (this._actorState !== ActorState.Active) return;
 
 		if (this._transformDirty) {
 			this._transformDirty = false;
-			ELYSIA_DEV: devCallLifecycle(
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(
 				this,
 				this.onTransformChanged
 			)
 			ELYSIA_PROD: this.onTransformChanged?.();
 		}
 
-		ELYSIA_DEV: devCallLifecycle(this, this.onBeforeUpdate, delta, elapsed)
+		ELYSIA_DEV: DEV_CALL_LIFECYLE(this, this.onBeforeUpdate, delta, elapsed)
 		ELYSIA_PROD: this.onBeforeUpdate?.(delta, elapsed);
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: devCallLifecycle(
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(
 				(<IComponentInternals>(<unknown>component)),
 				(<IComponentInternals>(<unknown>component))._callBeforeUpdate,
 				delta,
@@ -452,15 +452,15 @@ export class Actor implements IBounded, IConstructable {
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: devCallLifecycle(child, child._callBeforeUpdate, delta, elapsed)
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(child, child._callBeforeUpdate, delta, elapsed)
 			ELYSIA_PROD: child._callBeforeUpdate(delta, elapsed);
 		}
 	}
 
-	_callUpdate(delta: number, elapsed: number): void {
+	private _callUpdate(delta: number, elapsed: number): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: devCallLifecycle(
+		ELYSIA_DEV: DEV_CALL_LIFECYLE(
 			this,
 			this.onUpdate,
 			delta,
@@ -469,7 +469,7 @@ export class Actor implements IBounded, IConstructable {
 		ELYSIA_PROD: this.onUpdate?.(delta, elapsed);
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: devCallLifecycle(
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(
 				(<IComponentInternals>(<unknown>component)),
 				(<IComponentInternals>(<unknown>component))._callUpdate,
 				delta,
@@ -482,15 +482,15 @@ export class Actor implements IBounded, IConstructable {
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: devCallLifecycle(child, child._callUpdate, delta, elapsed)
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(child, child._callUpdate, delta, elapsed)
 			ELYSIA_PROD: child._callUpdate(delta, elapsed);
 		}
 	}
 
-	_callAfterUpdate(delta: number, elapsed: number): void {
+	private _callAfterUpdate(delta: number, elapsed: number): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: devCallLifecycle(
+		ELYSIA_DEV: DEV_CALL_LIFECYLE(
 			this,
 			this.onAfterUpdate,
 			delta,
@@ -499,7 +499,7 @@ export class Actor implements IBounded, IConstructable {
 		ELYSIA_PROD: this.onAfterUpdate?.(delta, elapsed);
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: devCallLifecycle(
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(
 				(<IComponentInternals>(<unknown>component)),
 				(<IComponentInternals>(<unknown>component))._callAfterUpdate,
 				delta,
@@ -512,7 +512,7 @@ export class Actor implements IBounded, IConstructable {
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: devCallLifecycle(
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(
 				child,
 				child._callAfterUpdate,
 				delta,
@@ -522,12 +522,12 @@ export class Actor implements IBounded, IConstructable {
 		}
 	}
 
-	_callShutdown(): void {
+	private _callShutdown(): void {
 		if (this._actorState !== ActorState.Active) return;
 		this._actorState = ActorState.Destroyed;
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: devCallLifecycle(
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(
 				(<IComponentInternals>(<unknown>component)),
 				(<IComponentInternals>(<unknown>component))._callShutdown
 			)
@@ -535,18 +535,18 @@ export class Actor implements IBounded, IConstructable {
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: devCallLifecycle(child, child._callShutdown);
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(child, child._callShutdown);
 			ELYSIA_PROD: child._callShutdown();
 		}
 
-		ELYSIA_DEV: devCallLifecycle(this, this.onShutdown)
+		ELYSIA_DEV: DEV_CALL_LIFECYLE(this, this.onShutdown)
 		ELYSIA_PROD: this.onShutdown?.();
 	}
 
-	_callCanvasResize(width: number, height: number): void {
+	private _callCanvasResize(width: number, height: number): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: devCallLifecycle(
+		ELYSIA_DEV: DEV_CALL_LIFECYLE(
 			this,
 			this.onCanvasResize,
 			width,
@@ -555,10 +555,10 @@ export class Actor implements IBounded, IConstructable {
 		ELYSIA_PROD: this.onCanvasResize?.(width, height);
 	}
 
-	_callSiblingAdded(sibling: Actor | Component): void {
+	private _callSiblingAdded(sibling: Actor | Component): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: devCallLifecycle(
+		ELYSIA_DEV: DEV_CALL_LIFECYLE(
 			this,
 			this.onSiblingAdded,
 			sibling
@@ -566,10 +566,10 @@ export class Actor implements IBounded, IConstructable {
 		ELYSIA_PROD: this.onSiblingAdded?.(sibling);
 	}
 
-	_callSiblingRemoved(sibling: Actor | Component): void {
+	private _callSiblingRemoved(sibling: Actor | Component): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: devCallLifecycle(
+		ELYSIA_DEV: DEV_CALL_LIFECYLE(
 			this,
 			this.onSiblingRemoved,
 			sibling
@@ -577,10 +577,10 @@ export class Actor implements IBounded, IConstructable {
 		ELYSIA_PROD: this.onSiblingRemoved?.(sibling);
 	}
 
-	_callChildAdded(child: Actor): void {
+	private _callChildAdded(child: Actor): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: devCallLifecycle(
+		ELYSIA_DEV: DEV_CALL_LIFECYLE(
 			this,
 			this.onChildAdded,
 			child
@@ -589,7 +589,7 @@ export class Actor implements IBounded, IConstructable {
 		ELYSIA_PROD: this.onChildAdded?.(child);
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: devCallLifecycle(
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(
 				(<IComponentInternals>(<unknown>component)),
 				(<IComponentInternals>(<unknown>component))._callSiblingAdded,
 				child
@@ -600,7 +600,7 @@ export class Actor implements IBounded, IConstructable {
 		}
 
 		for (let sibling of this._children) {
-			ELYSIA_DEV: devCallLifecycle(
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(
 				sibling,
 				sibling._callSiblingAdded,
 				child
@@ -609,14 +609,14 @@ export class Actor implements IBounded, IConstructable {
 		}
 	}
 
-	_callChildRemoved(child: Actor): void {
+	private _callChildRemoved(child: Actor): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: devCallLifecycle(this, this.onChildRemoved, child);
+		ELYSIA_DEV: DEV_CALL_LIFECYLE(this, this.onChildRemoved, child);
 		ELYSIA_PROD: this.onChildRemoved?.(child);
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: devCallLifecycle(
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(
 				(<IComponentInternals>(<unknown>component)),
 				(<IComponentInternals>(<unknown>component))._callSiblingRemoved,
 				child
@@ -627,19 +627,19 @@ export class Actor implements IBounded, IConstructable {
 		}
 
 		for (let sibling of this._children) {
-			ELYSIA_DEV: devCallLifecycle(sibling, sibling._callSiblingRemoved, child);
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(sibling, sibling._callSiblingRemoved, child);
 			ELYSIA_PROD: sibling._callSiblingRemoved(child);
 		}
 	}
 
-	_callComponentAdded(component: Component): void {
+	private _callComponentAdded(component: Component): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: devCallLifecycle(this, this.onComponentAdded, component);
+		ELYSIA_DEV: DEV_CALL_LIFECYLE(this, this.onComponentAdded, component);
 		ELYSIA_PROD: this.onComponentAdded?.(component);
 
 		for (let childComponent of this._components.values()) {
-			ELYSIA_DEV: devCallLifecycle(
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(
 				(<IComponentInternals>(<unknown>childComponent)),
 				(<IComponentInternals>(<unknown>childComponent))._callSiblingAdded,
 				component
@@ -650,7 +650,7 @@ export class Actor implements IBounded, IConstructable {
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: devCallLifecycle(
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(
 				child,
 				child._callSiblingAdded,
 				component
@@ -659,14 +659,14 @@ export class Actor implements IBounded, IConstructable {
 		}
 	}
 
-	_callComponentRemoved(component: Component): void {
+	private _callComponentRemoved(component: Component): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: devCallLifecycle(this, this.onComponentRemoved, component);
+		ELYSIA_DEV: DEV_CALL_LIFECYLE(this, this.onComponentRemoved, component);
 		ELYSIA_PROD: this.onComponentRemoved?.(component);
 
 		for (let childComponent of this._components.values()) {
-			ELYSIA_DEV: devCallLifecycle(
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(
 				(<IComponentInternals>(<unknown>childComponent)),
 				(<IComponentInternals>(<unknown>childComponent))._callSiblingRemoved,
 				component
@@ -678,32 +678,11 @@ export class Actor implements IBounded, IConstructable {
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: devCallLifecycle(child, child._callSiblingRemoved, component);
+			ELYSIA_DEV: DEV_CALL_LIFECYLE(child, child._callSiblingRemoved, component);
 			ELYSIA_PROD: child._callSiblingRemoved(component);
 		}
 	}
 }
-
-let devCallLifecycle = <T extends (...args: any) => any>(
-	root: any,
-	method: T,
-	...args: Parameters<T>
-) => {
-	if(!method) return;
-	try {
-		method.apply(root, args);
-		return;
-	} catch (e) {
-		DEV_EXCEPTION(
-			`in ${method.name} for ${root.constructor.name}`,
-			{
-				error: e,
-				actor: root
-			}
-		)
-	}
-}
-
 
 export interface IActorInternals {
 	_parent: Actor | null;
@@ -730,4 +709,23 @@ export interface IActorInternals {
 	_callChildRemoved(child: Actor): void;
 	_callComponentAdded(component: Component): void;
 	_callComponentRemoved(component: Component): void;
+}
+
+let DEV_CALL_LIFECYLE = <T extends (...args: any) => any>(
+	root: any,
+	method: T,
+	...args: Parameters<T>
+) => {
+	if(!method) return;
+	try {
+		return method.apply(root, args);
+	} catch (e) {
+		DEV_EXCEPTION(
+			`in ${method.name} for ${root.constructor.name}`,
+			{
+				error: e,
+				actor: root
+			}
+		)
+	}
 }

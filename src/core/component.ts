@@ -166,7 +166,7 @@ export class Component implements IConstructable {
 		if (this.destroyed || this._componentState !== ComponentState.Inactive)
 			return;
 		this._componentState = ComponentState.Active;
-		ELYSIA_DEV: callLifecycle(this, this.onStartup);
+		ELYSIA_DEV: DEV_CALL_LIFECYCLE(this, this.onStartup);
 		ELYSIA_PROD: this.onStartup?.();
 	}
 
@@ -175,80 +175,60 @@ export class Component implements IConstructable {
 		if (this.destroyed || !this.active) return;
 		if (this._parentTransformChanged) {
 			this._parentTransformChanged = false;
-			ELYSIA_DEV: callLifecycle(this, this.onParentTransformChanged);
+			ELYSIA_DEV: DEV_CALL_LIFECYCLE(this, this.onParentTransformChanged);
 			ELYSIA_PROD: this.onParentTransformChanged?.();
 		}
-		ELYSIA_DEV: callLifecycle(this, this.onBeforeUpdate, delta, elapsed);
+		ELYSIA_DEV: DEV_CALL_LIFECYCLE(this, this.onBeforeUpdate, delta, elapsed);
 		ELYSIA_PROD: this.onBeforeUpdate?.(delta, elapsed);
 	}
 
 	/** @internal */
 	private _callUpdate(delta: number, elapsed: number): void {
 		if (this.destroyed || !this.active) return;
-		ELYSIA_DEV: callLifecycle(this, this.onUpdate, delta, elapsed);
+		ELYSIA_DEV: DEV_CALL_LIFECYCLE(this, this.onUpdate, delta, elapsed);
 		ELYSIA_PROD: this.onUpdate?.(delta, elapsed);
 	}
 
 	/** @internal */
 	private _callAfterUpdate(delta: number, elapsed: number): void {
 		if (this.destroyed) return;
-		ELYSIA_DEV: callLifecycle(this, this.onAfterUpdate, delta, elapsed);
+		ELYSIA_DEV: DEV_CALL_LIFECYCLE(this, this.onAfterUpdate, delta, elapsed);
 		ELYSIA_PROD: this.onAfterUpdate?.(delta, elapsed);
 	}
 
 	/** @internal */
 	private _callShutdown(): void {
 		if (this.destroyed) return;
-		ELYSIA_DEV: callLifecycle(this, this.onShutdown);
+		ELYSIA_DEV: DEV_CALL_LIFECYCLE(this, this.onShutdown);
 		ELYSIA_PROD: this.onShutdown?.();
 	}
 
 	/** @internal */
 	private _callCanvasResize(width: number, height: number): void {
 		if (this.destroyed || !this.active) return;
-		ELYSIA_DEV: callLifecycle(this, this.onCanvasResize, width, height);
+		ELYSIA_DEV: DEV_CALL_LIFECYCLE(this, this.onCanvasResize, width, height);
 		ELYSIA_PROD: this.onCanvasResize?.(width, height);
 	}
 
 	/** @internal */
 	private _callSiblingAdded(sibling: Actor | Component): void {
 		if (this.destroyed || !this.active) return;
-		ELYSIA_DEV: callLifecycle(this, this.onSiblingAdded, sibling);
+		ELYSIA_DEV: DEV_CALL_LIFECYCLE(this, this.onSiblingAdded, sibling);
 		ELYSIA_PROD: this.onSiblingAdded?.(sibling);
 	}
 
 	/** @internal */
 	private _callSiblingRemoved(sibling: Actor | Component): void {
 		if (this.destroyed || !this.active) return;
-		ELYSIA_DEV: callLifecycle(this, this.onSiblingRemoved, sibling);
+		ELYSIA_DEV: DEV_CALL_LIFECYCLE(this, this.onSiblingRemoved, sibling);
 		ELYSIA_PROD: this.onSiblingRemoved?.(sibling);
 	}
 
 	/** @internal */
 	private _callParentTransformChanged(): void {
 		if (this._componentState !== ComponentState.Active) return;
-		ELYSIA_DEV: callLifecycle(this, this.onParentTransformChanged);
+		ELYSIA_DEV: DEV_CALL_LIFECYCLE(this, this.onParentTransformChanged);
 		ELYSIA_PROD: this.onParentTransformChanged?.();
-	}
-}
-
-let callLifecycle = <T extends (...args: any) => any>(
-	root: any,
-	method: T,
-	...args: Parameters<T>
-) => {
-	if(!method) return;
-	try {
-		method.apply(root, args);
-		return;
-	} catch (e) {
-		DEV_EXCEPTION(
-			`in ${method.name} for ${root.constructor.name}`,
-			{
-				error: e,
-				component: root
-			}
-		)
 	}
 }
 
@@ -266,4 +246,23 @@ export interface IComponentInternals {
 	_callSiblingAdded(sibling: Actor | Component): void;
 	_callSiblingRemoved(sibling: Actor | Component): void;
 	_callParentTransformChanged(): void;
+}
+
+let DEV_CALL_LIFECYCLE = <T extends (...args: any) => any>(
+	root: any,
+	method: T,
+	...args: Parameters<T>
+) => {
+	if(!method) return;
+	try {
+		return method.apply(root, args);
+	} catch (e) {
+		DEV_EXCEPTION(
+			`in ${method.name} for ${root.constructor.name}`,
+			{
+				error: e,
+				component: root
+			}
+		)
+	}
 }
