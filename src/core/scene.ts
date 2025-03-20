@@ -1,11 +1,9 @@
-import type { Actor, IActorInternals } from "./actor.ts";
-import type { Constructor } from "../util/types.ts";
+import { Actor, type IActorInternals } from "./actor.ts";
 import type { AutoInitMap } from "../containers/autoinitmap.ts";
 import type { ReadonlySet } from "../util/types.ts";
 import { Application, type IApplicationInternals } from "./application.ts";
-import type { Component } from "./component.ts";
-import { Destructible } from "../util/destructible.ts";
 import type { IConstructable } from "./new.ts";
+import { EXCEPTION } from "../util/exceptions.ts";
 
 export enum SceneState {
 	Inactive = 0,
@@ -21,6 +19,13 @@ export class Scene implements IConstructable {
 	}
 
 	addChild<T extends Actor>(child: T) {
+		if(!(child instanceof Actor)) {
+			EXCEPTION(
+				"Cannot add non-actor to scene",
+				{ child }
+			)
+		}
+
 		if (child.parent) {
 			child.parent.removeChild(child);
 		}
@@ -44,34 +49,13 @@ export class Scene implements IConstructable {
 		return removed ? child : null;
 	}
 
-	/**
-	 * Used to construct Actors and Components.
-	 * @param ctor
-	 * @param args
-	 */
-	make = <T extends Actor | Component, Args extends any[]>(
-		ctor: Constructor<T, Args>,
-		...args: Args
-	) => {
-		Destructible.modifyPrototype(ctor);
-		return new ctor(...args);
-	};
-
-	static make = <T extends Actor | Component, Args extends any[]>(
-		ctor: Constructor<T, Args>,
-		...args: Args
-	) => {
-		Destructible.modifyPrototype(ctor);
-		return new ctor(...args);
-	};
-
 	protected constructor() {
 		(<IApplicationInternals>(<unknown>Application.instance))._scene = this;
 	}
 
 	protected onUpdate?(delta: number, elapsed: number): void;
 
-	protected destructor() {}
+	protected destructor?(): void;
 
 	private _children = new Set<Actor>();
 

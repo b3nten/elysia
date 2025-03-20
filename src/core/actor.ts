@@ -10,9 +10,10 @@ import {
 import type { Component, IComponentInternals } from "./component.ts";
 import { isConstructor } from "../util/asserts.ts";
 import type { IBounded } from "./interfaces.ts";
-import { throwDevException } from "../util/exceptions.ts";
+import { DEV_EXCEPTION, EXCEPTION } from "../util/exceptions.ts";
 import { Destructible } from "../util/destructible.ts";
 import type { IConstructable } from "./new.ts";
+import { elysiaLogger } from "./log.ts";
 
 export enum ActorState {
 	Inactive = 0,
@@ -109,9 +110,10 @@ export class Actor implements IBounded, IConstructable {
 
 	addComponent<T extends Component>(component: T): T {
 		if (this._components.has(<Constructor<T>>component.constructor)) {
-			throw new Error(
-				`Component ${component.constructor.name} already exists on Actor ${this.constructor.name}`,
-			);
+			EXCEPTION(
+				"Cannot add multiple components of the same type",
+				{ component, actor: this }
+			)
 		}
 
 		if (component.active) {
@@ -159,8 +161,30 @@ export class Actor implements IBounded, IConstructable {
 		return component;
 	}
 
-	addChild<T extends Actor>(child: T) {
+	addChild<T extends Actor>(child: T): T {
+		if(!(child instanceof Actor)) {
+			EXCEPTION(
+				"Cannot add non-actor to actor",
+				{ child, actor: this }
+			)
+		}
+
+		// @ts-expect-error double check
+		if(child === this) {
+			EXCEPTION(
+				"Cannot add actor to itself",
+				{ child, actor: this }
+			)
+		}
+
 		if (child.parent === this) {
+			ELYSIA_DEV: elysiaLogger.warn(
+				`attempted to add an Actor to its parent`,
+				{
+					actor: this,
+					child,
+				}
+			)
 			return child;
 		}
 
@@ -185,6 +209,14 @@ export class Actor implements IBounded, IConstructable {
 			child._callShutdown();
 			(<IActorInternals>(<unknown>child))._parent = null;
 			this._callChildRemoved(child);
+		} else {
+			ELYSIA_DEV: elysiaLogger.warn(
+				`attempted to remove a child that is not a child of this Actor`,
+				{
+					actor: this,
+					child,
+				}
+			)
 		}
 		return removed ? child : null;
 	}
@@ -194,9 +226,12 @@ export class Actor implements IBounded, IConstructable {
 			ELYSIA_DEV: try {
 				component[event]?.(...args);
 			} catch (e) {
-				throwDevException(
-					`Component ${component.constructor.name} event handler threw an error: ${e}`,
-					e,
+				DEV_EXCEPTION(
+					`component ${component.constructor.name} event handler threw an error`,
+					{
+						component,
+						error: e,
+					}
 				);
 			}
 			ELYSIA_PROD: component[event]?.(...args);
@@ -208,9 +243,12 @@ export class Actor implements IBounded, IConstructable {
 			ELYSIA_DEV: try {
 				child[event]?.(...args);
 			} catch (e) {
-				throwDevException(
-					`Child ${child.constructor.name} event handler threw an error: ${e}`,
-					e,
+				DEV_EXCEPTION(
+					`child ${child.constructor.name} event handler threw an error`,
+					{
+						child,
+						error: e,
+					}
 				);
 			}
 			ELYSIA_PROD: child[event]?.(...args);
@@ -223,7 +261,13 @@ export class Actor implements IBounded, IConstructable {
 	}
 
 	destroy() {
-		if (this._actorState === ActorState.Destroyed) return;
+		if (this._actorState === ActorState.Destroyed) {
+			ELYSIA_DEV: elysiaLogger.warn(
+				"attempted to destroy an already destroyed Actor",
+				{ actor: this }
+			)
+			return;
+		}
 		if(this._actorState === ActorState.Active) {
 			this._callShutdown();
 		}
@@ -363,37 +407,19 @@ export class Actor implements IBounded, IConstructable {
 		if (this._actorState !== ActorState.Inactive) return;
 		this._actorState = ActorState.Active;
 
-		ELYSIA_DEV: try {
-			this.onStartup?.();
-		} catch (e) {
-			throwDevException(
-				`Error in onStartup callback for ${this.constructor.name}`,
-				e,
-			);
-		}
+		ELYSIA_DEV: devCallLifecycle(this, this.onStartup)
 		ELYSIA_PROD: this.onStartup?.();
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: try {
-				(<IComponentInternals>(<unknown>component))._callStartup();
-			} catch (e) {
-				throwDevException(
-					`Error in onStartup callback for ${component.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(
+				(<IComponentInternals>(<unknown>component)),
+				(<IComponentInternals>(<unknown>component))._callStartup
+			)
 			ELYSIA_PROD: (<IComponentInternals>(<unknown>component))._callStartup();
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: try {
-				child._callStartup();
-			} catch (e) {
-				throwDevException(
-					`Error in onStartup callback for ${child.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(child, child._callStartup)
 			ELYSIA_PROD: child._callStartup();
 		}
 	}
@@ -403,53 +429,30 @@ export class Actor implements IBounded, IConstructable {
 
 		if (this._transformDirty) {
 			this._transformDirty = false;
-			ELYSIA_DEV: try {
-				this.onTransformChanged?.();
-			} catch (e) {
-				throwDevException(
-					`Error in onTransformChanged callback for ${this.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(
+				this,
+				this.onTransformChanged
+			)
 			ELYSIA_PROD: this.onTransformChanged?.();
 		}
 
-		ELYSIA_DEV: try {
-			this.onBeforeUpdate?.(delta, elapsed);
-		} catch (e) {
-			throwDevException(
-				`Error in onBeforeUpdate callback for ${this.constructor.name}`,
-				e,
-			);
-		}
+		ELYSIA_DEV: devCallLifecycle(this, this.onBeforeUpdate, delta, elapsed)
 		ELYSIA_PROD: this.onBeforeUpdate?.(delta, elapsed);
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: try {
-				(<IComponentInternals>(<unknown>component))._callBeforeUpdate(
-					delta,
-					elapsed,
-				);
-			} catch (e) {
-				throwDevException(
-					`Error in onBeforeUpdate callback for ${component.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(
+				(<IComponentInternals>(<unknown>component)),
+				(<IComponentInternals>(<unknown>component))._callBeforeUpdate,
+				delta,
+				elapsed
+			)
 			ELYSIA_PROD: (<IComponentInternals>(
 				(<unknown>component)
 			))._callBeforeUpdate(delta, elapsed);
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: try {
-				child._callBeforeUpdate(delta, elapsed);
-			} catch (e) {
-				throwDevException(
-					`Error in onBeforeUpdate callback for ${child.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(child, child._callBeforeUpdate, delta, elapsed)
 			ELYSIA_PROD: child._callBeforeUpdate(delta, elapsed);
 		}
 	}
@@ -457,25 +460,21 @@ export class Actor implements IBounded, IConstructable {
 	_callUpdate(delta: number, elapsed: number): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: try {
-			this.onUpdate?.(delta, elapsed);
-		} catch (e) {
-			throwDevException(
-				`Error in onUpdate callback for ${this.constructor.name}`,
-				e,
-			);
-		}
+		ELYSIA_DEV: devCallLifecycle(
+			this,
+			this.onUpdate,
+			delta,
+			elapsed
+		)
 		ELYSIA_PROD: this.onUpdate?.(delta, elapsed);
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: try {
-				(<IComponentInternals>(<unknown>component))._callUpdate(delta, elapsed);
-			} catch (e) {
-				throwDevException(
-					`Error in onUpdate callback for ${component.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(
+				(<IComponentInternals>(<unknown>component)),
+				(<IComponentInternals>(<unknown>component))._callUpdate,
+				delta,
+				elapsed
+			)
 			ELYSIA_PROD: (<IComponentInternals>(<unknown>component))._callUpdate(
 				delta,
 				elapsed,
@@ -483,14 +482,7 @@ export class Actor implements IBounded, IConstructable {
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: try {
-				child._callUpdate(delta, elapsed);
-			} catch (e) {
-				throwDevException(
-					`Error in onUpdate callback for ${child.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(child, child._callUpdate, delta, elapsed)
 			ELYSIA_PROD: child._callUpdate(delta, elapsed);
 		}
 	}
@@ -498,28 +490,21 @@ export class Actor implements IBounded, IConstructable {
 	_callAfterUpdate(delta: number, elapsed: number): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: try {
-			this.onAfterUpdate?.(delta, elapsed);
-		} catch (e) {
-			throwDevException(
-				`Error in onAfterUpdate callback for ${this.constructor.name}`,
-				e,
-			);
-		}
+		ELYSIA_DEV: devCallLifecycle(
+			this,
+			this.onAfterUpdate,
+			delta,
+			elapsed
+		)
 		ELYSIA_PROD: this.onAfterUpdate?.(delta, elapsed);
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: try {
-				(<IComponentInternals>(<unknown>component))._callAfterUpdate(
-					delta,
-					elapsed,
-				);
-			} catch (e) {
-				throwDevException(
-					`Error in onAfterUpdate callback for ${component.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(
+				(<IComponentInternals>(<unknown>component)),
+				(<IComponentInternals>(<unknown>component))._callAfterUpdate,
+				delta,
+				elapsed
+			)
 			ELYSIA_PROD: (<IComponentInternals>(<unknown>component))._callAfterUpdate(
 				delta,
 				elapsed,
@@ -527,14 +512,12 @@ export class Actor implements IBounded, IConstructable {
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: try {
-				child._callAfterUpdate(delta, elapsed);
-			} catch (e) {
-				throwDevException(
-					`Error in onAfterUpdate callback for ${child.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(
+				child,
+				child._callAfterUpdate,
+				delta,
+				elapsed
+			)
 			ELYSIA_PROD: child._callAfterUpdate(delta, elapsed);
 		}
 	}
@@ -544,117 +527,84 @@ export class Actor implements IBounded, IConstructable {
 		this._actorState = ActorState.Destroyed;
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: try {
-				(<IComponentInternals>(<unknown>component))._callShutdown();
-			} catch (e) {
-				throwDevException(
-					`Error in onShutdown callback for ${component.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(
+				(<IComponentInternals>(<unknown>component)),
+				(<IComponentInternals>(<unknown>component))._callShutdown
+			)
 			ELYSIA_PROD: (<IComponentInternals>(<unknown>component))._callShutdown();
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: try {
-				child._callShutdown();
-			} catch (e) {
-				throwDevException(
-					`Error in onShutdown callback for ${child.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(child, child._callShutdown);
 			ELYSIA_PROD: child._callShutdown();
 		}
 
-		ELYSIA_DEV: try {
-			this.onShutdown?.();
-		} catch (e) {
-			throwDevException(
-				`Error in onShutdown callback for ${this.constructor.name}`,
-				e,
-			);
-		}
+		ELYSIA_DEV: devCallLifecycle(this, this.onShutdown)
 		ELYSIA_PROD: this.onShutdown?.();
 	}
 
 	_callCanvasResize(width: number, height: number): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: try {
-			this.onCanvasResize?.(width, height);
-		} catch (e) {
-			throwDevException(
-				`Error in onCanvasResize callback for ${this.constructor.name}`,
-				e,
-			);
-		}
+		ELYSIA_DEV: devCallLifecycle(
+			this,
+			this.onCanvasResize,
+			width,
+			height
+		)
 		ELYSIA_PROD: this.onCanvasResize?.(width, height);
 	}
 
 	_callSiblingAdded(sibling: Actor | Component): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: try {
-			this.onSiblingAdded?.(sibling);
-		} catch (e) {
-			throwDevException(
-				`Error in onSiblingAdded callback for ${this.constructor.name}`,
-				e,
-			);
-		}
+		ELYSIA_DEV: devCallLifecycle(
+			this,
+			this.onSiblingAdded,
+			sibling
+		)
 		ELYSIA_PROD: this.onSiblingAdded?.(sibling);
 	}
 
 	_callSiblingRemoved(sibling: Actor | Component): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: try {
-			this.onSiblingRemoved?.(sibling);
-		} catch (e) {
-			throwDevException(
-				`Error in onSiblingRemoved callback for ${this.constructor.name}`,
-				e,
-			);
-		}
+		ELYSIA_DEV: devCallLifecycle(
+			this,
+			this.onSiblingRemoved,
+			sibling
+		)
 		ELYSIA_PROD: this.onSiblingRemoved?.(sibling);
 	}
 
 	_callChildAdded(child: Actor): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: try {
-			this.onChildAdded?.(child);
-		} catch (e) {
-			throwDevException(
-				`Error in onChildAdded callback for ${this.constructor.name}`,
-				e,
-			);
-		}
+		ELYSIA_DEV: devCallLifecycle(
+			this,
+			this.onChildAdded,
+			child
+		)
+
+		ELYSIA_PROD: this.onChildAdded?.(child);
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: try {
-				(<IComponentInternals>(<unknown>component))._callSiblingAdded(child);
-			} catch (e) {
-				throwDevException(
-					`Error in onChildAdded callback for ${component.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(
+				(<IComponentInternals>(<unknown>component)),
+				(<IComponentInternals>(<unknown>component))._callSiblingAdded,
+				child
+			)
 			ELYSIA_PROD: (<IComponentInternals>(
 				(<unknown>component)
 			))._callSiblingAdded(child);
 		}
 
 		for (let sibling of this._children) {
-			ELYSIA_DEV: try {
-				sibling._callSiblingAdded(child);
-			} catch (e) {
-				throwDevException(
-					`Error in onChildAdded callback for ${sibling.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(
+				sibling,
+				sibling._callSiblingAdded,
+				child
+			)
 			ELYSIA_PROD: sibling._callSiblingAdded(child);
 		}
 	}
@@ -662,38 +612,22 @@ export class Actor implements IBounded, IConstructable {
 	_callChildRemoved(child: Actor): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: try {
-			this.onChildRemoved?.(child);
-		} catch (e) {
-			throwDevException(
-				`Error in onChildRemoved callback for ${this.constructor.name}`,
-				e,
-			);
-		}
+		ELYSIA_DEV: devCallLifecycle(this, this.onChildRemoved, child);
+		ELYSIA_PROD: this.onChildRemoved?.(child);
 
 		for (let component of this._components.values()) {
-			ELYSIA_DEV: try {
-				(<IComponentInternals>(<unknown>component))._callSiblingRemoved(child);
-			} catch (e) {
-				throwDevException(
-					`Error in onChildRemoved callback for ${component.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(
+				(<IComponentInternals>(<unknown>component)),
+				(<IComponentInternals>(<unknown>component))._callSiblingRemoved,
+				child
+			)
 			ELYSIA_PROD: (<IComponentInternals>(
 				(<unknown>component)
 			))._callSiblingRemoved(child);
 		}
 
 		for (let sibling of this._children) {
-			ELYSIA_DEV: try {
-				sibling._callSiblingRemoved(child);
-			} catch (e) {
-				throwDevException(
-					`Error in onChildRemoved callback for ${sibling.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(sibling, sibling._callSiblingRemoved, child);
 			ELYSIA_PROD: sibling._callSiblingRemoved(child);
 		}
 	}
@@ -701,41 +635,26 @@ export class Actor implements IBounded, IConstructable {
 	_callComponentAdded(component: Component): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: try {
-			this.onComponentAdded?.(component);
-		} catch (e) {
-			throwDevException(
-				`Error in onComponentAdded callback for ${this.constructor.name}`,
-				e,
-			);
-		}
+		ELYSIA_DEV: devCallLifecycle(this, this.onComponentAdded, component);
 		ELYSIA_PROD: this.onComponentAdded?.(component);
 
 		for (let childComponent of this._components.values()) {
-			ELYSIA_DEV: try {
-				(<IComponentInternals>(<unknown>childComponent))._callSiblingAdded(
-					component,
-				);
-			} catch (e) {
-				throwDevException(
-					`Error in onComponentAdded callback for ${childComponent.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(
+				(<IComponentInternals>(<unknown>childComponent)),
+				(<IComponentInternals>(<unknown>childComponent))._callSiblingAdded,
+				component
+			)
 			ELYSIA_PROD: (<IComponentInternals>(
 				(<unknown>childComponent)
 			))._callSiblingAdded(component);
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: try {
-				child._callSiblingAdded(component);
-			} catch (e) {
-				throwDevException(
-					`Error in onComponentAdded callback for ${child.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(
+				child,
+				child._callSiblingAdded,
+				component
+			)
 			ELYSIA_PROD: child._callSiblingAdded(component);
 		}
 	}
@@ -743,44 +662,48 @@ export class Actor implements IBounded, IConstructable {
 	_callComponentRemoved(component: Component): void {
 		if (this._actorState !== ActorState.Active) return;
 
-		ELYSIA_DEV: try {
-			this.onComponentRemoved?.(component);
-		} catch (e) {
-			throwDevException(
-				`Error in onComponentRemoved callback for ${this.constructor.name}`,
-				e,
-			);
-		}
+		ELYSIA_DEV: devCallLifecycle(this, this.onComponentRemoved, component);
+		ELYSIA_PROD: this.onComponentRemoved?.(component);
 
 		for (let childComponent of this._components.values()) {
-			ELYSIA_DEV: try {
-				(<IComponentInternals>(<unknown>childComponent))._callSiblingRemoved(
-					component,
-				);
-			} catch (e) {
-				throwDevException(
-					`Error in onComponentRemoved callback for ${childComponent.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(
+				(<IComponentInternals>(<unknown>childComponent)),
+				(<IComponentInternals>(<unknown>childComponent))._callSiblingRemoved,
+				component
+			)
+
 			ELYSIA_PROD: (<IComponentInternals>(
 				(<unknown>childComponent)
 			))._callSiblingRemoved(component);
 		}
 
 		for (let child of this._children) {
-			ELYSIA_DEV: try {
-				child._callSiblingRemoved(component);
-			} catch (e) {
-				throwDevException(
-					`Error in onComponentRemoved callback for ${child.constructor.name}`,
-					e,
-				);
-			}
+			ELYSIA_DEV: devCallLifecycle(child, child._callSiblingRemoved, component);
 			ELYSIA_PROD: child._callSiblingRemoved(component);
 		}
 	}
 }
+
+let devCallLifecycle = <T extends (...args: any) => any>(
+	root: any,
+	method: T,
+	...args: Parameters<T>
+) => {
+	if(!method) return;
+	try {
+		method.apply(root, args);
+		return;
+	} catch (e) {
+		DEV_EXCEPTION(
+			`in ${method.name} for ${root.constructor.name}`,
+			{
+				error: e,
+				actor: root
+			}
+		)
+	}
+}
+
 
 export interface IActorInternals {
 	_parent: Actor | null;

@@ -26,6 +26,7 @@ class TestComponent extends Component {
 
     protected onShutdown() {
         console.log("Component onShutdown")
+        throw Error("WHOOPS")
     }
 }
 
@@ -61,7 +62,7 @@ class TestScene extends Scene {
 
         setTimeout(() => {
             a.destroy()
-        }, 100)
+        }, 1000)
     }
     protected onUpdate(delta: number, elapsed: number) {
         // console.log("Scene onUpdate", delta, elapsed)

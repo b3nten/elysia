@@ -1,17 +1,26 @@
+import { elysiaLogger } from "../core/log.ts";
+import { Application, type IApplicationInternals } from "../core/application.ts";
+
 export class Exception {
 	constructor(public name: string) {}
 }
 
 export class DevException extends Exception {
-	cause?: unknown;
 	data?: unknown;
-	constructor(message: string, options: { cause?: unknown; data?: unknown }) {
-		super(message);
-		this.cause = options.cause;
-		this.data = options.data;
+	message: string
+	constructor(message: string, data?: unknown) {
+		super("DevException");
+		this.message = message;
+		this.data = data;
 	}
 }
 
-export let throwDevException = (message: string, data?: unknown) => {
-	throw new DevException(message, data);
+export let DEV_EXCEPTION = (message: string, data?: unknown) => {
+	elysiaLogger.error(message, data);
+	(<IApplicationInternals><unknown>Application.instance)._hasErrored = true;
 };
+
+export let EXCEPTION = (message: string, data?: unknown) => {
+	elysiaLogger.error(message, data);
+	throw new Exception(message);
+}

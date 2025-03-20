@@ -1,11 +1,11 @@
 import type { IRenderer } from "../renderer/mod.ts";
 import { Input } from "../input/mod.ts";
-import type { ISceneInternals, Scene } from "./scene.ts";
+import { type ISceneInternals, Scene } from "./scene.ts";
 import { CanvasObserver } from "../util/canvas.ts";
 import { Clock } from "./clock.ts";
 import { EventQueue } from "../events/queue.ts";
 import { EventDispatcher } from "../events/dispatcher.ts";
-import { throwDevException } from "../util/exceptions.ts";
+import { DEV_EXCEPTION, EXCEPTION } from "../util/exceptions.ts";
 import { elysiaLogger } from "./log.ts";
 import { Destructible } from "../util/destructible.ts";
 import { makeNew } from "./new.ts";
@@ -39,7 +39,7 @@ interface ApplicationArgs {
 export class Application {
 	static get instance() {
 		ELYSIA_DEV: if (!Application._instance) {
-			throwDevException(
+			DEV_EXCEPTION(
 				"Application instance does not exist. Make sure to create an instance of Application before accessing it.",
 			);
 		}
@@ -148,6 +148,13 @@ export class Application {
 	destructor() {}
 
 	loadScene = async (scene: typeof Scene) => {
+		if(!(scene.prototype instanceof Scene)) {
+			EXCEPTION(
+				"cannot load non-scene",
+				{ scene }
+			)
+		}
+
 		try {
 			if (this._scene) {
 				Destructible.destroy(this._scene);
@@ -178,11 +185,12 @@ export class Application {
 
 	update = () => {
 		ELYSIA_DEV: {
+			this._checkIfDestroyed();
 			try {
 				this._update();
 			} catch (e) {
-				elysiaLogger.error(e);
 				this._hasErrored = true;
+				throw Error("Application has errored. Check the console for more information.");
 			}
 			if (this.autoUpdate && !this._hasErrored) {
 				requestAnimationFrame(this.update);
@@ -290,11 +298,18 @@ export class Application {
 			q.clear();
 		}
 	};
+
+	_checkIfDestroyed = () => {
+		if (this._hasErrored) {
+			throw Error("Application has errored. Check the console for more information.");
+		}
+	}
 }
 
 export interface IApplicationInternals {
 	_scene?: Scene;
 	_renderer: IRenderer;
 	_canvasObserver: CanvasObserver;
+	_hasErrored: boolean;
 	_clock: Clock;
 }
